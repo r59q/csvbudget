@@ -2,22 +2,22 @@
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import {advancedFilters, loadCsvs, MappedCsvRow} from '@/utility/csvutils';
-import React, {useEffect, useState} from 'react';
-
-type RowCategoryMap = Record<string, string>; // key: JSON.stringify(row)
+import React, {useEffect, useMemo, useRef, useState} from 'react';
+import {RowCategoryMap, saveCategories} from "@/utility/datautils";
 
 dayjs.extend(customParseFormat)
 
-export default function GroupingPage() {
-    const [rows, setRows] = useState<MappedCsvRow[]>([]);
+export default function ExpensesPage() {
+    const [csvRows, setCsvRows] = useState<MappedCsvRow[]>([]);
     const [rowMap, setRowMap] = useState<RowCategoryMap>({});
     const [categories, setCategories] = useState<string[]>([]);
-    const [newCategory, setNewCategory] = useState('');
     const [ownAccounts, setOwnAccounts] = useState<string[]>([])
+
+    const newCategoryInputRef = useRef<HTMLInputElement | null>(null)
 
     useEffect(() => {
         const loaded = loadCsvs();
-        setRows(loaded);
+        setCsvRows(loaded);
         setOwnAccounts(JSON.parse(localStorage.getItem("own_accounts") ?? "[]"))
 
         const savedMap = localStorage.getItem('row_category_map');
@@ -32,20 +32,13 @@ export default function GroupingPage() {
         localStorage.setItem('row_category_map', JSON.stringify(map));
     };
 
-    const saveCategories = (cats: string[]) => {
-        const sorted = [...new Set(cats)].sort();
-        setCategories(sorted);
-        localStorage.setItem('categories', JSON.stringify(sorted));
-    };
-
     const updateCategory = (selectedRow: MappedCsvRow, category: string) => {
         const posting = selectedRow.mappedPosting;
         const updatedMap: RowCategoryMap = {...rowMap};
 
-        rows.forEach((row) => {
+        csvRows.forEach((row) => {
             if (row.mappedPosting === posting) {
-                const key = JSON.stringify(row);
-                updatedMap[key] = category;
+                updatedMap[row.mappedId] = category;
             }
         });
 
@@ -53,32 +46,34 @@ export default function GroupingPage() {
 
         // Also add to categories if it's new
         if (category && !categories.includes(category)) {
-            saveCategories([...categories, category]);
+            const cats = [...categories, category];
+            setCategories(saveCategories(cats));
         }
     };
 
-    const updateSingleCategory= (row: MappedCsvRow, category:string) => {
+    const updateSingleCategory = (row: MappedCsvRow, category: string) => {
         const updatedMap: RowCategoryMap = {...rowMap};
-        const key = JSON.stringify(row);
-        updatedMap[key] = category;
+        updatedMap[row.mappedId] = category;
         saveMap(updatedMap);
     }
 
     const addNewCategory = () => {
-        const trimmed = newCategory.trim();
+        const current = newCategoryInputRef.current;
+        if (!current) return;
+        const trimmed = current.value.trim();
         if (trimmed && !categories.includes(trimmed)) {
-            saveCategories([...categories, trimmed]);
-            setNewCategory('');
+            const cats = [...categories, trimmed];
+            setCategories(saveCategories(cats));
+            current.value = '';
         }
     };
 
     const getCategory = (row: MappedCsvRow) => {
-        const category = rowMap[JSON.stringify(row)] || '';
-        return category;
+        return rowMap[row.mappedId] || '';
     }
 
     const aggregation: Record<string, number> = {};
-    rows.forEach((row) => {
+    csvRows.forEach((row) => {
         const cat = getCategory(row);
         if (!cat) return;
         const amt = parseFloat(row.mappedAmount.replace('.', '').replace(',', '.') || '0');
@@ -88,7 +83,7 @@ export default function GroupingPage() {
     const deleteCategory = (catToRemove: string) => {
         // Remove from category list
         const updatedCategories = categories.filter((cat) => cat !== catToRemove);
-        saveCategories(updatedCategories);
+        setCategories(saveCategories(updatedCategories));
 
         // Remove all mappings to this category
         const updatedMap = Object.fromEntries(
@@ -99,32 +94,32 @@ export default function GroupingPage() {
 
     const sortedAggregates = Object.entries(aggregation).sort((a, b) => b[1] - a[1]);
 
-    const filteredRows: MappedCsvRow[] = rows.filter(e => {
+    const filteredRows: MappedCsvRow[] = useMemo(() => csvRows.filter(e => {
         return !(ownAccounts.includes(e.mappedFrom) && ownAccounts.includes(e.mappedTo));
     }).filter(advancedFilters).toSorted((a, b) => {
         const aDate = dayjs(a.mappedDate, 'DD-MM-YYYY');
         const bDate = dayjs(b.mappedDate, 'DD-MM-YYYY');
         return bDate.unix() - aDate.unix()
-    });
+    }), [csvRows])
 
-    const filteredRowsDiff = rows.length - filteredRows.length;
-    const unfilteredRows = rows.filter((e => {
+    const filteredRowsDiff = useMemo(() => csvRows.length - filteredRows.length, [csvRows, filteredRows]);
+    const unfilteredRows = useMemo(() => csvRows.filter((e => {
         return (!ownAccounts.includes(e.mappedFrom) || ownAccounts.includes(e.mappedTo)) || !advancedFilters(e)
-    }))
-    console.assert(unfilteredRows.length === filteredRowsDiff)
+    })), [csvRows, ownAccounts])
 
-    const groupedFilteredRows = Object.groupBy(filteredRows, row => {
+    const groupedFilteredRows = useMemo(() => Object.groupBy(filteredRows, row => {
         return dayjs(row.mappedDate, 'DD-MM-YYYY').format("MMMM YYYY");
-    });
+    }), [filteredRows]);
 
     const groupedByCategory = Object.groupBy(filteredRows, row => {
         return getCategory(row);
     })
 
+    console.assert(unfilteredRows.length === filteredRowsDiff)
     return (
         <div className="flex min-h-screen">
             {/* Left Panel */}
-            <div className="w-2/3 p-4 border-r overflow-y-auto">
+            <div className="w-1/2 p-4 border-r overflow-y-auto">
                 <h2 className="text-lg font-bold mb-2">Map Rows</h2>
 
                 {/* Category List & Adder */}
@@ -154,8 +149,7 @@ export default function GroupingPage() {
                         <input
                             className="border px-2 py-1 rounded w-48 text-sm"
                             placeholder="New category"
-                            value={newCategory}
-                            onChange={(e) => setNewCategory(e.target.value)}
+                            ref={newCategoryInputRef}
                             onKeyDown={(e) => e.key === 'Enter' && addNewCategory()}
                         />
                         <button
@@ -246,7 +240,57 @@ export default function GroupingPage() {
             </div>
 
             {/* Right Panel: Aggregates */}
-            <div className="w-1/3 p-4 overflow-y-auto">
+            <div className="w-1/2 p-4 overflow-y-auto">
+
+                <p className={"text-2xl font-bold"}>Categories</p>
+                <div className={"flex flex-col gap-8"}>
+                    {Object.keys(groupedByCategory).filter(e => !!e).toSorted((a, b) => a.localeCompare(b)).map(cat => {
+                        const rows = groupedByCategory[cat]
+                        if (!rows) {
+                            return null;
+                        }
+                        return <div key={cat}>
+                            <p className={"text-xl"}>{cat}</p>
+                            <table className="text-sm w-full border">
+                                <thead>
+                                <tr className="bg-gray-900">
+                                    <th className="p-2 border text-left">Posting Text</th>
+                                    <th className="p-2 border text-right">Date</th>
+                                    <th className="p-2 border text-right">Amount</th>
+                                    <th className="p-2 border text-right">Posting</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {rows.map((row, idx) => {
+                                    const category = getCategory(row);
+                                    return <tr key={idx}>
+                                        <td>{row.mappedPosting}</td>
+                                        <td>{row.mappedDate}</td>
+                                        <td>{row.mappedAmount}</td>
+                                        <td>
+                                            <select
+                                                className="w-full p-1 border"
+                                                onClick={(e) => e.stopPropagation()}
+                                                value={category}
+                                                onChange={(e) => updateSingleCategory(row, e.target.value)}>
+                                                <option value="" className={"bg-gray-900"}>Unassigned</option>
+                                                {categories.map((opt) => (
+                                                    <option className={"bg-gray-900"} key={opt} value={opt}>
+                                                        {opt}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                })}
+                                </tbody>
+                            </table>
+                        </div>
+                    })}
+                </div>
+
+                <div className={"flex my-6 mt-8 flex-row flex-grow border-solid border-b-2"}/>
+
                 <h2 className="text-lg font-bold mb-4">Category Totals</h2>
                 <table className="text-sm w-full border">
                     <thead>
@@ -267,47 +311,6 @@ export default function GroupingPage() {
                 {sortedAggregates.length === 0 && (
                     <p className="text-sm text-gray-500 mt-2">No rows categorized yet.</p>
                 )}
-                {Object.keys(groupedByCategory).filter(e=>!!e).toSorted((a,b) => a.localeCompare(b)).map(cat => {
-                    const rows = groupedByCategory[cat]
-                    if (!rows) {
-                        return null;
-                    }
-                    return <div key={cat}>
-                        <p>{cat}</p>
-                        <table className="text-sm w-full border">
-                        <thead>
-                        <tr className="bg-gray-900">
-                            <th className="p-2 border text-left">Posting Text</th>
-                            <th className="p-2 border text-right">Amount</th>
-                            <th className="p-2 border text-right">Posting</th>
-                        </tr>
-                        </thead>
-                            <tbody>
-                            {rows.map((row,idx) => {
-                            const category = getCategory(row);
-                            return <tr key={idx}>
-                                <td>{row.mappedPosting}</td>
-                                <td>{row.mappedAmount}</td>
-                                <td>
-                                    <select
-                                        className="w-full p-1 border"
-                                        onClick={(e) => e.stopPropagation()}
-                                        value={category}
-                                        onChange={(e) => updateSingleCategory(row, e.target.value)}>
-                                        <option value="" className={"bg-gray-900"}>Unassigned</option>
-                                        {categories.map((opt) => (
-                                            <option className={"bg-gray-900"} key={opt} value={opt}>
-                                                {opt}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                            </tr>
-                        })}
-                        </tbody>
-                        </table>
-                    </div>
-                })}
             </div>
         </div>
     );

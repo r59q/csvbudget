@@ -1,4 +1,9 @@
 import Papa, {ParseResult} from 'papaparse';
+import {CsvRowId, saveAdvancedFilters} from "@/utility/datautils";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat)
 
 type CsvRow = Record<string, string | number>; // one row of CSV as an object
 export type CsvHeaders = string[]; // one row of CSV as an object
@@ -7,6 +12,7 @@ type BlackList = { account: string, blacklisted: string }[]
 
 // IMPORTANT: The mapped csv row, must have an equivalent entry in the column mapping where mapped is removed and first letter is lower case
 export interface MappedCsvRow extends CsvRow {
+        mappedId: CsvRowId; // Hashed row
     mappedDate: string;
     mappedPosting: string;
     mappedFrom: string;
@@ -105,16 +111,18 @@ export const getSchemaKeyFromCsvRow = (csvRow: CsvRow) => {
     return Object.keys(csvRow).filter(e => !e.startsWith("mapped")).join("-")
 }
 
-export const mapCsvRow = (row: CsvRow): MappedCsvRow | undefined => {
-    const mapping = getRowColumnMapping(row);
+export const mapCsvRow = (unmappedRow: CsvRow): MappedCsvRow | undefined => {
+    const mapping = getRowColumnMapping(unmappedRow);
     if (!mapping) {
         return undefined;
     }
+    const hashId = fnv1aHash(JSON.stringify(unmappedRow));
     const mappingKeys = Object.keys(mapping);
-    const mappedCsv = {...row}
+    const mappedCsv: Partial<MappedCsvRow> = {...unmappedRow}
     mappingKeys.forEach(((key, idx) =>
-            mappedCsv["mapped" + firstLetterUpper(key)] = row[mapping[mappingKeys[idx] as keyof ColumnMapping]].toString().trim()
+            mappedCsv["mapped" + firstLetterUpper(key)] = unmappedRow[mapping[mappingKeys[idx] as keyof ColumnMapping]].toString().trim()
     ));
+    mappedCsv.mappedId = hashId;
     return mappedCsv as MappedCsvRow;
 }
 
@@ -152,6 +160,21 @@ export const advancedFilters = (row: MappedCsvRow) => {
     const from = row.mappedFrom;
     const date = row.mappedDate;
     const posting = row.mappedPosting;
-    const filterEvals = parsedFilters.map(filter => Boolean(eval(filter)));
-    return !filterEvals.includes(true);
+    try {
+        const filterEvals = parsedFilters.map(filter => Boolean(eval(filter)));
+        return !filterEvals.includes(true);
+    } catch (e) {
+        alert(`Filter evaluations failed. Got\n ${e}\n\nRemoved all filters to avoid softlock, sorry. Please refresh the page`)
+        saveAdvancedFilters([]);
+    }
+    return false;
+}
+
+function fnv1aHash(str: string) {
+    let hash = 0x811c9dc5; // FNV offset basis
+    for (let i = 0; i < str.length; i++) {
+        hash ^= str.charCodeAt(i);
+        hash = (hash * 0x01000193) >>> 0; // FNV prime (multiply and truncate to 32 bits)
+    }
+    return hash >>> 0; // Ensure it's an unsigned 32-bit integer
 }
