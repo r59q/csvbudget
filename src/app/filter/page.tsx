@@ -1,55 +1,43 @@
 "use client";
 import React, {useEffect, useRef, useState} from 'react';
-import {advancedFilters, getAccountValueMappings, loadCsvs, MappedCsvRow} from "@/utility/csvutils";
-import {saveAdvancedFilters} from "@/utility/datautils";
+import useAccountMapping from "@/hooks/AccountMapping";
+import useCSVRows from "@/hooks/CSVRows";
+import useOwnedAccounts from "@/hooks/OwnedAccount";
+import {getAdvancedFiltersData} from "@/data";
+import {advancedFilters} from "@/utility/datautils";
 
 const FilterPage = () => {
-    const [csvRows, setCsvRows] = useState<MappedCsvRow[]>([]);
-    const [accountValueMappings, setAccountValueMappings] = useState<Record<string, string>>({});
-    const [ownAccounts, setOwnAccounts] = useState<string[]>([])
+    const {mappedCSVRows} = useCSVRows()
+    const {getAccountMapping} = useAccountMapping();
+    const {isAccountOwned, removeOwnedAccount, addOwnedAccount} = useOwnedAccounts();
     const [filters, setFilters] = useState<string[]>([])
     const filterTextAreaRef = useRef<HTMLTextAreaElement | null>(null)
 
     useEffect(() => {
-        const mappedCsvs = loadCsvs();
-        setCsvRows(mappedCsvs);
-        setAccountValueMappings(getAccountValueMappings());
-        setOwnAccounts(JSON.parse(localStorage.getItem("own_accounts") ?? "[]"))
-        setFilters(JSON.parse(localStorage.getItem("advanced_filters") ?? "[]"))
+        setFilters(getAdvancedFiltersData().load());
     }, [])
 
-    const handleAddAccount = (account: string) => {
-        const newState = [...ownAccounts, account]
-        setOwnAccounts(newState)
-        localStorage.setItem("own_accounts", JSON.stringify(newState))
-    }
-
-    const handleRemoveAccount = (account: string) => {
-        const newState = [...ownAccounts].filter(e => e !== account)
-        setOwnAccounts(newState);
-        localStorage.setItem("own_accounts", JSON.stringify(newState))
-    }
-    const toValues = new Set(csvRows.map(e => e.mappedTo));
-    const fromValues = new Set(csvRows.map(e => e.mappedFrom));
+    const toValues = new Set(mappedCSVRows.map(e => e.mappedTo));
+    const fromValues = new Set(mappedCSVRows.map(e => e.mappedFrom));
     const accounts = Array.from(new Set([...toValues, ...fromValues]))
         .filter(e => e !== "");
 
-    const ownedAccounts = accounts.filter(e => ownAccounts.includes(e));
-    const unknownAccounts = accounts.filter(e => !ownAccounts.includes(e))
+    const ownedAccounts = accounts.filter(e => isAccountOwned(e));
+    const unknownAccounts = accounts.filter(e => !isAccountOwned(e))
 
     const handleAddFilter = () => {
         const textArea = filterTextAreaRef.current;
         if (!textArea) return;
         const filterText = textArea.value;
         const newState = [...filters, filterText]
-        setFilters(saveAdvancedFilters(newState))
+        setFilters(getAdvancedFiltersData().save(newState))
         textArea.value = ''
     }
 
     const handleRemoveFilter = (filter: string) => {
         const newState = [...filters].filter(e => e !== filter);
         setFilters(newState)
-        setFilters(saveAdvancedFilters(newState))
+        setFilters(getAdvancedFiltersData().save(newState))
     }
 
     return (
@@ -59,15 +47,16 @@ const FilterPage = () => {
                     Select which of these accounts are yours.
                 </p>
                 <p>Transactions between your own account will not count
-                    towards your expenses. This means moving money from one of your account to another will not count as an expense</p>
+                    towards your expenses. This means moving money from one of your account to another will not count as
+                    an expense</p>
                 <p className={"text-sm pt-2"}>Click an account to move it</p>
                 <div className={"flex flex-row justify-between"}>
                     <div>
                         <p className={"text-2xl"}>Unknown Accounts</p>
                         {unknownAccounts.map(account => {
-                            const mappedAccount = accountValueMappings[account]
+                            const mappedAccount = getAccountMapping(account)
                             return <div className={"pt-1 cursor-pointer select-none"} key={account}
-                                        onClick={() => handleAddAccount(account)}>
+                                        onClick={() => addOwnedAccount(account)}>
                                 {mappedAccount ?? account}
                             </div>;
                         })}
@@ -75,9 +64,9 @@ const FilterPage = () => {
                     <div>
                         <p className={"text-2xl"}>Your Accounts</p>
                         {ownedAccounts.map(account => {
-                            const mappedAccount = accountValueMappings[account]
+                            const mappedAccount = getAccountMapping(account)
                             return <div className={"pt-1 cursor-pointer select-none"} key={account}
-                                        onClick={() => handleRemoveAccount(account)}>
+                                        onClick={() => removeOwnedAccount(account)}>
                                 {mappedAccount ?? account}
                             </div>;
                         })}
@@ -115,7 +104,7 @@ posting - string: The original posting text
                 <thead>
                 </thead>
                 <tbody>
-                {csvRows.filter(advancedFilters).map((row, idx) => {
+                {mappedCSVRows.filter(advancedFilters).map((row, idx) => {
                     return <tr key={idx}>
                         <td>{row.mappedDate}</td>
                         <td>{row.mappedPosting}</td>

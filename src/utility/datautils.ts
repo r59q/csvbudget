@@ -1,22 +1,9 @@
+import {MappedCSVRow, Month} from "@/model";
+import {getAdvancedFiltersData} from "@/data";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 
-const ADVANCED_FILTER_KEY = "advanced_filters";
-export type CsvRowId = number;
-export type RowCategoryMap = Record<CsvRowId, string>; // key: JSON.stringify(row)
-
-export const saveCategories = (cats: string[]) => {
-    const sorted = [...new Set(cats)].sort();
-    localStorage.setItem('categories', JSON.stringify(sorted));
-    return sorted;
-};
-
-export const loadAdvancedFilters = (): string[] => {
-    return JSON.parse(localStorage.getItem(ADVANCED_FILTER_KEY) ?? "[]")
-}
-
-export const saveAdvancedFilters = (filters: string[]): string[] => {
-    localStorage.setItem(ADVANCED_FILTER_KEY, JSON.stringify(filters));
-    return filters;
-}
+dayjs.extend(customParseFormat)
 
 export const formatCurrency = (amount: number) =>
     amount.toLocaleString("da-DK", {
@@ -25,3 +12,48 @@ export const formatCurrency = (amount: number) =>
         minimumFractionDigits: 2,
     });
 
+export const advancedFilters = (row: MappedCSVRow) => {
+    const parsedFilters: string[] = getAdvancedFiltersData().load();
+    if (parsedFilters.length === 0) return true;
+    const amount = row.mappedAmount;
+    const to = row.mappedTo;
+    const from = row.mappedFrom;
+    const date = row.mappedDate;
+    const posting = row.mappedPosting;
+    try {
+        const filterEvals = parsedFilters.map(filter => Boolean(eval(filter)));
+        return !filterEvals.includes(true);
+    } catch (e) {
+        alert(`Filter evaluations failed. Got\n ${e}\n\nRemoved all filters to avoid softlock, sorry. Please refresh the page`)
+        getAdvancedFiltersData().save([]);
+    }
+    return false;
+}
+
+export const groupByMonth = (rows: MappedCSVRow[]): Partial<Record<Month, MappedCSVRow[]>> => {
+    return Object.groupBy(rows, row => {
+        return dayjs(row.mappedDate, 'DD-MM-YYYY').format("MMMM YYYY");
+    });
+}
+
+export const getSum = (rows: MappedCSVRow[]) => {
+    return rows.reduce((pre, cur) => pre + cur.mappedAmount, 0)
+}
+
+export const sortedByDate = (a: MappedCSVRow, b: MappedCSVRow) => {
+    const aDate = dayjs(a.mappedDate, 'DD-MM-YYYY');
+    const bDate = dayjs(b.mappedDate, 'DD-MM-YYYY');
+    return bDate.unix() - aDate.unix()
+}
+
+export const intersection = <T,>(arr1: T[], arr2: T[]) => {
+    return Array.from(new Set(arr1.filter(value => arr2.includes(value))));
+}
+
+export const getDayJs = (date: string) => {
+    return dayjs(date, 'DD-MM-YYYY');
+}
+
+export const formatDate = (date: Date) => {
+    return dayjs(date).format("MMM D")
+}

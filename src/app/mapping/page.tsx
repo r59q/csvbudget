@@ -1,41 +1,22 @@
 'use client';
 
 import React, {useEffect, useState} from 'react';
-import {
-    ColumnMapping,
-    CsvHeaders, getAccountValueMappings,
-    getSchemaKeyFromCsvRow,
-    loadCsvs, loadCsvSchemas,
-    MAPPED_COLUMNS, MappedCsvRow
-} from "@/utility/csvutils";
+import {ColumnMapping, getSchemaKeyFromCsvRow, MAPPED_COLUMNS} from "@/utility/csvutils";
 import Link from "next/link";
+import useCSVRows from "@/hooks/CSVRows";
+import useAccountMapping from "@/hooks/AccountMapping";
 
 export default function MappingPage() {
-    const [csvRows, setCsvRows] = useState<MappedCsvRow[]>([]);
-    const [schemas, setSchemas] = useState<{ [key: string]: CsvHeaders }>({})
+    const {mappedCSVRows, csvSchemas} = useCSVRows()
+    const {accountValueMappings, addAccountMapping, removeAccountMapping} = useAccountMapping();
     const [mappings, setMappings] = useState<Partial<ColumnMapping>>({});
-    const [accountValueMappings, setAccountValueMappings] = useState<Record<string, string>>({});
     const [newKey, setNewKey] = useState('');
     const [newLabel, setNewLabel] = useState('');
     useEffect(() => {
-        const rows = loadCsvs();
-        setCsvRows(rows);
-
-        const schemaKeys = loadCsvSchemas();
-        setSchemas(schemaKeys);
-
-        setAccountValueMappings(getAccountValueMappings());
-
         setMappings(JSON.parse(localStorage.getItem("csv_mappings")!))
     }, []);
 
-    const saveValueMappings = (updated: Record<string, string>) => {
-        setAccountValueMappings(updated);
-        localStorage.setItem('csv_value_mappings', JSON.stringify(updated));
-    };
-
-    const schemaKeys = Object.keys(schemas);
-
+    const schemaKeys = Object.keys(csvSchemas);
 
     return (
         <div className="p-4 max-w-2xl mx-auto">
@@ -46,7 +27,7 @@ export default function MappingPage() {
             <div className={"flex flex-col gap-12"}>
                 {schemaKeys.map(schemaKey => <div key={schemaKey}>
                     <p className={"text-xs"}>{schemaKey}</p>
-                    <SchemaMappings schema={schemas[schemaKey]} {...{schemaKey}}/>
+                    <SchemaMappings schema={csvSchemas[schemaKey]} {...{schemaKey}}/>
                 </div>)}
             </div>
 
@@ -70,12 +51,10 @@ export default function MappingPage() {
                         className="bg-green-600 text-white px-2 py-1 rounded"
                         onClick={() => {
                             if (!newKey || !newLabel) return;
-                            const updated = {...accountValueMappings, [newKey]: newLabel};
-                            saveValueMappings(updated);
+                            addAccountMapping(newKey, newLabel)
                             setNewKey('');
                             setNewLabel('');
-                        }}
-                    >
+                        }}>
                         Add
                     </button>
                 </div>
@@ -88,11 +67,8 @@ export default function MappingPage() {
                                 <button
                                     className="text-red-500 text-xs"
                                     onClick={() => {
-                                        const updated = {...accountValueMappings};
-                                        delete updated[key];
-                                        saveValueMappings(updated);
-                                    }}
-                                >
+                                        removeAccountMapping(key);
+                                    }}>
                                     Remove
                                 </button>
                             </li>
@@ -100,7 +76,7 @@ export default function MappingPage() {
                     </ul>
                 )}
             </div>
-            {csvRows.length > 0 && (
+            {mappedCSVRows.length > 0 && (
                 <div className="mt-8">
                     <h3 className="text-lg font-semibold mb-2">Preview</h3>
                     <table className="w-full border text-sm">
@@ -113,7 +89,7 @@ export default function MappingPage() {
                         </tr>
                         </thead>
                         <tbody>
-                        {csvRows.map((row, idx) => {
+                        {mappedCSVRows.map((row, idx) => {
                             const schemaKey = getSchemaKeyFromCsvRow(row);
                             const mapping = mappings[schemaKey as keyof ColumnMapping] as unknown as ColumnMapping;
                             if (!mapping) {

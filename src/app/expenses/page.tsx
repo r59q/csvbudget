@@ -1,121 +1,67 @@
 'use client';
-import dayjs from 'dayjs'
-import customParseFormat from 'dayjs/plugin/customParseFormat';
-import {advancedFilters, loadCsvs, MappedCsvRow} from '@/utility/csvutils';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {RowCategoryMap, saveCategories} from "@/utility/datautils";
-
-dayjs.extend(customParseFormat)
+import React, {useMemo, useRef, useState} from 'react';
+import useCSVRows from "@/hooks/CSVRows";
+import useOwnedAccounts from "@/hooks/OwnedAccount";
+import useCategories from "@/hooks/Categories";
+import {MappedCSVRow} from "@/model";
+import {advancedFilters, groupByMonth, sortedByDate} from "@/utility/datautils";
 
 export default function ExpensesPage() {
-    const [csvRows, setCsvRows] = useState<MappedCsvRow[]>([]);
-    const [rowMap, setRowMap] = useState<RowCategoryMap>({});
-    const [categories, setCategories] = useState<string[]>([]);
-    const [ownAccounts, setOwnAccounts] = useState<string[]>([])
+    const {mappedCSVRows} = useCSVRows()
+    const {filterIntraAccountTransaction, filterInterAccountTransaction} = useOwnedAccounts();
+    const {
+        setCategory,
+        categories,
+        getCategory,
+        createCategory,
+        deleteCategory,
+        groupByCategory,
+        rowCategoryMap
+    } = useCategories();
 
     const newCategoryInputRef = useRef<HTMLInputElement | null>(null)
 
-    useEffect(() => {
-        const loaded = loadCsvs();
-        setCsvRows(loaded);
-        setOwnAccounts(JSON.parse(localStorage.getItem("own_accounts") ?? "[]"))
-
-        const savedMap = localStorage.getItem('row_category_map');
-        if (savedMap) setRowMap(JSON.parse(savedMap));
-
-        const savedCats = localStorage.getItem('categories');
-        if (savedCats) setCategories(JSON.parse(savedCats));
-    }, []);
-
-    const saveMap = (map: RowCategoryMap) => {
-        setRowMap(map);
-        localStorage.setItem('row_category_map', JSON.stringify(map));
-    };
-
-    const updateCategory = (selectedRow: MappedCsvRow, category: string) => {
+    const updateCategory = (selectedRow: MappedCSVRow, category: string) => {
         const posting = selectedRow.mappedPosting;
-        const updatedMap: RowCategoryMap = {...rowMap};
-
-        csvRows.forEach((row) => {
+        const rows: MappedCSVRow[] = []
+        mappedCSVRows.forEach((row) => {
             if (row.mappedPosting === posting) {
-                updatedMap[row.mappedId] = category;
+                rows.push(row)
             }
         });
-
-        saveMap(updatedMap);
-
-        // Also add to categories if it's new
-        if (category && !categories.includes(category)) {
-            const cats = [...categories, category];
-            setCategories(saveCategories(cats));
-        }
+        setCategory(rows, category)
     };
-
-    const updateSingleCategory = (row: MappedCsvRow, category: string) => {
-        const updatedMap: RowCategoryMap = {...rowMap};
-        updatedMap[row.mappedId] = category;
-        saveMap(updatedMap);
-    }
 
     const addNewCategory = () => {
         const current = newCategoryInputRef.current;
         if (!current) return;
-        const trimmed = current.value.trim();
-        if (trimmed && !categories.includes(trimmed)) {
-            const cats = [...categories, trimmed];
-            setCategories(saveCategories(cats));
-            current.value = '';
-        }
+        const category = current.value;
+        createCategory(category);
+        current.value = '';
     };
 
-    const getCategory = (row: MappedCsvRow) => {
-        return rowMap[row.mappedId] || '';
-    }
-
     const aggregation: Record<string, number> = {};
-    csvRows.forEach((row) => {
+    mappedCSVRows.forEach((row) => {
         const cat = getCategory(row);
         if (!cat) return;
-        const amt = parseFloat(row.mappedAmount.replace('.', '').replace(',', '.') || '0');
+        const amt = row.mappedAmount;
         aggregation[cat] = (aggregation[cat] || 0) + amt;
     });
 
-    const deleteCategory = (catToRemove: string) => {
-        // Remove from category list
-        const updatedCategories = categories.filter((cat) => cat !== catToRemove);
-        setCategories(saveCategories(updatedCategories));
-
-        // Remove all mappings to this category
-        const updatedMap = Object.fromEntries(
-            Object.entries(rowMap).filter(([_, value]) => value !== catToRemove)
-        );
-        saveMap(updatedMap);
-    };
-
     const sortedAggregates = Object.entries(aggregation).sort((a, b) => b[1] - a[1]);
 
-    const filteredRows: MappedCsvRow[] = useMemo(() => csvRows.filter(e => {
-        return !(ownAccounts.includes(e.mappedFrom) && ownAccounts.includes(e.mappedTo));
-    }).filter(advancedFilters).toSorted((a, b) => {
-        const aDate = dayjs(a.mappedDate, 'DD-MM-YYYY');
-        const bDate = dayjs(b.mappedDate, 'DD-MM-YYYY');
-        return bDate.unix() - aDate.unix()
-    }), [csvRows])
+    const filteredRows: MappedCSVRow[] = mappedCSVRows
+        .filter(filterIntraAccountTransaction)
+        .filter(advancedFilters)
+        .toSorted(sortedByDate)
 
-    const filteredRowsDiff = useMemo(() => csvRows.length - filteredRows.length, [csvRows, filteredRows]);
-    const unfilteredRows = useMemo(() => csvRows.filter((e => {
-        return (!ownAccounts.includes(e.mappedFrom) || ownAccounts.includes(e.mappedTo)) || !advancedFilters(e)
-    })), [csvRows, ownAccounts])
+    const filteredRowsDiff = mappedCSVRows.length - filteredRows.length;
+    const unfilteredRows = mappedCSVRows.filter(e => filterInterAccountTransaction(e) || !advancedFilters(e));
 
-    const groupedFilteredRows = useMemo(() => Object.groupBy(filteredRows, row => {
-        return dayjs(row.mappedDate, 'DD-MM-YYYY').format("MMMM YYYY");
-    }), [filteredRows]);
+    const groupedByMonth = useMemo(() => groupByMonth(filteredRows), [filteredRows, rowCategoryMap]);
+    const groupedByCategory = groupByCategory(filteredRows);
 
-    const groupedByCategory = Object.groupBy(filteredRows, row => {
-        return getCategory(row);
-    })
-
-    console.assert(unfilteredRows.length === filteredRowsDiff)
+    console.assert(unfilteredRows.length === filteredRowsDiff) // Sanity check
     return (
         <div className="flex min-h-screen">
             {/* Left Panel */}
@@ -164,11 +110,11 @@ export default function ExpensesPage() {
                 {/* Table of Rows */}
                 <p>Filtered {filteredRowsDiff} rows</p>
                 <div className={"flex flex-col gap-8"}>
-                    {Object.keys(groupedFilteredRows).map(grouping => {
-                        const rows = groupedFilteredRows[grouping];
+                    {Object.keys(groupedByMonth).map(month => {
+                        const rows = groupedByMonth[month];
                         if (!rows) return null;
-                        return <div key={grouping}>
-                            <p key={grouping} className={"text-2xl"}>{grouping}</p>
+                        return <div key={month}>
+                            <p key={month} className={"text-2xl"}>{month}</p>
                             <table className="text-sm w-full border">
                                 <thead>
                                 <tr className="bg-gray-900">
@@ -180,13 +126,13 @@ export default function ExpensesPage() {
                                 </thead>
                                 <tbody>
                                 {rows
-                                    .filter((row) => !getCategory(row) || getCategory(row) === "") // only unassigned
+                                    .filter((row) => !getCategory(row) || getCategory(row) === "Unassigned")
                                     .map((row, i) => {
                                         const category = getCategory(row);
                                         return (
                                             <PostingsTableRow {...{category, categories, row}}
                                                               onSelectCategory={updateCategory}
-                                                              key={i}/>
+                                                              key={row.mappedId}/>
                                         );
                                     })}
                                 </tbody>
@@ -210,7 +156,7 @@ export default function ExpensesPage() {
                     {unfilteredRows
                         .filter((row) => !getCategory(row)) // only unassigned
                         .map((row, i) => {
-                            const amount = parseFloat(row.mappedAmount);
+                            const amount = row.mappedAmount;
                             return (
                                 <React.Fragment key={i}>
                                     <tr className="even:bg-gray-950">
@@ -272,7 +218,7 @@ export default function ExpensesPage() {
                                                 className="w-full p-1 border"
                                                 onClick={(e) => e.stopPropagation()}
                                                 value={category}
-                                                onChange={(e) => updateSingleCategory(row, e.target.value)}>
+                                                onChange={(e) => setCategory(row, e.target.value)}>
                                                 <option value="" className={"bg-gray-900"}>Unassigned</option>
                                                 {categories.map((opt) => (
                                                     <option className={"bg-gray-900"} key={opt} value={opt}>
@@ -317,18 +263,21 @@ export default function ExpensesPage() {
 }
 
 interface PostingsTableRowProps {
-    row: MappedCsvRow;
-    category: string;
+    row: MappedCSVRow;
+    category: string | undefined;
     categories: string[];
-    onSelectCategory: (selectedRow: MappedCsvRow, category: string) => void;
+    onSelectCategory: (selectedRow: MappedCSVRow, category: string) => void;
 }
 
 const PostingsTableRow = ({row, category, categories, onSelectCategory}: PostingsTableRowProps) => {
     const [isExpanded, setExpanded] = useState(false)
-    const amount = parseFloat(row.mappedAmount);
+    const amount = row.mappedAmount
 
     const toggleOpen = () => {
         setExpanded(!isExpanded);
+    }
+    if (category) {
+        console.error(row)
     }
 
     return <>
@@ -343,8 +292,7 @@ const PostingsTableRow = ({row, category, categories, onSelectCategory}: Posting
                     className="w-full p-1 border"
                     onClick={(e) => e.stopPropagation()}
                     value={category}
-                    onChange={(e) => onSelectCategory(row, e.target.value)}
-                >
+                    onChange={(e) => onSelectCategory(row, e.target.value)}>
                     <option value="" className={"bg-gray-900"}>Unassigned</option>
                     {categories.map((opt) => (
                         <option className={"bg-gray-900"} key={opt} value={opt}>

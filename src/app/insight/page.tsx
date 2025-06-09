@@ -1,11 +1,16 @@
 "use client";
-import React, {createContext, use, useEffect, useMemo, useRef, useState} from 'react';
-import {advancedFilters, loadCsvs, MappedCsvRow} from "@/utility/csvutils";
-import {formatCurrency, RowCategoryMap, saveCategories} from "@/utility/datautils";
+import React, {createContext, use, useMemo, useState} from 'react';
+import {advancedFilters, formatCurrency, getDayJs, getSum, groupByMonth} from "@/utility/datautils";
 import dayjs from "dayjs";
+import useCSVRows from "@/hooks/CSVRows";
+import useCategories from "@/hooks/Categories";
+import useOwnedAccounts from "@/hooks/OwnedAccount";
+import {MappedCSVRow} from '@/model';
+import useIncome from "@/hooks/Income";
+import BurndownChart from "@/components/BurndownChart";
 
 interface InsightsContextType {
-    getCategory: (row: MappedCsvRow) => string;
+    getCategory: (row: MappedCSVRow) => string | undefined;
 }
 
 interface MonthlyTotals {
@@ -16,69 +21,27 @@ interface MonthlyTotals {
 const InsightsContext = createContext<InsightsContextType>(null!)
 
 const InsightPage = () => {
-    const [csvRows, setCsvRows] = useState<MappedCsvRow[]>([]);
-    const [rowMap, setRowMap] = useState<RowCategoryMap>({});
-    const [categories, setCategories] = useState<string[]>([]);
-    const [ownAccounts, setOwnAccounts] = useState<string[]>([])
+    const {mappedCSVRows} = useCSVRows();
+    const {getCategory, categories} = useCategories();
+    const {isAccountOwned} = useOwnedAccounts();
+    const {incomeRows} = useIncome();
 
-    const newCategoryInputRef = useRef<HTMLInputElement | null>(null)
-
-    useEffect(() => {
-        const loaded = loadCsvs();
-        setCsvRows(loaded);
-        setOwnAccounts(JSON.parse(localStorage.getItem("own_accounts") ?? "[]"))
-
-        const savedMap = localStorage.getItem('row_category_map');
-        if (savedMap) setRowMap(JSON.parse(savedMap));
-
-        const savedCats = localStorage.getItem('categories');
-        if (savedCats) setCategories(JSON.parse(savedCats));
-    }, []);
-
-    const saveMap = (map: RowCategoryMap) => {
-        setRowMap(map);
-        localStorage.setItem('row_category_map', JSON.stringify(map));
-    };
-
-    const addNewCategory = () => {
-        const current = newCategoryInputRef.current;
-        if (!current) return;
-        const trimmed = current.value.trim();
-        if (trimmed && !categories.includes(trimmed)) {
-            const cats = [...categories, trimmed];
-            setCategories(saveCategories(cats));
-            current.value = '';
-        }
-    };
-
-    const getCategory = (row: MappedCsvRow) => rowMap[row.mappedId] || '';
-
-
-    const aggregation: Record<string, number> = {};
-    csvRows.forEach((row) => {
-        const cat = getCategory(row);
-        if (!cat) return;
-        const amt = parseFloat(row.mappedAmount.replace('.', '').replace(',', '.') || '0');
-        aggregation[cat] = (aggregation[cat] || 0) + amt;
-    });
-
-
-    const filteredRows: MappedCsvRow[] = useMemo(() => csvRows.filter(e => {
-        return !(ownAccounts.includes(e.mappedFrom) && ownAccounts.includes(e.mappedTo));
+    const filteredRows: MappedCSVRow[] = useMemo(() => mappedCSVRows.filter(e => {
+        return !(isAccountOwned(e.mappedFrom) && isAccountOwned(e.mappedTo));
     }).filter(advancedFilters).toSorted((a, b) => {
         const aDate = dayjs(a.mappedDate, 'DD-MM-YYYY');
         const bDate = dayjs(b.mappedDate, 'DD-MM-YYYY');
         return bDate.unix() - aDate.unix()
-    }), [csvRows])
+    }), [mappedCSVRows])
 
-    const groupedByMonth: Record<string, MappedCsvRow[] | undefined> = useMemo(() => Object.groupBy(filteredRows, row => {
+    const groupedByMonth: Record<string, MappedCSVRow[] | undefined> = useMemo(() => Object.groupBy(filteredRows, row => {
         return dayjs(row.mappedDate, 'DD-MM-YYYY').format("MMMM YYYY");
     }), [filteredRows]);
     const months = Object.keys(groupedByMonth).filter(e => e !== "");
 
     const monthlyTotals: MonthlyTotals = useMemo(() => {
         return computeMonthlyTotals(months, groupedByMonth, getCategory);
-    }, [csvRows])
+    }, [mappedCSVRows])
 
 
     const total = useMemo(() => months.reduce((pre, cur) => {
@@ -106,29 +69,75 @@ const InsightPage = () => {
         monthlyAverageExpensesPerCategory[category] = total / months.length;
     })
 
+    const incomePerMonth = groupByMonth(incomeRows);
+    const incomeMonths = Object.keys(incomePerMonth);
+    const totalIncome = incomeMonths.reduce((pre, cur) => pre + getSum(incomePerMonth[cur] ?? []), 0);
+    const averageIncomePerMonth = totalIncome / incomeMonths.length;
+    const averageIncomePerDay = totalIncome / durationDays;
+
+    const categoriesSortedByMonthlyCost = [...categories]
+        .toSorted((a, b) => monthlyAverageExpensesPerCategory[b] - monthlyAverageExpensesPerCategory[a]);
+
     return (
         <InsightsContext.Provider value={{getCategory}}>
             <div className={"p-2 flex flex-col gap-8 pt-4"}>
-                <div className={"flex flex-row"}>
-                    <div>
-                        <p>Statistics</p>
-                        <div className={"grid gap-2 grid-cols-2"}>
-                            <p>Daily expenses</p>
-                            <p>{formatCurrency(dailyAverageExpenses)}</p>
-                            <p>Monthly expenses</p>
-                            <p>{formatCurrency(monthlyAverageExpenses)}</p>
-                            <p>Category</p>
-                            <p className={"text-right"}>Monthly Average</p>
-                            {categories.map(category => {
-                                const categoryAverage = monthlyAverageExpensesPerCategory[category];
-                                return <React.Fragment key={category}>
-                                    <p>{category}</p>
-                                    <p className={"text-right"}>{formatCurrency(categoryAverage)}</p>
-                                </React.Fragment>
-                            })}
+                <div className="gap-4">
+                    <div className={"flex flex-row"}>
+                        <div className="bg-zinc-900 text-zinc-100 p-6 rounded-2xl shadow-xl space-y-6">
+                            {/* Section: Expenses */}
+                            <section>
+                                <h3 className="text-lg font-semibold text-red-400 mb-3">Expenses</h3>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <span className="text-zinc-400">Daily</span>
+                                    <span className="text-right">{formatCurrency(dailyAverageExpenses)}</span>
+                                    <span className="text-zinc-400">Monthly</span>
+                                    <span className="text-right">{formatCurrency(monthlyAverageExpenses)}</span>
+                                </div>
+
+                                <hr/>
+
+                                <div>
+                                    <div className="grid grid-cols-2 gap-2 text-sm mt-4">
+                                        <span className="text-zinc-400">Category</span>
+                                        <span className="text-right text-zinc-400">Monthly Average</span>
+                                        {categoriesSortedByMonthlyCost.map((category) => (
+                                            <React.Fragment key={category}>
+                                                <span>{category}</span>
+                                                <span
+                                                    className="text-right">{formatCurrency(monthlyAverageExpensesPerCategory[category])}</span>
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Section: Income */}
+                            <section>
+                                <h3 className="text-lg font-semibold text-green-400 mb-3">Income</h3>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <span className="text-zinc-400">Daily</span>
+                                    <span className="text-right">{formatCurrency(averageIncomePerDay)}</span>
+                                    <span className="text-zinc-400">Monthly</span>
+                                    <span className="text-right">{formatCurrency(averageIncomePerMonth)}</span>
+                                </div>
+                            </section>
+
+                            {/* Section: Net */}
+                            <section>
+                                <h3 className="text-lg font-semibold text-blue-400 mb-3">Net</h3>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <span className="text-zinc-400">Daily</span>
+                                    <span
+                                        className="text-right">{formatCurrency(averageIncomePerDay + dailyAverageExpenses)}</span>
+                                    <span className="text-zinc-400">Monthly</span>
+                                    <span
+                                        className="text-right">{formatCurrency(averageIncomePerMonth + monthlyAverageExpenses)}</span>
+                                </div>
+                            </section>
                         </div>
                     </div>
                 </div>
+
                 <div>
                     {months.map(month => {
                         const rows = groupedByMonth[month];
@@ -136,6 +145,7 @@ const InsightPage = () => {
                         return <div key={month}>
                             <p>{month}</p>
                             <MonthInsight {...{month, rows}}
+                                          income={getSum(incomePerMonth[month] ?? [])}
                                           categoryTotals={monthlyTotals.categoryTotals[month]}
                                           totalSum={monthlyTotals.totals[month]}/>
                         </div>
@@ -148,22 +158,42 @@ const InsightPage = () => {
 
 interface MonthInsightProps {
     month: string,
-    rows: MappedCsvRow[],
+    rows: MappedCSVRow[],
     categoryTotals: Record<string, number>;
     totalSum: number;
+    income: number;
 }
 
-const MonthInsight = ({month, rows, categoryTotals, totalSum}: MonthInsightProps) => {
-    return <MonthInsightsTable {...{month, rows, categoryTotals, totalSum}}/>
+const MonthInsight = ({month, rows, categoryTotals, totalSum, income}: MonthInsightProps) => {
+    return <MonthInsightsTable {...{month, rows, categoryTotals, totalSum, income}}/>
 };
 
 const MonthInsightsTable = ({
                                 rows,
                                 totalSum,
-                                categoryTotals
-                            }: Pick<MonthInsightProps, 'month' | "rows" | 'totalSum' | 'categoryTotals'>) => {
+                                categoryTotals,
+                                income
+                            }: Pick<MonthInsightProps, 'month' | "rows" | 'totalSum' | 'categoryTotals' | "income">) => {
     const {getCategory} = use(InsightsContext);
     const [open, setOpen] = useState(false);
+    const firstOfMonth = rows[rows.length - 1];
+    const firstDateOfMonth = getDayJs(firstOfMonth.mappedDate)
+    console.log(rows)
+    const burndown: {
+        value: number,
+        date: number
+    }[] = [{
+        value: income,
+        date: firstDateOfMonth.toDate().getTime()
+    }];
+
+    [...rows].reverse().forEach((row, idx) => {
+        burndown.push({
+            date: getDayJs(row.mappedDate).toDate().getTime(),
+            value: burndown[idx].value + row.mappedAmount
+        });
+    })
+    const expenses = getSum(rows);
 
     return (
         <div className="rounded-xl shadow p-4 mb-6 bg-gray-800">
@@ -171,12 +201,20 @@ const MonthInsightsTable = ({
                 className="flex items-center justify-between w-full text-left text-lg font-semibold text-gray-300 hover:text-white"
                 onClick={() => setOpen(!open)}>
                 <span className={"text-sm"}>Transactions</span>
-                <span className="text-sm">{open ? "▼" : "►"}</span>
+                <div className={"items-center flex flex-row gap-8"}>
+                    <span className={"text-green-600"}>{income}</span>
+                    <span className={"text-red-600"}>{expenses}</span>
+                    <span className={"text-blue-600"}>{income + expenses}</span>
+                    <span className="text-sm">{open ? "▼" : "►"}</span>
+                </div>
             </button>
 
             {open && (
                 <div className="mt-4 transition-all duration-300">
                     <div className="overflow-x-auto mb-4">
+                        <div className={"flex w-full"}>
+                            <BurndownChart burndown={burndown}/>
+                        </div>
                         <table className="w-full text-sm text-left text-gray-300 border border-gray-700 rounded-lg">
                             <thead className="bg-gray-900 text-gray-500 font-semibold">
                             <tr>
@@ -205,8 +243,8 @@ const MonthInsightsTable = ({
 }
 
 interface MonthInsightsTableRowProps {
-    row: MappedCsvRow;
-    category: string;
+    row: MappedCSVRow;
+    category: string | undefined;
 }
 
 const MonthInsightsTableRow = ({row, category}: MonthInsightsTableRowProps) => {
@@ -269,7 +307,7 @@ const getHeatColor = (value: number, maxAbs: number) => {
     return `rgb(255, ${white}, ${white})`; // white to red gradient
 };
 
-const computeMonthlyTotals = (months: string[], groupedByMonth: Record<string, MappedCsvRow[] | undefined>, getCategory: (row: MappedCsvRow) => string): MonthlyTotals => {
+const computeMonthlyTotals = (months: string[], groupedByMonth: Record<string, MappedCSVRow[] | undefined>, getCategory: (row: MappedCSVRow) => string | undefined): MonthlyTotals => {
     const totals: Record<string, number> = {};
     const monthlyCategoryTotals: Record<string, Record<string, number>> = {};
 
@@ -285,8 +323,7 @@ const computeMonthlyTotals = (months: string[], groupedByMonth: Record<string, M
                 throw new Error("wa")
             }
             const category = getCategory(row) || "Unassigned";
-            const clean = row.mappedAmount.replace(",", ".").replace(/[^\d.-]/g, "");
-            const num = parseFloat(clean);
+            const num = row.mappedAmount;
             if (!isNaN(num)) {
                 categoryTotals[category] = (categoryTotals[category] || 0) + num;
                 totalSum += num;
