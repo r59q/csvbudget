@@ -3,7 +3,7 @@
 import useCSVRows from "@/hooks/CSVRows";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 import useIncome from "@/hooks/Income";
-import {advancedFilters, formatCurrency, groupByMonth, sortedByDate} from "@/utility/datautils";
+import {formatCurrency, groupByMonth, sortedByDate} from "@/utility/datautils";
 
 const Page = () => {
     const {mappedCSVRows} = useCSVRows()

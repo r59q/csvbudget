@@ -56,13 +56,12 @@ const loadDeduplicatedCsvRows = (): CsvRow[] => {
 
     // Deduplicate based on stringified row content
     const seen = new Set<string>();
-    const uniqueRows = allRows.filter((row) => {
+    return allRows.filter((row) => {
         const key = JSON.stringify(row);
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
     });
-    return uniqueRows;
 }
 
 /**
@@ -107,7 +106,7 @@ const getRowColumnMapping = (row: CsvRow): ColumnMapping | undefined => {
     const headers = Object.keys(row)
     const schemaKey = headers.join("-")
     const allMappings = JSON.parse(localStorage.getItem('csv_mappings') || '{}');
-    let schemaMapping = allMappings[schemaKey];
+     const schemaMapping = allMappings[schemaKey];
     if (schemaMapping) {
         const columnMapping = {} as ColumnMapping;
         const keys = Object.keys(schemaMapping);
@@ -134,7 +133,7 @@ type BlackList = { account: string, blacklisted: string }[]
 const blackListFilter = (result: ParseResult<CsvRow>) => {
     const blacklist = JSON.parse(localStorage.getItem('blacklist') ?? "[]") as BlackList;
     const filteredData = [...result.data].filter(csvRow => {
-        let blackListIdx = blacklist.findIndex(e => csvRow['Exportkonto'].toString().toLowerCase() === e.account);
+        const blackListIdx = blacklist.findIndex(e => csvRow['Exportkonto'].toString().toLowerCase() === e.account);
         let blacklistedWords: string[] = []
         if (blackListIdx !== -1) {
             if (blacklist[blackListIdx].blacklisted.length > 0) {

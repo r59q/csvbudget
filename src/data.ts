@@ -1,4 +1,4 @@
-import {AccountMappings, AccountNumber, Category, CSVFile, RowCategoryMap, RowIncomeMap} from "@/model";
+import {AccountMappings, AccountNumber, BudgetPost, Category, CSVFile, RowCategoryMap, RowIncomeMap} from "@/model";
 
 interface StoredDataWrapper<T> {
     load: () => T;
@@ -12,6 +12,7 @@ const ADVANCED_FILTERS_KEY = "advanced_filters"
 const CATEGORIES_KEY = "categories"
 const ROW_CATEGORY_MAP_KEY = "row_category_map"
 const ROW_INCOME_MAP_KEY = "row_income_map"
+const BUDGET_POST_KEY = "budget_posts"
 
 
 export const getCSVFilesData = (): StoredDataWrapper<CSVFile[]> => {
@@ -128,6 +129,7 @@ export const getRowCategoryData = (): StoredDataWrapper<RowCategoryMap> => {
         }
     };
 }
+
 export const getRowIncomeData = (): StoredDataWrapper<RowIncomeMap> => {
     return {
         load: () => {
@@ -142,6 +144,24 @@ export const getRowIncomeData = (): StoredDataWrapper<RowIncomeMap> => {
                 return []
             }
             return rowIncome;
+        }
+    };
+}
+
+export const getBudgetPostData = (): StoredDataWrapper<BudgetPost[]> => {
+    return {
+        load: () => {
+            const loaded = localStorage.getItem(BUDGET_POST_KEY) ?? "[]";
+            return JSON.parse(loaded)
+        },
+        save: budgetPosts => {
+            try {
+                localStorage.setItem(BUDGET_POST_KEY, JSON.stringify(budgetPosts));
+            } catch (e) {
+                console.error(e);
+                return []
+            }
+            return budgetPosts;
         }
     };
 }

@@ -128,7 +128,7 @@ const SchemaMappings = ({schemaKey, schema}: SchemaMappingsProps) => {
         if (allMappings[schemaKey]) {
             setMapping(allMappings[schemaKey]);
         }
-    }, []);
+    }, [schemaKey]);
 
     const handleMappingChange = (target: keyof ColumnMapping, source: string) => {
         setMapping((prev) => ({...prev, [target]: source}));
