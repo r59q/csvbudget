@@ -4,7 +4,7 @@ import {getRowIncomeData} from "@/data";
 import useCSVRows from "@/hooks/CSVRows";
 
 const useIncome = () => {
-    const {mappedCSVRows, getById} = useCSVRows()
+    const {getById} = useCSVRows()
     const [incomeMap, setIncomeMap] = useState<RowIncomeMap>({})
 
     useEffect(() => {

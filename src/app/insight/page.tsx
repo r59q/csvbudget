@@ -32,7 +32,7 @@ const InsightPage = () => {
         const aDate = dayjs(a.mappedDate, 'DD-MM-YYYY');
         const bDate = dayjs(b.mappedDate, 'DD-MM-YYYY');
         return bDate.unix() - aDate.unix()
-    }), [mappedCSVRows])
+    }), [mappedCSVRows, isAccountOwned])
 
     const groupedByMonth: Record<string, MappedCSVRow[] | undefined> = useMemo(() => Object.groupBy(filteredRows, row => {
         return dayjs(row.mappedDate, 'DD-MM-YYYY').format("MMMM YYYY");
@@ -41,12 +41,12 @@ const InsightPage = () => {
 
     const monthlyTotals: MonthlyTotals = useMemo(() => {
         return computeMonthlyTotals(months, groupedByMonth, getCategory);
-    }, [mappedCSVRows])
+    }, [mappedCSVRows, months])
 
 
     const total = useMemo(() => months.reduce((pre, cur) => {
         return monthlyTotals.totals[cur] + pre;
-    }, 0), [monthlyTotals])
+    }, 0), [monthlyTotals, months])
 
     if (filteredRows.length === 0) {
         return <></>
@@ -178,7 +178,7 @@ const MonthInsightsTable = ({
     const [open, setOpen] = useState(false);
     const firstOfMonth = rows[rows.length - 1];
     const firstDateOfMonth = getDayJs(firstOfMonth.mappedDate)
-    console.log(rows)
+
     const burndown: {
         value: number,
         date: number

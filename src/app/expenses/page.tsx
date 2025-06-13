@@ -15,8 +15,7 @@ export default function ExpensesPage() {
         getCategory,
         createCategory,
         deleteCategory,
-        groupByCategory,
-        rowCategoryMap
+        groupByCategory
     } = useCategories();
 
     const newCategoryInputRef = useRef<HTMLInputElement | null>(null)
@@ -58,7 +57,7 @@ export default function ExpensesPage() {
     const filteredRowsDiff = mappedCSVRows.length - filteredRows.length;
     const unfilteredRows = mappedCSVRows.filter(e => filterInterAccountTransaction(e) || !advancedFilters(e));
 
-    const groupedByMonth = useMemo(() => groupByMonth(filteredRows), [filteredRows, rowCategoryMap]);
+    const groupedByMonth = useMemo(() => groupByMonth(filteredRows), [filteredRows]);
     const groupedByCategory = groupByCategory(filteredRows);
 
     console.assert(unfilteredRows.length === filteredRowsDiff) // Sanity check

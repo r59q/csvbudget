@@ -34,6 +34,7 @@ export default function RootLayout({
             <Link className={"text-lg border-solid border-gray-500 border-2 px-2"} href={"/expenses"}>Expenses</Link>
             <Link className={"text-lg border-solid border-gray-500 border-2 px-2"} href={"/income"}>Income</Link>
             <Link className={"text-lg border-solid border-gray-500 border-2 px-2"} href={"/insight"}>Insight</Link>
+            <Link className={"text-lg border-solid border-gray-500 border-2 px-2"} href={"/budget"}>Budget</Link>
         </div>
 
         {children}

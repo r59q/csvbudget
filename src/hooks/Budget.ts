@@ -21,7 +21,8 @@ const useBudget = () => {
         },
         deleteBudgetPost: (post: BudgetPost) => {
             saveBudgetPosts([...budgetPosts].filter(e => e !== post))
-        }
+        },
+        saveBudgetPosts
     };
 };
 

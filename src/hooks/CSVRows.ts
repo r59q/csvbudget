@@ -26,7 +26,7 @@ const useCSVRows = () => {
             .filter(e => !!e);
         setMappedCSVRows(mapped);
         setCSVSchemas(getCSVSchemas(loaded));
-    }, [])
+    }, [rowCategoryMap])
 
     const getById = (rowId: CSVRowId): MappedCSVRow | undefined => {
         return mappedCSVRows.find(row => row.mappedId === rowId);

@@ -17,7 +17,7 @@ export type AccountNumber = string;
 export type Category = string | "Unassigned";
 export type Month = string;
 
-export type BudgetPost = string;
+export type BudgetPost = { title: string; amount: number; }
 
 export type RowCategoryMap = Record<CSVRowId, Category>;
 export type RowIncomeMap = Record<CSVRowId, Month>;
