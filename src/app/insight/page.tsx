@@ -41,7 +41,7 @@ const InsightPage = () => {
 
     const monthlyTotals: MonthlyTotals = useMemo(() => {
         return computeMonthlyTotals(months, groupedByMonth, getCategory);
-    }, [mappedCSVRows, months])
+    }, [mappedCSVRows, months, getCategory])
 
 
     const total = useMemo(() => months.reduce((pre, cur) => {

@@ -21,6 +21,7 @@ export type BudgetPost = { title: string; amount: number; }
 
 export type RowCategoryMap = Record<CSVRowId, Category>;
 export type RowIncomeMap = Record<CSVRowId, Month>;
+export type CategoryBudgetPostMap = Record<Category, BudgetPost["title"]>;
 
 export type MappedCSVRow = {
     mappedId: CSVRowId; // Hashed row

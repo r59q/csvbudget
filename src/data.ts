@@ -1,4 +1,13 @@
-import {AccountMappings, AccountNumber, BudgetPost, Category, CSVFile, RowCategoryMap, RowIncomeMap} from "@/model";
+import {
+    AccountMappings,
+    AccountNumber,
+    BudgetPost,
+    Category,
+    CategoryBudgetPostMap,
+    CSVFile,
+    RowCategoryMap,
+    RowIncomeMap
+} from "@/model";
 
 interface StoredDataWrapper<T> {
     load: () => T;
@@ -162,6 +171,25 @@ export const getBudgetPostData = (): StoredDataWrapper<BudgetPost[]> => {
                 return []
             }
             return budgetPosts;
+        }
+    };
+}
+
+const CATEGORY_BUDGET_MAP_KEY = "category_budgetpost_map";
+export const getCategoryBudgetMapData = (): StoredDataWrapper<CategoryBudgetPostMap> => {
+    return {
+        load: () => {
+            const loaded = localStorage.getItem(CATEGORY_BUDGET_MAP_KEY) ?? "{}";
+            return JSON.parse(loaded)
+        },
+        save: (mapping: CategoryBudgetPostMap) => {
+            try {
+                localStorage.setItem(CATEGORY_BUDGET_MAP_KEY, JSON.stringify(mapping));
+            } catch (e) {
+                console.error(e);
+                return {}
+            }
+            return mapping;
         }
     };
 }

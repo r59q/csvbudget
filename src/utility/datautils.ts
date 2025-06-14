@@ -54,6 +54,10 @@ export const getDayJs = (date: string) => {
     return dayjs(date, 'DD-MM-YYYY');
 }
 
+export const formatMonth = (date:Date) => {
+    return dayjs(date).format("MMMM YYYY")
+}
+
 export const formatDate = (date: Date) => {
     return dayjs(date).format("MMM D")
 }
