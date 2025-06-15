@@ -8,7 +8,7 @@ import {formatCurrency, groupByMonth, sortedByDate} from "@/utility/datautils";
 const Page = () => {
     const {mappedCSVRows} = useCSVRows()
     const {filterInterAccountTransaction} = useOwnedAccounts();
-    const {getMonthForIncome, setMonthForIncome, incomeRows, incomeMap} = useIncome();
+    const {getEnvelopeForIncome, setMonthForIncome, incomeRows, incomeMap} = useIncome();
 
     const unfilteredRows = mappedCSVRows.filter(e => filterInterAccountTransaction(e)).filter(row => row.mappedAmount > 0).sort(sortedByDate);
 
@@ -56,7 +56,7 @@ const Page = () => {
                         </thead>
                         <tbody>
                         {rows.map((row) => {
-                            const assignedMonth = getMonthForIncome(row);
+                            const assignedMonth = getEnvelopeForIncome(row);
                             return (
                                 <tr key={row.mappedId}
                                     className="hover:bg-gray-800 transition-colors duration-150">
@@ -64,7 +64,7 @@ const Page = () => {
                                         {row.mappedDate}
                                     </td>
                                     <td className="px-4 py-2 border-b border-gray-700">
-                                        {row.mappedPosting}
+                                        {row.mappedText}
                                     </td>
                                     <td className="px-4 py-2 border-b border-gray-700 text-right">
                                         {row.mappedAmount}

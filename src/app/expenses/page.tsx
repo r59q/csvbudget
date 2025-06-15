@@ -21,10 +21,10 @@ export default function ExpensesPage() {
     const newCategoryInputRef = useRef<HTMLInputElement | null>(null)
 
     const updateCategory = (selectedRow: MappedCSVRow, category: string) => {
-        const posting = selectedRow.mappedPosting;
+        const posting = selectedRow.mappedText;
         const rows: MappedCSVRow[] = []
         mappedCSVRows.forEach((row) => {
-            if (row.mappedPosting === posting) {
+            if (row.mappedText === posting) {
                 rows.push(row)
             }
         });
@@ -160,7 +160,7 @@ export default function ExpensesPage() {
                                 <React.Fragment key={i}>
                                     <tr className="even:bg-gray-950">
                                         <td className="p-2 border">{row.mappedDate}</td>
-                                        <td className="p-2 border">{row.mappedPosting}</td>
+                                        <td className="p-2 border">{row.mappedText}</td>
                                         {amount > 0 &&
                                             <td className="p-2 border text-right bg-green-700">{amount.toFixed(2)}</td>}
                                         {amount < 0 && <td className="p-2 border text-right">{amount.toFixed(2)}</td>}
@@ -282,7 +282,7 @@ const PostingsTableRow = ({row, category, categories, onSelectCategory}: Posting
     return <>
         <tr className="even:bg-gray-950" onClick={toggleOpen}>
             <td className="p-2 border">{row.mappedDate}</td>
-            <td className="p-2 border">{row.mappedPosting}</td>
+            <td className="p-2 border">{row.mappedText}</td>
             {amount > 0 &&
                 <td className="p-2 border text-right bg-green-700">{amount.toFixed(2)}</td>}
             {amount < 0 && <td className="p-2 border text-right">{amount.toFixed(2)}</td>}

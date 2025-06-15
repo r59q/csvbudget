@@ -1,4 +1,4 @@
-import {MappedCSVRow, Month} from "@/model";
+import {MappedCSVRow, Envelope} from "@/model";
 import {getAdvancedFiltersData} from "@/data";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -19,7 +19,7 @@ export const advancedFilters = (row: MappedCSVRow) => {
     const to = row.mappedTo;
     const from = row.mappedFrom;
     const date = row.mappedDate;
-    const posting = row.mappedPosting;
+    const posting = row.mappedText;
     try {
         const filterEvals = parsedFilters.map(filter => Boolean(eval(filter)));
         return !filterEvals.includes(true);
@@ -30,7 +30,7 @@ export const advancedFilters = (row: MappedCSVRow) => {
     return false;
 }
 
-export const groupByMonth = (rows: MappedCSVRow[]): Partial<Record<Month, MappedCSVRow[]>> => {
+export const groupByMonth = (rows: MappedCSVRow[]): Partial<Record<Envelope, MappedCSVRow[]>> => {
     return Object.groupBy(rows, row => {
         return dayjs(row.mappedDate, 'DD-MM-YYYY').format("MMMM YYYY");
     });
@@ -60,4 +60,8 @@ export const formatMonth = (date:Date) => {
 
 export const formatDate = (date: Date) => {
     return dayjs(date).format("MMM D")
+}
+
+export const getEnvelope = (datestr: string): Envelope => {
+    return getDayJs(datestr).format("MM-YYYY")
 }

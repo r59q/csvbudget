@@ -251,7 +251,7 @@ const MonthInsightsTableRow = ({row, category}: MonthInsightsTableRowProps) => {
     return (
         <tr key={row.mappedId} className="even:bg-gray-700 hover:bg-gray-900">
             <td className="px-4 py-2 border-b">{row.mappedDate}</td>
-            <td className="px-4 py-2 border-b">{row.mappedPosting}</td>
+            <td className="px-4 py-2 border-b">{row.mappedText}</td>
             <td className="px-4 py-2 border-b">
                 {category || (
                     <span className="text-gray-500">Unassigned</span>

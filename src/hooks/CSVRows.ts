@@ -5,7 +5,6 @@ import {CSVHeaders, CsvRow, CSVRowId, CSVSchemas, MappedCSVRow, RowCategoryMap} 
 import {getCSVFilesData} from "@/data";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import useCategories from "@/hooks/Categories";
 
 dayjs.extend(customParseFormat)
 
@@ -16,17 +15,16 @@ const useCSVRows = () => {
     const [csvRows, setCsvRows] = useState<CsvRow[]>([]);
     const [mappedCSVRows, setMappedCSVRows] = useState<MappedCSVRow[]>([]);
     const [csvSchemas, setCSVSchemas] = useState<CSVSchemas>({});
-    const {rowCategoryMap} = useCategories();
 
     useEffect(() => {
         const loaded = loadDeduplicatedCsvRows();
         setCsvRows(loaded);
         const mapped = loaded
-            .map(e => mapCsvRow(e, rowCategoryMap))
+            .map(e => mapCsvRow(e))
             .filter(e => !!e);
         setMappedCSVRows(mapped);
         setCSVSchemas(getCSVSchemas(loaded));
-    }, [rowCategoryMap])
+    }, [])
 
     const getById = (rowId: CSVRowId): MappedCSVRow | undefined => {
         return mappedCSVRows.find(row => row.mappedId === rowId);
@@ -67,7 +65,7 @@ const loadDeduplicatedCsvRows = (): CsvRow[] => {
 /**
  * Adding typing by appending the column mapped fields and giving the row a deterministic ID.
  */
-const mapCsvRow = (unmappedRow: CsvRow, rowCategoryMap: RowCategoryMap): MappedCSVRow | undefined => {
+const mapCsvRow = (unmappedRow: CsvRow): MappedCSVRow | undefined => {
     const mapping = getRowColumnMapping(unmappedRow);
     if (!mapping) {
         return undefined;
@@ -81,8 +79,7 @@ const mapCsvRow = (unmappedRow: CsvRow, rowCategoryMap: RowCategoryMap): MappedC
             mappedAmount: parseFloat(unmappedRow[mapping["amount"]]),
             mappedId: hashId,
             mappedDate: unmappedRow[mapping["date"]],
-            mappedPosting: unmappedRow[mapping["posting"]],
-            mappedCategory: rowCategoryMap[hashId] ?? "Unassigned",
+            mappedText: unmappedRow[mapping["posting"]],
         } as MappedCSVRow;
     } catch (e) {
         alert(e)

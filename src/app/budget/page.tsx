@@ -5,7 +5,7 @@ import useIncome from "@/hooks/Income";
 import {advancedFilters, formatCurrency, formatMonth, getDayJs, getSum, groupByMonth} from "@/utility/datautils";
 import useCategories from "@/hooks/Categories";
 import useCSVRows from "@/hooks/CSVRows";
-import {BudgetPost, Category, CategoryBudgetPostMap, MappedCSVRow, Month} from "@/model";
+import {BudgetPost, Category, CategoryBudgetPostMap, MappedCSVRow, Envelope} from "@/model";
 import dayjs from "dayjs";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 
@@ -86,7 +86,7 @@ export default function BudgetPage() {
         .toSorted((a, b) => monthlyAverageExpensesPerCategory[b] - monthlyAverageExpensesPerCategory[a]);
 
 
-    const isMonthSelected = (month: Month) => {
+    const isMonthSelected = (month: Envelope) => {
         const idx = months.indexOf(month);
         if (selectedFromMonth === undefined) {
             return true;
@@ -169,7 +169,7 @@ export default function BudgetPage() {
         setCategoryBudgetMap(newCategoryBudgetMap);
     }
 
-    const handleMonthSelect = (month: Month) => {
+    const handleMonthSelect = (month: Envelope) => {
         const idx = months.indexOf(month);
         if (idx === -1) return;
         if (selectedFromMonth === undefined) {

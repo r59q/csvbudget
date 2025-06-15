@@ -107,7 +107,7 @@ posting - string: The original posting text
                 {mappedCSVRows.filter(advancedFilters).map((row, idx) => {
                     return <tr key={idx}>
                         <td>{row.mappedDate}</td>
-                        <td>{row.mappedPosting}</td>
+                        <td>{row.mappedText}</td>
                         <td>{row.mappedAmount}</td>
                     </tr>
                 })}

@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {MappedCSVRow, Month, RowIncomeMap} from "@/model";
+import {MappedCSVRow, Envelope, RowIncomeMap, Transaction, TransactionID} from "@/model";
 import {getRowIncomeData} from "@/data";
 import useCSVRows from "@/hooks/CSVRows";
 
@@ -20,14 +20,14 @@ const useIncome = () => {
     return {
         incomeMap,
         incomeRows,
-        getMonthForIncome: (row: MappedCSVRow): Month | undefined => {
-            const month = incomeMap[row.mappedId];
+        getEnvelopeForIncome: (transactionId: TransactionID): Envelope | undefined => {
+            const month = incomeMap[transactionId];
             if (month === "") {
                 return undefined;
             }
             return month;
         },
-        setMonthForIncome: (row: MappedCSVRow, month: Month | undefined) => {
+        setMonthForIncome: (row: MappedCSVRow, month: Envelope | undefined) => {
             const newState = {...incomeMap};
             if (month === "" || month == undefined) {
                 delete newState[row.mappedId];

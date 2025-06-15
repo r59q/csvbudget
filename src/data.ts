@@ -8,6 +8,7 @@ import {
     RowCategoryMap,
     RowIncomeMap
 } from "@/model";
+import {ColumnMapping} from "@/utility/csvutils";
 
 interface StoredDataWrapper<T> {
     load: () => T;
@@ -22,7 +23,8 @@ const CATEGORIES_KEY = "categories"
 const ROW_CATEGORY_MAP_KEY = "row_category_map"
 const ROW_INCOME_MAP_KEY = "row_income_map"
 const BUDGET_POST_KEY = "budget_posts"
-
+const CATEGORY_BUDGET_MAP_KEY = "category_budgetpost_map";
+const CSV_MAPPING_KEY = "csv_mappings";
 
 export const getCSVFilesData = (): StoredDataWrapper<CSVFile[]> => {
     return {
@@ -175,7 +177,6 @@ export const getBudgetPostData = (): StoredDataWrapper<BudgetPost[]> => {
     };
 }
 
-const CATEGORY_BUDGET_MAP_KEY = "category_budgetpost_map";
 export const getCategoryBudgetMapData = (): StoredDataWrapper<CategoryBudgetPostMap> => {
     return {
         load: () => {
@@ -185,6 +186,24 @@ export const getCategoryBudgetMapData = (): StoredDataWrapper<CategoryBudgetPost
         save: (mapping: CategoryBudgetPostMap) => {
             try {
                 localStorage.setItem(CATEGORY_BUDGET_MAP_KEY, JSON.stringify(mapping));
+            } catch (e) {
+                console.error(e);
+                return {}
+            }
+            return mapping;
+        }
+    };
+}
+
+export const getCSVMappingData = (): StoredDataWrapper<ColumnMapping> => {
+    return {
+        load: () => {
+            const loaded = localStorage.getItem(CSV_MAPPING_KEY) ?? "{}";
+            return JSON.parse(loaded)
+        },
+        save: (mapping: ColumnMapping) => {
+            try {
+                localStorage.setItem(CSV_MAPPING_KEY, JSON.stringify(mapping));
             } catch (e) {
                 console.error(e);
                 return {}
