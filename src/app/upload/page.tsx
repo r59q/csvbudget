@@ -13,6 +13,7 @@ import {
 } from "@/utility/csvutils";
 import {CSVHeaders} from "@/model";
 import useCSVRows from "@/hooks/CSVRows";
+import BackdropBlur from "@/components/BackdropBlur";
 
 type CsvFile = { name: string; content: string };
 
@@ -95,11 +96,11 @@ export default function CsvUploader() {
 
     return (
         <>
-            {unmappedSchemas.length > 0 && <div className={"backdrop-blur-sm top-0 absolute w-screen h-screen"}>
-                <div className={"flex justify-center items-center h-full"}>
+            {unmappedSchemas.length > 0 && (
+                <BackdropBlur>
                     <SchemaMapper unmappedSchema={unmappedSchemas[0]} onSaveMapping={handleSaveMapping}/>
-                </div>
-            </div>}
+                </BackdropBlur>
+            )}
             <div className={"w-full max-w-md mx-auto mt-10 gap-4 flex flex-col"}>
                 <div className="p-4 rounded-lg border border-gray-300">
                     <h2 className="text-xl font-semibold mb-4">Upload Budget CSVs</h2>
