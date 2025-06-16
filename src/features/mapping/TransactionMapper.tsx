@@ -1,20 +1,18 @@
 "use client";
 import React, {useState} from 'react';
 import {Transaction, TransactionType} from "@/model";
-import {firstLetterUpper} from "@/utility/strutils";
-import AccountField from "@/components/fields/AccountField";
 import {useGlobalContext} from "@/context/GlobalContext";
+import TransactionRow from "@/components/TransactionRow";
 
 interface Props {
     transactions: Transaction[];
 }
 
 const PAGE_SIZE = 10;
-const TRANSACTION_TYPES: TransactionType[] = ["income", "expense"];
 
 const TransactionMapper = ({transactions}: Props) => {
     const [page, setPage] = useState(0);
-    const {isAccountOwned}= useGlobalContext();
+    const {isAccountOwned} = useGlobalContext();
     transactions.forEach(e => console.log(isAccountOwned(e.from), isAccountOwned(e.mappedFrom)))
 
     const unmappedTransactions = transactions.filter(t => !t.type || t.type === "unknown");
@@ -23,10 +21,6 @@ const TransactionMapper = ({transactions}: Props) => {
     // Pagination
     const paginatedUnmapped = unmappedTransactions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
     const totalPages = Math.ceil(unmappedTransactions.length / PAGE_SIZE);
-
-    const handleMap = (id: number, type: TransactionType) => {
-        console.log("Setting map")
-    };
 
     return (
         <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">
@@ -40,38 +34,21 @@ const TransactionMapper = ({transactions}: Props) => {
                     <table className="w-full text-sm border mb-2 table-fixed">
                         <thead>
                         <tr className="bg-gray-950">
-                            <th className="p-2 border w-32">Date</th>
-                            <th className="p-2 border w-42">Text</th>
-                            <th className="p-2 border w-32">Amount</th>
-                            <th className="p-2 border w-32">From</th>
-                            <th className="p-2 border w-32">To</th>
-                            <th className="p-2 border w-40">Map as</th>
+                            <th className="p-2 border">ID</th>
+                            <th className="p-2 border">Date</th>
+                            <th className="p-2 border">Text</th>
+                            <th className="p-2 border">Amount</th>
+                            <th className="p-2 border">From</th>
+                            <th className="p-2 border w-50">To</th>
+                            <th className="p-2 border w-50">Map as</th>
                         </tr>
                         </thead>
                         <tbody>
                         {paginatedUnmapped.map(t => (
-                            <tr key={t.id}>
-                                <td className="p-2 border w-32">{t.date.format("YYYY-MM-DD")}</td>
-                                <td className="p-2 border w-42">{t.text}</td>
-                                <td className="p-2 border w-32">{t.amount}</td>
-                                <td className="p-2 border w-32"><AccountField account={t.mappedFrom}/></td>
-                                <td className="p-2 border w-32"><AccountField account={t.mappedTo}/></td>
-                                <td className="p-2 border w-40">
-                                    <select
-                                        className="p-1 border w-full"
-                                        value={t.type || ""}
-                                        onChange={e => handleMap(t.id, e.target.value as TransactionType)}
-                                    >
-                                        <option value="" className={"bg-gray-800"}>Select type</option>
-                                        {TRANSACTION_TYPES.map(opt => (
-                                            <option className={"bg-gray-800"} key={opt}
-                                                    value={opt}>{firstLetterUpper(opt)}</option>
-                                        ))}
-                                        <option className={"bg-gray-800"} value="refund">Refund</option>
-                                        <option className={"bg-gray-800"} value="unknown">Unknown</option>
-                                    </select>
-                                </td>
-                            </tr>
+                            <TransactionRow
+                                key={t.id}
+                                transaction={t}
+                            />
                         ))}
                         </tbody>
                     </table>

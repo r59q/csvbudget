@@ -1,5 +1,5 @@
 import useCSVRows from "@/hooks/CSVRows";
-import {Transaction, TransactionID} from "@/model";
+import {MappedCSVRow, Transaction, TransactionID, TransactionLinkDescriptor} from "@/model";
 import useCategories from "@/hooks/Categories";
 import {getDayJs, getEnvelope} from "@/utility/datautils";
 import useIncome from "@/hooks/Income";
@@ -24,6 +24,7 @@ const useTransactions = () => {
         const mappedFrom = accountValueMappings[originalFrom];
         const isTransfer = isAccountOwned(mappedTo) && isAccountOwned(mappedFrom);
         const guessedType = isIncome(id) ? "income" : amount < 0 ? "expense" : "unknown";
+        const guessedLinks = guessLinks(mappedRow, mappedCSVRows)
         const transaction: Transaction = {
             id,
             amount,
@@ -33,12 +34,13 @@ const useTransactions = () => {
             mappedTo: mappedTo ? mappedTo : originalTo,
             category: getCategory(mappedRow) ?? "Unassigned",
             linkedTransactions: [],
+            guessedLinkedTransactions: guessedLinks,
             date: getDayJs(mappedRow.mappedDate),
             isTransfer,
             notes: "",
             text: mappedRow.mappedText,
             guessedType: guessedType,
-            type: !isTransfer ? guessedType : "unknown",
+            type: (!isTransfer && guessedLinks.length === 0) ? guessedType : "unknown",
             envelope: getEnvelopeForIncome(id) ?? getEnvelope(mappedRow.mappedDate)
         };
         return transaction;
@@ -47,5 +49,10 @@ const useTransactions = () => {
         transactions
     };
 };
+
+const guessLinks = (guessingRow: MappedCSVRow, rows: MappedCSVRow[]): TransactionLinkDescriptor[] => {
+    const amount = guessingRow.mappedAmount;
+    return rows.filter(row => -row.mappedAmount === amount).map(row => ({linkedId: row.mappedId, linkType: "unknown"}))
+}
 
 export default useTransactions;

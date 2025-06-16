@@ -66,5 +66,6 @@ export interface Transaction {
     notes: string;
     amount: number;
     linkedTransactions: TransactionLinkDescriptor[];
+    guessedLinkedTransactions: TransactionLinkDescriptor[];
     envelope: Envelope;
 }

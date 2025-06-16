@@ -82,13 +82,15 @@ const AccountField: React.FC<AccountFieldProps> = ({account}) => {
                     {mappedAccount}
                 </span>
             )}
-            <button
-                className={`px-2 py-0.5 rounded text-xs border ${owned ? 'bg-green-700 text-white border-green-700 hover:bg-green-800' : 'bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-800'}`}
-                onClick={handleToggle}
-                title={owned ? 'Remove from owned accounts' : 'Mark as owned account'}
-            >
-                {owned ? '✓ Owned' : '+ Own'}
-            </button>
+            {account !== "" && (
+                <button
+                    className={`px-2 py-0.5 rounded text-xs border ${owned ? 'bg-green-700 text-white border-green-700 hover:bg-green-800' : 'bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-800'}`}
+                    onClick={handleToggle}
+                    title={owned ? 'Remove from owned accounts' : 'Mark as owned account'}
+                >
+                    {owned ? '✓ Owned' : '+ Own'}
+                </button>
+            )}
         </div>
     );
 };
