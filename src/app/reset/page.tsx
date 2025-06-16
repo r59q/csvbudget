@@ -2,12 +2,13 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { LOCALSTORAGE_KEYS } from '@/data';
 
 export default function ResetPage() {
     const router = useRouter();
 
     useEffect(() => {
-        localStorage.clear();
+        LOCALSTORAGE_KEYS.forEach(key => localStorage.removeItem(key));
         router.replace('/upload');
     }, [router]);
 

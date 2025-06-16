@@ -26,6 +26,20 @@ const BUDGET_POST_KEY = "budget_posts"
 const CATEGORY_BUDGET_MAP_KEY = "category_budgetpost_map";
 const CSV_MAPPING_KEY = "csv_mappings";
 
+/// Used for resetting data
+export const LOCALSTORAGE_KEYS = [
+    CSV_FILES_KEY,
+    ACCOUNT_MAPPINGS_KEY,
+    OWNED_ACCOUNTS_KEY,
+    ADVANCED_FILTERS_KEY,
+    CATEGORIES_KEY,
+    ROW_CATEGORY_MAP_KEY,
+    ROW_INCOME_MAP_KEY,
+    BUDGET_POST_KEY,
+    CATEGORY_BUDGET_MAP_KEY,
+    CSV_MAPPING_KEY,
+];
+
 export const getCSVFilesData = (): StoredDataWrapper<CSVFile[]> => {
     return {
         load: () => {
