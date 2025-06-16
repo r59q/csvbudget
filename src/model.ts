@@ -1,5 +1,6 @@
 // The header row
 import {Dayjs} from "dayjs";
+import {SchemaKey} from "@/utility/csvutils";
 
 export type CSVHeaders = string[];
 
@@ -7,6 +8,11 @@ export type CSVHeaders = string[];
 export type CSVSchemas = { [key: string]: CSVHeaders }
 
 export type CSVFile = { name: string; content: string };
+
+export interface UnmappedSchema {
+    key: SchemaKey;
+    headers: CSVHeaders;
+}
 
 // one row of CSV as an object
 export type CsvRow = Record<string, string>;

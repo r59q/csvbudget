@@ -5,7 +5,7 @@ import useIncome from "@/hooks/Income";
 import {advancedFilters, formatCurrency, formatMonth, getDayJs, getSum, groupByMonth} from "@/utility/datautils";
 import useCategories from "@/hooks/Categories";
 import useCSVRows from "@/hooks/CSVRows";
-import {BudgetPost, Category, CategoryBudgetPostMap, MappedCSVRow, Envelope} from "@/model";
+import {BudgetPost, Category, CategoryBudgetPostMap, Envelope, MappedCSVRow} from "@/model";
 import dayjs from "dayjs";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 

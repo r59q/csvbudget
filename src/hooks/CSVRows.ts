@@ -1,10 +1,10 @@
 import {useEffect, useState} from "react";
-import {ColumnMapping, SchemaColumnMapping} from "@/utility/csvutils";
+import {ColumnMapping} from "@/utility/csvutils";
 import Papa, {ParseResult} from "papaparse";
-import {CSVHeaders, CsvRow, CSVRowId, CSVSchemas, MappedCSVRow, RowCategoryMap} from "@/model";
-import {getCSVFilesData} from "@/data";
+import {CSVFile, CSVHeaders, CsvRow, CSVRowId, CSVSchemas, MappedCSVRow} from "@/model";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import {useGlobalContext} from "@/context/GlobalContext";
 
 dayjs.extend(customParseFormat)
 
@@ -12,12 +12,13 @@ dayjs.extend(customParseFormat)
  * Loads the CSV data from localstorage
  */
 const useCSVRows = () => {
+    const {csvFiles} = useGlobalContext();
     const [csvRows, setCsvRows] = useState<CsvRow[]>([]);
     const [mappedCSVRows, setMappedCSVRows] = useState<MappedCSVRow[]>([]);
     const [csvSchemas, setCSVSchemas] = useState<CSVSchemas>({});
 
     useEffect(() => {
-        const loaded = loadDeduplicatedCsvRows();
+        const loaded = loadDeduplicatedCsvRows(csvFiles);
         setCsvRows(loaded);
         const mapped = loaded
             .map(e => mapCsvRow(e))
@@ -36,11 +37,10 @@ const useCSVRows = () => {
 /**
  * Load CSVs from localStorage, parse, and deduplicate rows
  */
-const loadDeduplicatedCsvRows = (): CsvRow[] => {
-    const csvFilesData = getCSVFilesData();
+const loadDeduplicatedCsvRows = (files: CSVFile[]): CsvRow[] => {
     const allRows: CsvRow[] = [];
 
-    for (const file of csvFilesData.load()) {
+    for (const file of files) {
         const result = Papa.parse<CsvRow>(file.content, {
             header: true,
             skipEmptyLines: true,
@@ -103,7 +103,7 @@ const getRowColumnMapping = (row: CsvRow): ColumnMapping | undefined => {
     const headers = Object.keys(row)
     const schemaKey = headers.join("-")
     const allMappings = JSON.parse(localStorage.getItem('csv_mappings') || '{}');
-     const schemaMapping = allMappings[schemaKey];
+    const schemaMapping = allMappings[schemaKey];
     if (schemaMapping) {
         const columnMapping = {} as ColumnMapping;
         const keys = Object.keys(schemaMapping);
