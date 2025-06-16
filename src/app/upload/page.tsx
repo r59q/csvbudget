@@ -12,6 +12,7 @@ import {
     SchemaKey
 } from "@/utility/csvutils";
 import {CSVHeaders} from "@/model";
+import useCSVRows from "@/hooks/CSVRows";
 
 type CsvFile = { name: string; content: string };
 
@@ -23,6 +24,7 @@ interface UnmappedSchema {
 export default function CsvUploader() {
     const [uploadedFiles, setUploadedFiles] = useState<CsvFile[]>([]);
     const [unmappedSchemas, setUnmappedSchemas] = useState<UnmappedSchema[]>([])
+    const {csvSchemas} = useCSVRows();
 
     // Load existing CSVs from localStorage on mount
     useEffect(() => {
@@ -130,8 +132,10 @@ export default function CsvUploader() {
                         <p className="text-sm text-gray-500">No CSVs uploaded yet.</p>
                     )}
                 </div>
-                <div className={"pl-4"}>
-                    <Link href={"/mapping"} className={"underline"}>Next: Map data</Link>
+                <div>
+                    {Object.keys(csvSchemas).map(schema => {
+                        return <p>{schema}</p>
+                    })}
                 </div>
             </div>
         </>
