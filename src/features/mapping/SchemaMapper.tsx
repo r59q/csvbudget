@@ -1,35 +1,13 @@
 import React, {useState} from 'react';
-import BackdropBlur from "@/components/BackdropBlur";
-import {ColumnMapping, MAPPED_COLUMNS, SchemaColumnMapping, SchemaKey} from "@/utility/csvutils";
 import {UnmappedSchema} from "@/model";
-import useTransactions from "@/hooks/Transactions";
+import {ColumnMapping, MAPPED_COLUMNS, SchemaColumnMapping, SchemaKey} from "@/utility/csvutils";
 
-interface DataMappingProps {
-    unmappedSchemas: any[];
-    onSaveMapping: (mapping: any, schemaKey: any) => void;
-}
-
-const DataMapping = ({ unmappedSchemas, onSaveMapping }: DataMappingProps) => {
-    const {transactions} = useTransactions();
-    console.log(transactions)
-    return (
-        <>
-            {unmappedSchemas.length > 0 && (
-                <BackdropBlur>
-                    <SchemaMapper unmappedSchema={unmappedSchemas[0]} onSaveMapping={onSaveMapping}/>
-                </BackdropBlur>
-            )}
-        </>
-    );
-};
-
-
-interface SchemaMapperProps {
+interface Props {
     unmappedSchema: UnmappedSchema
     onSaveMapping: (mapping: ColumnMapping, schemaKey: SchemaKey) => void;
 }
 
-const SchemaMapper = ({unmappedSchema, onSaveMapping}: SchemaMapperProps) => {
+const SchemaMapper = ({unmappedSchema, onSaveMapping}: Props) => {
     const [mapping, setMapping] = useState<Partial<ColumnMapping>>({});
 
     const handleMappingChange = (target: keyof SchemaColumnMapping, source: string) => {
@@ -78,4 +56,4 @@ const SchemaMapper = ({unmappedSchema, onSaveMapping}: SchemaMapperProps) => {
         </div>
     </>
 }
-export default DataMapping;
+export default SchemaMapper;

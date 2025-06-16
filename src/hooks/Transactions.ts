@@ -2,13 +2,13 @@ import useCSVRows from "@/hooks/CSVRows";
 import {Transaction, TransactionID} from "@/model";
 import useCategories from "@/hooks/Categories";
 import {getDayJs, getEnvelope} from "@/utility/datautils";
-import useOwnedAccounts from "@/hooks/OwnedAccount";
 import useIncome from "@/hooks/Income";
+import {useGlobalContext} from "@/context/GlobalContext";
 
 const useTransactions = () => {
+    const {isAccountOwned, accountValueMappings} = useGlobalContext();
     const {mappedCSVRows} = useCSVRows();
     const {getCategory} = useCategories();
-    const {isAccountOwned} = useOwnedAccounts();
     const {incomeMap, getEnvelopeForIncome} = useIncome();
 
     const isIncome = (id: TransactionID) => {
@@ -18,18 +18,27 @@ const useTransactions = () => {
     const transactions = mappedCSVRows.map(mappedRow => {
         const id = mappedRow.mappedId;
         const amount = mappedRow.mappedAmount;
+        const originalTo = mappedRow.mappedTo;
+        const mappedTo = accountValueMappings[originalTo];
+        const originalFrom = mappedRow.mappedFrom;
+        const mappedFrom = accountValueMappings[originalFrom];
+        const isTransfer = isAccountOwned(mappedTo) && isAccountOwned(mappedFrom);
+        const guessedType = isIncome(id) ? "income" : amount < 0 ? "expense" : "unknown";
         const transaction: Transaction = {
             id,
             amount,
-            from: mappedRow.mappedFrom,
-            to: mappedRow.mappedTo,
+            from: originalFrom,
+            mappedFrom: mappedFrom ? mappedFrom : originalFrom,
+            to: originalTo,
+            mappedTo: mappedTo ? mappedTo : originalTo,
             category: getCategory(mappedRow) ?? "Unassigned",
             linkedTransactions: [],
             date: getDayJs(mappedRow.mappedDate),
-            isTransfer: isAccountOwned(mappedRow.mappedTo) && isAccountOwned(mappedRow.mappedFrom),
+            isTransfer,
             notes: "",
             text: mappedRow.mappedText,
-            type: isIncome(id) ? "income" : amount < 0 ? "expense" : "unknown",
+            guessedType: guessedType,
+            type: !isTransfer ? guessedType : "unknown",
             envelope: getEnvelopeForIncome(id) ?? getEnvelope(mappedRow.mappedDate)
         };
         return transaction;

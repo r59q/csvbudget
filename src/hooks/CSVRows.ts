@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {ColumnMapping} from "@/utility/csvutils";
+import {ColumnMapping, getSchemaKeyFromCsvRow} from "@/utility/csvutils";
 import Papa, {ParseResult} from "papaparse";
 import {CSVFile, CSVHeaders, CsvRow, CSVRowId, CSVSchemas, MappedCSVRow} from "@/model";
 import dayjs from "dayjs";
@@ -12,7 +12,7 @@ dayjs.extend(customParseFormat)
  * Loads the CSV data from localstorage
  */
 const useCSVRows = () => {
-    const {csvFiles} = useGlobalContext();
+    const {csvFiles, columnMappings} = useGlobalContext();
     const [csvRows, setCsvRows] = useState<CsvRow[]>([]);
     const [mappedCSVRows, setMappedCSVRows] = useState<MappedCSVRow[]>([]);
     const [csvSchemas, setCSVSchemas] = useState<CSVSchemas>({});
@@ -21,11 +21,11 @@ const useCSVRows = () => {
         const loaded = loadDeduplicatedCsvRows(csvFiles);
         setCsvRows(loaded);
         const mapped = loaded
-            .map(e => mapCsvRow(e))
+            .map(e => mapCsvRow(e, columnMappings[getSchemaKeyFromCsvRow(e)]))
             .filter(e => !!e);
         setMappedCSVRows(mapped);
         setCSVSchemas(getCSVSchemas(loaded));
-    }, [])
+    }, [csvFiles, columnMappings])
 
     const getById = (rowId: CSVRowId): MappedCSVRow | undefined => {
         return mappedCSVRows.find(row => row.mappedId === rowId);
@@ -65,8 +65,7 @@ const loadDeduplicatedCsvRows = (files: CSVFile[]): CsvRow[] => {
 /**
  * Adding typing by appending the column mapped fields and giving the row a deterministic ID.
  */
-const mapCsvRow = (unmappedRow: CsvRow): MappedCSVRow | undefined => {
-    const mapping = getRowColumnMapping(unmappedRow);
+const mapCsvRow = (unmappedRow: CsvRow, mapping: ColumnMapping | undefined): MappedCSVRow | undefined => {
     if (!mapping) {
         return undefined;
     }
@@ -97,20 +96,6 @@ const getCSVSchemas = (csvRows: CsvRow[]) => {
         }
     })
     return result;
-}
-
-const getRowColumnMapping = (row: CsvRow): ColumnMapping | undefined => {
-    const headers = Object.keys(row)
-    const schemaKey = headers.join("-")
-    const allMappings = JSON.parse(localStorage.getItem('csv_mappings') || '{}');
-    const schemaMapping = allMappings[schemaKey];
-    if (schemaMapping) {
-        const columnMapping = {} as ColumnMapping;
-        const keys = Object.keys(schemaMapping);
-        keys.forEach(key => columnMapping[key as keyof ColumnMapping] = schemaMapping[key])
-        return columnMapping
-    }
-    return undefined;
 }
 
 /**

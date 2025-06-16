@@ -1,43 +1,14 @@
 'use client';
 
-import React, {useEffect, useState} from 'react';
-import {getCSVMappingData} from "@/data";
-import {
-    ColumnMapping,
-    getHeadersFromFile,
-    getSchemaKeyFromCsvFile,
-    isSchemaMapped,
-    SchemaKey
-} from "@/utility/csvutils";
-import {CSVFile, UnmappedSchema} from "@/model";
-import DataMapping from "@/features/DataMapping";
+import React from 'react';
+import {CSVFile} from "@/model";
+import DataMapping from "@/features/mapping/DataMapping";
 import {useGlobalContext} from "@/context/GlobalContext";
 import useCSVRows from "@/hooks/CSVRows";
 
-function useUnmappedSchemas(uploadedFiles: CSVFile[]): [UnmappedSchema[], React.Dispatch<React.SetStateAction<UnmappedSchema[]>>] {
-    const [unmappedSchemas, setUnmappedSchemas] = useState<UnmappedSchema[]>([]);
-
-    useEffect(() => {
-        const unmapped: UnmappedSchema[] = [];
-        uploadedFiles.forEach(file => {
-            const schemaKeyFromCsvFile = getSchemaKeyFromCsvFile(file);
-            if (!isSchemaMapped(schemaKeyFromCsvFile)) {
-                unmapped.push({
-                    key: schemaKeyFromCsvFile,
-                    headers: getHeadersFromFile(file)
-                });
-            }
-        });
-        setUnmappedSchemas(unmapped);
-    }, [uploadedFiles]);
-
-    return [unmappedSchemas, setUnmappedSchemas];
-}
-
 export default function CsvUploader() {
-    const {csvFiles, setCSVFiles} = useGlobalContext();
+    const {csvFiles, setCSVFiles, unmappedSchemas, handleSaveMapping} = useGlobalContext();
     const {csvSchemas} = useCSVRows();
-    const [unmappedSchemas, setUnmappedSchemas] = useUnmappedSchemas(csvFiles);
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -76,14 +47,6 @@ export default function CsvUploader() {
         const updated = csvFiles.filter((file) => file.name !== fileName);
         setCSVFiles(updated);
     };
-    const handleSaveMapping = (mapping: ColumnMapping, schemaKey: SchemaKey) => {
-        const newData = {...getCSVMappingData().load()};
-        newData[schemaKey] = mapping;
-        getCSVMappingData().save(newData);
-        if (isSchemaMapped(schemaKey)) {
-            setUnmappedSchemas([...unmappedSchemas.filter(e => e.key != schemaKey)])
-        }
-    }
 
     return (
         <>

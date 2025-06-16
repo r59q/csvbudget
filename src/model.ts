@@ -56,9 +56,12 @@ export interface Transaction {
     date: Dayjs;
     text: string;
     from: AccountNumber;
+    mappedFrom: AccountNumber;
     to: AccountNumber;
+    mappedTo: AccountNumber;
     category: Category;
     type: TransactionType;
+    guessedType: TransactionType;
     isTransfer: boolean;
     notes: string;
     amount: number;

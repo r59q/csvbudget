@@ -1,13 +1,26 @@
-import React, {createContext, useContext, useEffect} from "react";
-import {CSVFile} from "@/model";
-import {getCSVFilesData} from "@/data";
+import React, {createContext, useContext} from "react";
+import {AccountNumber, CSVFile, UnmappedSchema} from "@/model";
 import useCSVFiles from "@/hooks/useCSVFiles";
+import useSchemaMapping from "@/hooks/SchemaMapping";
+import {SchemaColumnMapping} from "@/utility/csvutils";
+import useAccountMapping from "@/hooks/AccountMapping";
+import useOwnedAccounts from "@/hooks/OwnedAccount";
 
 export interface GlobalContextType {
     user: { name: string; email: string } | null;
     setUser: (user: { name: string; email: string } | null) => void;
     csvFiles: CSVFile[];
     setCSVFiles: (files: CSVFile[]) => void;
+    unmappedSchemas: UnmappedSchema[];
+    handleSaveMapping: (mapping: any, schemaKey: string) => void;
+    columnMappings: SchemaColumnMapping;
+    accountValueMappings: Record<AccountNumber, string>,
+    addAccountMapping: (original: string, mapped: string) => void;
+    removeAccountMapping: (original: string) => void;
+    isAccountOwned: (account: string | AccountNumber) => boolean;
+    addOwnedAccount: (accountNumber: AccountNumber) => void;
+    removeOwnedAccount: (accountNumber: AccountNumber) => void;
+    getAccountMapping: (accountNumber: AccountNumber) => string | AccountNumber;
 }
 
 export const GlobalContext = createContext<GlobalContextType>(undefined!);
@@ -21,15 +34,18 @@ export function useGlobalContext() {
 export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
     const [user, setUser] = React.useState<{ name: string; email: string } | null>(null);
     const {csvFiles, setCSVFiles} = useCSVFiles();
-
-    // Load existing CSVs from localStorage on mount
-    useEffect(() => {
-        const stored = getCSVFilesData().load();
-        setCSVFiles(stored);
-    }, []);
+    const {accountValueMappings, addAccountMapping, removeAccountMapping, getAccountMapping} = useAccountMapping();
+    const {isAccountOwned, addOwnedAccount, removeOwnedAccount} = useOwnedAccounts();
+    const {
+        unmappedSchemas,
+        handleSaveMapping,
+        columnMappings
+    } = useSchemaMapping(csvFiles);
 
     return (
-        <GlobalContext.Provider value={{user, setUser, csvFiles, setCSVFiles}}>
+        <GlobalContext.Provider value={{
+            user, setUser, csvFiles, setCSVFiles, isAccountOwned, unmappedSchemas, handleSaveMapping, columnMappings, accountValueMappings, addAccountMapping, removeAccountMapping, addOwnedAccount, removeOwnedAccount, getAccountMapping
+        }}>
             {children}
         </GlobalContext.Provider>
     );

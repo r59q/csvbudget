@@ -1,5 +1,6 @@
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {getAccountMappingData} from "@/data";
+import {AccountNumber} from "@/model";
 
 const useAccountMapping = () => {
     const [accountValueMappings, setAccountValueMappings] = useState<Record<string, string>>({});
@@ -17,7 +18,7 @@ const useAccountMapping = () => {
 
     return {
         accountValueMappings,
-        getAccountMapping: (original: string) => {
+        getAccountMapping: (original: AccountNumber) => {
             const accountValueMapping = accountValueMappings[original];
             if (!accountValueMapping) {
                 return original;

@@ -1,0 +1,46 @@
+"use client";
+import {useEffect, useState} from "react";
+import {CSVFile, UnmappedSchema} from "@/model";
+import {getCSVMappingData} from "@/data";
+import {
+    SchemaKey,
+    getSchemaKeyFromCsvFile,
+    getHeadersFromFile,
+    SchemaColumnMapping,
+    ColumnMapping
+} from "@/utility/csvutils";
+
+const useSchemaMapping = (files: CSVFile[]) => {
+    const [columnMappings, setColumnMappings] = useState<SchemaColumnMapping>({});
+
+    useEffect(() => {
+        setColumnMappings(getCSVMappingData().load());
+    }, []);
+
+    // Derive unmapped schemas directly from files and columnMappings
+    const unmappedSchemas: UnmappedSchema[] = files.reduce((acc, file) => {
+        const schemaKeyFromCsvFile = getSchemaKeyFromCsvFile(file);
+        if (!columnMappings[schemaKeyFromCsvFile]) {
+            acc.push({
+                key: schemaKeyFromCsvFile,
+                headers: getHeadersFromFile(file)
+            });
+        }
+        return acc;
+    }, [] as UnmappedSchema[]);
+
+    const handleSaveMapping = (mapping: ColumnMapping, schemaKey: SchemaKey) => {
+        const newData = { ...columnMappings };
+        newData[schemaKey] = mapping;
+        setColumnMappings(getCSVMappingData().save(newData));
+    };
+
+    return {
+        unmappedSchemas,
+        handleSaveMapping,
+        columnMappings,
+        setColumnMappings,
+    };
+};
+
+export default useSchemaMapping;

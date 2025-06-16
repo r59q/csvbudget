@@ -103,6 +103,7 @@ export default function MappingPage() {
                                     <td className="p-2 border">{row[mapping.posting!] || ''}</td>
                                     <td className="p-2 border">{formatAmount(row[mapping.amount!].toString() || '')}</td>
                                     <td className="p-2 border">{row[mapping.date!] || ''}</td>
+                                    <td>{row.type}</td>
                                 </tr>
                             )
                         })}
