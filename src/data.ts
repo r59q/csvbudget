@@ -8,7 +8,7 @@ import {
     RowCategoryMap,
     RowIncomeMap
 } from "@/model";
-import {ColumnMapping} from "@/utility/csvutils";
+import {SchemaColumnMapping} from "@/utility/csvutils";
 
 interface StoredDataWrapper<T> {
     load: () => T;
@@ -209,13 +209,13 @@ export const getCategoryBudgetMapData = (): StoredDataWrapper<CategoryBudgetPost
     };
 }
 
-export const getCSVMappingData = (): StoredDataWrapper<ColumnMapping> => {
+export const getCSVMappingData = (): StoredDataWrapper<SchemaColumnMapping> => {
     return {
         load: () => {
             const loaded = localStorage.getItem(CSV_MAPPING_KEY) ?? "{}";
             return JSON.parse(loaded)
         },
-        save: (mapping: ColumnMapping) => {
+        save: (mapping: SchemaColumnMapping) => {
             try {
                 localStorage.setItem(CSV_MAPPING_KEY, JSON.stringify(mapping));
             } catch (e) {

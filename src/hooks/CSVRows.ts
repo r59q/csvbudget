@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {ColumnMapping} from "@/utility/csvutils";
+import {ColumnMapping, SchemaColumnMapping} from "@/utility/csvutils";
 import Papa, {ParseResult} from "papaparse";
 import {CSVHeaders, CsvRow, CSVRowId, CSVSchemas, MappedCSVRow, RowCategoryMap} from "@/model";
 import {getCSVFilesData} from "@/data";

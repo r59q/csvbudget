@@ -1,7 +1,7 @@
 'use client';
 
 import React, {useEffect, useState} from 'react';
-import {ColumnMapping, getSchemaKeyFromCsvRow, MAPPED_COLUMNS} from "@/utility/csvutils";
+import {SchemaColumnMapping, getSchemaKeyFromCsvRow, MAPPED_COLUMNS} from "@/utility/csvutils";
 import Link from "next/link";
 import useCSVRows from "@/hooks/CSVRows";
 import useAccountMapping from "@/hooks/AccountMapping";
@@ -9,7 +9,7 @@ import useAccountMapping from "@/hooks/AccountMapping";
 export default function MappingPage() {
     const {mappedCSVRows, csvSchemas} = useCSVRows()
     const {accountValueMappings, addAccountMapping, removeAccountMapping} = useAccountMapping();
-    const [mappings, setMappings] = useState<Partial<ColumnMapping>>({});
+    const [mappings, setMappings] = useState<Partial<SchemaColumnMapping>>({});
     const [newKey, setNewKey] = useState('');
     const [newLabel, setNewLabel] = useState('');
     useEffect(() => {
@@ -91,7 +91,7 @@ export default function MappingPage() {
                         <tbody>
                         {mappedCSVRows.map((row, idx) => {
                             const schemaKey = getSchemaKeyFromCsvRow(row);
-                            const mapping = mappings[schemaKey as keyof ColumnMapping] as unknown as ColumnMapping;
+                            const mapping = mappings[schemaKey as keyof SchemaColumnMapping] as unknown as SchemaColumnMapping;
                             if (!mapping) {
                                 return null;
                             }
@@ -120,7 +120,7 @@ interface SchemaMappingsProps {
 }
 
 const SchemaMappings = ({schemaKey, schema}: SchemaMappingsProps) => {
-    const [mapping, setMapping] = useState<Partial<ColumnMapping>>({});
+    const [mapping, setMapping] = useState<Partial<SchemaColumnMapping>>({});
     useEffect(() => {
         // Auto-detect mapping
         const allMappings = JSON.parse(localStorage.getItem('csv_mappings') || '{}');
@@ -130,7 +130,7 @@ const SchemaMappings = ({schemaKey, schema}: SchemaMappingsProps) => {
         }
     }, [schemaKey]);
 
-    const handleMappingChange = (target: keyof ColumnMapping, source: string) => {
+    const handleMappingChange = (target: keyof SchemaColumnMapping, source: string) => {
         setMapping((prev) => ({...prev, [target]: source}));
     };
 

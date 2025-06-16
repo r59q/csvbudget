@@ -4,7 +4,7 @@ import React, {useEffect, useState} from 'react';
 import Link from "next/link";
 import {getCSVFilesData, getCSVMappingData} from "@/data";
 import {
-    ColumnMapping,
+    SchemaColumnMapping,
     getHeadersFromFile,
     getSchemaKeyFromCsvFile,
     isSchemaMapped,
@@ -97,7 +97,7 @@ export default function CsvUploader() {
         <>
             {unmappedSchemas.length > 0 && <div className={"backdrop-blur-sm top-0 absolute w-screen h-screen"}>
                 <div className={"flex justify-center items-center h-full"}>
-                    <TransformData {...{unmappedSchemas}} onSaveMapping={handleSaveMapping}/>
+                    <SchemaMapper unmappedSchema={unmappedSchemas[0]} onSaveMapping={handleSaveMapping}/>
                 </div>
             </div>}
             <div className={"w-full max-w-md mx-auto mt-10 gap-4 flex flex-col"}>
@@ -142,25 +142,22 @@ export default function CsvUploader() {
     );
 }
 
-interface TransformDataProps {
-    unmappedSchemas: UnmappedSchema[]
+interface SchemaMapperProps {
+    unmappedSchema: UnmappedSchema
     onSaveMapping: (mapping: Record<typeof MAPPED_COLUMNS[number], string>, schemaKey: SchemaKey) => void;
 }
 
-const TransformData = ({unmappedSchemas, onSaveMapping}: TransformDataProps) => {
+const SchemaMapper = ({unmappedSchema, onSaveMapping}: SchemaMapperProps) => {
     const [mapping, setMapping] = useState<Partial<Record<typeof MAPPED_COLUMNS[number], string>>>({});
 
-    const unmappedKey = unmappedSchemas[0].key;
-    const unmappedHeaders = unmappedSchemas[0].headers;
-
-    const handleMappingChange = (target: keyof ColumnMapping, source: string) => {
+    const handleMappingChange = (target: keyof SchemaColumnMapping, source: string) => {
         const newState = {...mapping, [target]: source};
         setMapping(newState)
     };
 
     return <>
         <div className={"bg-gray-900 p-4 rounded-md flex flex-col gap-4"}>
-            <h1 className={"text-lg"}>Transform data ({unmappedSchemas.length} left)</h1>
+            <h1 className={"text-lg"}>Transform data</h1>
             <table className="w-full border text-sm">
                 <thead>
                 <tr className="bg-gray-950">
@@ -180,7 +177,7 @@ const TransformData = ({unmappedSchemas, onSaveMapping}: TransformDataProps) => 
                                     onChange={(e) => handleMappingChange(field, e.target.value)}
                                 >
                                     <option value="" className={"bg-gray-900"}>Select column</option>
-                                    {unmappedHeaders.map((header) => (
+                                    {unmappedSchema.headers.map((header) => (
                                         <option className={"bg-gray-950"} key={header} value={header}>
                                             {header}
                                         </option>
@@ -192,7 +189,7 @@ const TransformData = ({unmappedSchemas, onSaveMapping}: TransformDataProps) => 
                 )}
                 </tbody>
             </table>
-            <button onClick={() => onSaveMapping(mapping as Record<typeof MAPPED_COLUMNS[number], string>, unmappedKey)}
+            <button onClick={() => onSaveMapping(mapping as Record<typeof MAPPED_COLUMNS[number], string>, unmappedSchema.key)}
                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                 Save Mapping
             </button>
