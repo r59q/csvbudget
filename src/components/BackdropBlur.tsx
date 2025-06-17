@@ -6,12 +6,11 @@ interface BackdropBlurProps {
 }
 
 const BackdropBlur: React.FC<BackdropBlurProps> = ({ children, className = '' }) => (
-    <div className={`backdrop-blur-sm top-0 absolute w-screen h-screen ${className}`}>
-        <div className="flex justify-center items-center h-full">
+    <div className={`backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center ${className}`}>
+        <div className="flex justify-center items-center w-full h-full">
             {children}
         </div>
     </div>
 );
 
 export default BackdropBlur;
-

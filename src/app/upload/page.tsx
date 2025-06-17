@@ -5,6 +5,7 @@ import {CSVFile} from "@/model";
 import DataMapping from "@/features/mapping/DataMapping";
 import {useGlobalContext} from "@/context/GlobalContext";
 import useCSVRows from "@/hooks/CSVRows";
+import {TransactionsProvider} from "@/context/TransactionsContext";
 
 export default function CsvUploader() {
     const {csvFiles, setCSVFiles, unmappedSchemas, handleSaveMapping} = useGlobalContext();
@@ -50,6 +51,7 @@ export default function CsvUploader() {
 
     return (
         <>
+            <TransactionsProvider>
             <DataMapping unmappedSchemas={unmappedSchemas} onSaveMapping={handleSaveMapping}/>
             <div className={"w-full max-w-md mx-auto mt-10 gap-4 flex flex-col"}>
                 <div className="p-4 rounded-lg border border-gray-300">
@@ -89,6 +91,7 @@ export default function CsvUploader() {
                     })}
                 </div>
             </div>
+            </TransactionsProvider>
         </>
     );
 }

@@ -1,8 +1,8 @@
 import React from 'react';
 import BackdropBlur from "@/components/BackdropBlur";
-import useTransactions from "@/hooks/Transactions";
 import SchemaMapper from "@/features/mapping/SchemaMapper";
 import TransactionMapper from "@/features/mapping/TransactionMapper";
+import {useTransactionsContext} from "@/context/TransactionsContext";
 
 interface DataMappingProps {
     unmappedSchemas: any[];
@@ -10,7 +10,7 @@ interface DataMappingProps {
 }
 
 const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
-    const {transactions} = useTransactions();
+    const {transactions} = useTransactionsContext();
     const groupedByType = Object.groupBy(transactions, e => e.type);
     const unknownTransactions = (groupedByType.unknown ?? []).filter(tra => !tra.isTransfer);
     const hasUnknownTransactions = unknownTransactions.length > 0
@@ -22,7 +22,7 @@ const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
 
     if (hasUnknownTransactions) {
         return <BackdropBlur>
-            <TransactionMapper transactions={unknownTransactions} />
+            <TransactionMapper transactions={unknownTransactions}/>
         </BackdropBlur>
     }
     return (

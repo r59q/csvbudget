@@ -1,7 +1,7 @@
 'use client';
 
 import React, {useEffect, useState} from 'react';
-import {SchemaColumnMapping, getSchemaKeyFromCsvRow, MAPPED_COLUMNS} from "@/utility/csvutils";
+import {SchemaColumnMapping, getSchemaKeyFromCsvRow, MAPPED_COLUMNS, ColumnMapping} from "@/utility/csvutils";
 import Link from "next/link";
 import useCSVRows from "@/hooks/CSVRows";
 import useAccountMapping from "@/hooks/AccountMapping";
@@ -91,7 +91,7 @@ export default function MappingPage() {
                         <tbody>
                         {mappedCSVRows.map((row, idx) => {
                             const schemaKey = getSchemaKeyFromCsvRow(row);
-                            const mapping = mappings[schemaKey as keyof SchemaColumnMapping] as unknown as SchemaColumnMapping;
+                            const mapping = mappings[schemaKey as keyof SchemaColumnMapping] as unknown as ColumnMapping;
                             if (!mapping) {
                                 return null;
                             }
@@ -121,7 +121,7 @@ interface SchemaMappingsProps {
 }
 
 const SchemaMappings = ({schemaKey, schema}: SchemaMappingsProps) => {
-    const [mapping, setMapping] = useState<Partial<SchemaColumnMapping>>({});
+    const [mapping, setMapping] = useState<Partial<ColumnMapping>>({});
     useEffect(() => {
         // Auto-detect mapping
         const allMappings = JSON.parse(localStorage.getItem('csv_mappings') || '{}');
@@ -131,16 +131,19 @@ const SchemaMappings = ({schemaKey, schema}: SchemaMappingsProps) => {
         }
     }, [schemaKey]);
 
-    const handleMappingChange = (target: keyof SchemaColumnMapping, source: string) => {
-        setMapping((prev) => ({...prev, [target]: source}));
-    };
-
     const saveMapping = () => {
         const allMappings = JSON.parse(localStorage.getItem('csv_mappings') || '{}');
         allMappings[schemaKey] = mapping;
         localStorage.setItem('csv_mappings', JSON.stringify(allMappings));
         alert('Mapping saved!');
     };
+
+    const handleMappingChange = (field: keyof ColumnMapping, value: string) => {
+        setMapping(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    }
 
     return <>
         <h2 className="text-xl font-bold mb-4">Map CSV Columns</h2>

@@ -6,7 +6,7 @@ import {
     CategoryBudgetPostMap,
     CSVFile,
     RowCategoryMap,
-    RowIncomeMap
+    RowIncomeMap, TransactionID, TransactionLinkDescriptor, TransactionType
 } from "@/model";
 import {SchemaColumnMapping} from "@/utility/csvutils";
 
@@ -25,6 +25,8 @@ const ROW_INCOME_MAP_KEY = "row_income_map"
 const BUDGET_POST_KEY = "budget_posts"
 const CATEGORY_BUDGET_MAP_KEY = "category_budgetpost_map";
 const CSV_MAPPING_KEY = "csv_mappings";
+const TRANSACTION_LINKS_KEY = "transaction_links";
+const TRANSACTION_TYPE_MAP_KEY = "transaction_type_map";
 
 /// Used for resetting data
 export const LOCALSTORAGE_KEYS = [
@@ -38,6 +40,8 @@ export const LOCALSTORAGE_KEYS = [
     BUDGET_POST_KEY,
     CATEGORY_BUDGET_MAP_KEY,
     CSV_MAPPING_KEY,
+    TRANSACTION_LINKS_KEY,
+    TRANSACTION_TYPE_MAP_KEY,
 ];
 
 export const getCSVFilesData = (): StoredDataWrapper<CSVFile[]> => {
@@ -223,6 +227,42 @@ export const getCSVMappingData = (): StoredDataWrapper<SchemaColumnMapping> => {
                 return {}
             }
             return mapping;
+        }
+    };
+}
+
+export const getTransactionLinksData = (): StoredDataWrapper<Record<TransactionID, TransactionLinkDescriptor[]>> => {
+    return {
+        load: () => {
+            const loaded = localStorage.getItem(TRANSACTION_LINKS_KEY) ?? "{}";
+            return JSON.parse(loaded);
+        },
+        save: (links: Record<number, TransactionLinkDescriptor[]>) => {
+            try {
+                localStorage.setItem(TRANSACTION_LINKS_KEY, JSON.stringify(links));
+            } catch (e) {
+                console.error(e);
+                return {};
+            }
+            return links;
+        }
+    };
+}
+
+export const getTransactionTypeMapData = (): StoredDataWrapper<Record<TransactionID, TransactionType>> => {
+    return {
+        load: () => {
+            const loaded = localStorage.getItem(TRANSACTION_TYPE_MAP_KEY) ?? '{}';
+            return JSON.parse(loaded);
+        },
+        save: (typeMap: Record<TransactionID, TransactionType>) => {
+            try {
+                localStorage.setItem(TRANSACTION_TYPE_MAP_KEY, JSON.stringify(typeMap));
+            } catch (e) {
+                console.error(e);
+                return {};
+            }
+            return typeMap;
         }
     };
 }

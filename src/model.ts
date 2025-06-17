@@ -43,8 +43,8 @@ export type MappedCSVRow = {
 export type AccountMappings = Record<AccountNumber, string>
 
 export type TransactionID = number;
-export type TransactionType = "expense" | "income" | "refund" | "unknown"
-export type LinkType = "refund" | "unknown"
+export type TransactionType = "expense" | "income" | "transfer" | "unknown"
+export type LinkType = "refund" | "unknown" | "transfer"
 
 export interface TransactionLinkDescriptor {
     linkedId: TransactionID;
