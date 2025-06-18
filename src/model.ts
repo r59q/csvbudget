@@ -27,8 +27,8 @@ export type Envelope = string;
 
 export type BudgetPost = { title: string; amount: number; }
 
-export type RowCategoryMap = Record<CSVRowId, Category>;
-export type RowIncomeMap = Record<CSVRowId, Envelope>;
+export type TransactionCategoryMap = Record<string, Category>;
+export type IncomeEnvelopeMap = Record<TransactionID, Envelope>;
 export type CategoryBudgetPostMap = Record<Category, BudgetPost["title"]>;
 
 export type MappedCSVRow = {

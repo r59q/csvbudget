@@ -1,17 +1,17 @@
 import {useEffect, useState} from "react";
-import {MappedCSVRow, Envelope, RowIncomeMap, Transaction, TransactionID} from "@/model";
+import {MappedCSVRow, Envelope, IncomeEnvelopeMap, Transaction, TransactionID} from "@/model";
 import {getRowIncomeData} from "@/data";
 import useCSVRows from "@/hooks/CSVRows";
 
 const useIncome = () => {
     const {getById} = useCSVRows()
-    const [incomeMap, setIncomeMap] = useState<RowIncomeMap>({})
+    const [incomeMap, setIncomeMap] = useState<IncomeEnvelopeMap>({})
 
     useEffect(() => {
         setIncomeMap(getRowIncomeData().load())
     }, []);
 
-    const saveIncomeMap = (map: RowIncomeMap) => {
+    const saveIncomeMap = (map: IncomeEnvelopeMap) => {
         setIncomeMap(getRowIncomeData().save(map));
     }
 

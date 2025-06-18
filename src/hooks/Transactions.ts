@@ -8,9 +8,8 @@ import {getTransactionLinksData, getTransactionTypeMapData} from "@/data";
 import {useEffect, useState} from "react";
 
 const useTransactions = () => {
-    const {isAccountOwned, accountValueMappings} = useGlobalContext();
+    const {isAccountOwned, accountValueMappings, getCategory} = useGlobalContext();
     const {mappedCSVRows} = useCSVRows();
-    const {getCategory} = useCategories();
     const {incomeMap, getEnvelopeForIncome} = useIncome();
     const transactionLinksStore = getTransactionLinksData();
     const transactionTypeMapStore = getTransactionTypeMapData();
@@ -134,7 +133,7 @@ const useTransactions = () => {
             mappedFrom: mappedFrom ? mappedFrom : undefined,
             to: originalTo,
             mappedTo: mappedTo ? mappedTo : undefined,
-            category: getCategory(mappedRow) ?? "Unassigned",
+            category: getCategory(id) ?? "Unassigned",
             guessedCategory: undefined,
             linkedTransactions: storedLinks[id] || [],
             guessedLinkedTransactions: guessedLinks,
@@ -170,6 +169,23 @@ const useTransactions = () => {
             })
     }
 
+    const getUncategorizedTransactionsLike = (transaction: Transaction) => {
+        return transactions
+            .filter(tran => {
+                if (tran.id === transaction.id) {
+                    return false; // Skip the same transaction
+                }
+                if (tran.category !== "Unassigned") {
+                    return false; // Only consider uncategorized transactions
+                }
+                // Find transactions that seem similar to the given transaction
+                if (tran.text === transaction.text) {
+                    return true;
+                }
+                return Math.abs(tran.amount) === Math.abs(transaction.amount);
+            })
+    }
+
     return {
         transactions,
         getTransactions,
@@ -178,7 +194,8 @@ const useTransactions = () => {
         setTransactionLinkType,
         setTransactionType,
         setTransactionTypes,
-        getUnmappedTransactionsLike
+        getUnmappedTransactionsLike,
+        getUncategorizedTransactionsLike
     };
 };
 

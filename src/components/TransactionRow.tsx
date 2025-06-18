@@ -6,6 +6,7 @@ import DateField from "@/components/fields/DateField";
 import TextField from "@/components/fields/TextField";
 import AmountField from "@/components/fields/AmountField";
 import TransactionTypeField from "@/components/fields/TransactionTypeField";
+import CategoryField from "@/components/fields/CategoryField";
 import {useTransactionsContext} from "@/context/TransactionsContext";
 
 interface TransactionRowProps {
@@ -34,9 +35,8 @@ const TransactionRow: React.FC<TransactionRowProps> = ({transaction, onContextMe
                 <td className="p-2 border"><AmountField transaction={transaction}/></td>
                 <td className="p-2 border w-50"><AccountField account={transaction.from}/></td>
                 <td className="p-2 border w-50"><AccountField account={transaction.to}/></td>
-                <td className="p-2 border">
-                    <TransactionTypeField transaction={transaction}/>
-                </td>
+                <td className="p-2 border"><TransactionTypeField transaction={transaction}/></td>
+                <td className="p-2 border"><CategoryField transaction={transaction}/></td>
             </tr>
             {expanded && <ExpandedTransactionRow {...{transaction, guessedLinkTransactions}} />}
         </>

@@ -5,8 +5,9 @@ import useSchemaMapping from "@/hooks/SchemaMapping";
 import {SchemaColumnMapping} from "@/utility/csvutils";
 import useAccountMapping from "@/hooks/AccountMapping";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
+import useCategories, {UseCategoriesResult} from "@/hooks/Categories";
 
-export interface GlobalContextType {
+export interface GlobalContextType extends UseCategoriesResult {
     user: { name: string; email: string } | null;
     setUser: (user: { name: string; email: string } | null) => void;
     csvFiles: CSVFile[];
@@ -36,6 +37,7 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
     const {csvFiles, setCSVFiles} = useCSVFiles();
     const {accountValueMappings, addAccountMapping, removeAccountMapping, getAccountMapping} = useAccountMapping();
     const {isAccountOwned, addOwnedAccount, removeOwnedAccount} = useOwnedAccounts();
+    const categories = useCategories();
     const {
         unmappedSchemas,
         handleSaveMapping,
@@ -44,9 +46,24 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return (
         <GlobalContext.Provider value={{
-            user, setUser, csvFiles, setCSVFiles, isAccountOwned, unmappedSchemas, handleSaveMapping, columnMappings, accountValueMappings, addAccountMapping, removeAccountMapping, addOwnedAccount, removeOwnedAccount, getAccountMapping
+            user,
+            setUser,
+            csvFiles,
+            setCSVFiles,
+            isAccountOwned,
+            unmappedSchemas,
+            handleSaveMapping,
+            columnMappings,
+            accountValueMappings,
+            addAccountMapping,
+            removeAccountMapping,
+            addOwnedAccount,
+            removeOwnedAccount,
+            getAccountMapping,
+            ...categories
         }}>
             {children}
         </GlobalContext.Provider>
     );
 };
+

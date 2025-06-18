@@ -5,8 +5,7 @@ import {
     Category,
     CategoryBudgetPostMap,
     CSVFile,
-    RowCategoryMap,
-    RowIncomeMap, TransactionID, TransactionLinkDescriptor, TransactionType
+    IncomeEnvelopeMap, TransactionCategoryMap, TransactionID, TransactionLinkDescriptor, TransactionType
 } from "@/model";
 import {SchemaColumnMapping} from "@/utility/csvutils";
 
@@ -20,8 +19,8 @@ const ACCOUNT_MAPPINGS_KEY = 'account_mappings';
 const OWNED_ACCOUNTS_KEY = 'own_accounts';
 const ADVANCED_FILTERS_KEY = "advanced_filters"
 const CATEGORIES_KEY = "categories"
-const ROW_CATEGORY_MAP_KEY = "row_category_map"
-const ROW_INCOME_MAP_KEY = "row_income_map"
+const ROW_CATEGORY_MAP_KEY = "transaction_category_map"
+const ROW_INCOME_MAP_KEY = "transaction_income_map"
 const BUDGET_POST_KEY = "budget_posts"
 const CATEGORY_BUDGET_MAP_KEY = "category_budgetpost_map";
 const CSV_MAPPING_KEY = "csv_mappings";
@@ -141,7 +140,7 @@ export const getCategoryData = (): StoredDataWrapper<Category[]> => {
         }
     };
 }
-export const getRowCategoryData = (): StoredDataWrapper<RowCategoryMap> => {
+export const getCategoryMapdData = (): StoredDataWrapper<TransactionCategoryMap> => {
     return {
         load: () => {
             const loaded = localStorage.getItem(ROW_CATEGORY_MAP_KEY) ?? "{}";
@@ -159,7 +158,7 @@ export const getRowCategoryData = (): StoredDataWrapper<RowCategoryMap> => {
     };
 }
 
-export const getRowIncomeData = (): StoredDataWrapper<RowIncomeMap> => {
+export const getRowIncomeData = (): StoredDataWrapper<IncomeEnvelopeMap> => {
     return {
         load: () => {
             const loaded = localStorage.getItem(ROW_INCOME_MAP_KEY) ?? "{}";

@@ -1,16 +1,26 @@
-import {Category, MappedCSVRow, RowCategoryMap} from "@/model";
-import {useEffect, useState} from "react";
-import {getCategoryData, getRowCategoryData} from "@/data";
+import {Category, Transaction, TransactionCategoryMap, TransactionID} from "@/model";
+import {useCallback, useEffect, useState} from "react";
+import {getCategoryData, getCategoryMapdData} from "@/data";
 
-const useCategories = () => {
+export interface UseCategoriesResult {
+    categoryMap: TransactionCategoryMap;
+    categories: Category[];
+    getCategory: (id: TransactionID) => Category;
+    groupByCategory: (transactions: Transaction[]) => Partial<Record<Category, Transaction[]>>;
+    createCategory: (category: Category) => void;
+    deleteCategory: (category: Category) => void;
+    setCategory: (transactions: Transaction | Transaction[], category: Category | undefined) => void;
+}
+
+const useCategories = (): UseCategoriesResult => {
     const [categories, setCategories] = useState<Category[]>([]);
-    const [rowCategoryMap, setRowCategoryMap] = useState<RowCategoryMap>({});
+    const [categoryMap, setCategoryMap] = useState<TransactionCategoryMap>({});
 
     useEffect(() => {
         const categoriesData = getCategoryData();
-        const rowCategoryMapData = getRowCategoryData();
+        const rowCategoryMapData = getCategoryMapdData();
         setCategories(categoriesData.load());
-        setRowCategoryMap(rowCategoryMapData.load());
+        setCategoryMap(rowCategoryMapData.load());
     }, []);
 
     const saveCategories = (categories: Category[]) => {
@@ -18,26 +28,26 @@ const useCategories = () => {
         setCategories(getCategoryData().save(value));
     }
 
-    const saveRowCategories = (updatedMap: RowCategoryMap) => {
-        setRowCategoryMap(getRowCategoryData().save(updatedMap));
+    const saveCategoryMap = (updatedMap: TransactionCategoryMap) => {
+        setCategoryMap(getCategoryMapdData().save(updatedMap));
     }
 
-    const getCategory = (row: MappedCSVRow): Category | undefined => {
-        const mappedValue = rowCategoryMap[row.mappedId];
-        if (mappedValue === "") {
-            return undefined;
+    const getCategory = useCallback((id: TransactionID): Category => {
+        const mappedValue = categoryMap[String(id)];
+        if ((mappedValue ?? "") === "") {
+            return "Unassigned"
         }
         return mappedValue;
-    }
+    }, [categoryMap]);
 
-    const groupByCategory = (rows: MappedCSVRow[]): Partial<Record<Category, MappedCSVRow[]>> => {
-        return Object.groupBy(rows, row => {
-            return getCategory(row) ?? "Unassigned";
+    const groupByCategory = (transactions: Transaction[]): Partial<Record<Category, Transaction[]>> => {
+        return Object.groupBy(transactions, transaction => {
+            return getCategory(transaction.id);
         })
     }
 
     return {
-        rowCategoryMap,
+        categoryMap,
         categories,
         getCategory,
         groupByCategory,
@@ -48,29 +58,28 @@ const useCategories = () => {
             saveCategories([...categories].filter(e => e !== category.trim()))
             // Remove all mappings to this category
             const updatedMap = Object.fromEntries(
-                Object.entries(rowCategoryMap).filter(([_, value]) => value !== category)
+                Object.entries(categoryMap).filter(([_, value]) => value !== category)
             );
-            saveRowCategories(updatedMap);
+            saveCategoryMap(updatedMap);
         },
-        setCategory: (rows: MappedCSVRow | MappedCSVRow[], category: Category | undefined) => {
-            const updatedMap: RowCategoryMap = {...rowCategoryMap};
-            if (Array.isArray(rows)) {
-                rows.forEach(row => {
+        setCategory: (transactions: Transaction | Transaction[], category: Category | undefined) => {
+            const updatedMap: TransactionCategoryMap = {...categoryMap};
+            if (Array.isArray(transactions)) {
+                transactions.forEach(tx => {
                     if (!category || category === "") {
-                        delete updatedMap[row.mappedId];
+                        delete updatedMap[String(tx.id)];
                     } else {
-                        updatedMap[row.mappedId] = category;
+                        updatedMap[String(tx.id)] = category;
                     }
                 })
-
             } else {
                 if (!category || category === "") {
-                    delete updatedMap[rows.mappedId];
+                    delete updatedMap[String(transactions.id)];
                 } else {
-                    updatedMap[rows.mappedId] = category;
+                    updatedMap[String(transactions.id)] = category;
                 }
             }
-            saveRowCategories(updatedMap)
+            saveCategoryMap(updatedMap);
         }
     }
 };
