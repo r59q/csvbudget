@@ -131,9 +131,9 @@ const useTransactions = () => {
             id,
             amount,
             from: originalFrom,
-            mappedFrom: mappedFrom ? mappedFrom : originalFrom,
+            mappedFrom: mappedFrom ? mappedFrom : undefined,
             to: originalTo,
-            mappedTo: mappedTo ? mappedTo : originalTo,
+            mappedTo: mappedTo ? mappedTo : undefined,
             category: getCategory(mappedRow) ?? "Unassigned",
             linkedTransactions: storedLinks[id] || [],
             guessedLinkedTransactions: guessedLinks,
@@ -165,7 +165,7 @@ const useTransactions = () => {
                 if (tran.text === transaction.text) {
                     return true;
                 }
-                return tran.amount === transaction.amount && tran.date.isSame(transaction.date, "day");
+                return Math.abs(tran.amount) === Math.abs(transaction.amount) && tran.date.isSame(transaction.date, "day");
             })
     }
 

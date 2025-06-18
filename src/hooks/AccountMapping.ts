@@ -16,6 +16,11 @@ const useAccountMapping = () => {
         );
     };
 
+    const removeAccountMapping = (original: string) => {
+        const updated = {...accountValueMappings};
+        delete updated[original];
+        saveValueMappings(updated);
+    };
     return {
         accountValueMappings,
         getAccountMapping: (original: AccountNumber) => {
@@ -30,11 +35,7 @@ const useAccountMapping = () => {
             updated[original] = mapped
             saveValueMappings(updated);
         },
-        removeAccountMapping: (original: string) => {
-            const updated = {...accountValueMappings};
-            delete updated[original];
-            saveValueMappings(updated);
-        }
+        removeAccountMapping
     }
 };
 

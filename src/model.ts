@@ -56,9 +56,9 @@ export interface Transaction {
     date: Dayjs;
     text: string;
     from: AccountNumber;
-    mappedFrom: AccountNumber;
+    mappedFrom: AccountNumber | undefined;
     to: AccountNumber;
-    mappedTo: AccountNumber;
+    mappedTo: AccountNumber | undefined;
     category: Category;
     type: TransactionType;
     guessedType: TransactionType;

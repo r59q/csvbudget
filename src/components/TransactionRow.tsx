@@ -32,8 +32,8 @@ const TransactionRow: React.FC<TransactionRowProps> = ({transaction, onContextMe
                 <td className="p-2 border"><DateField transaction={transaction}/></td>
                 <td className="p-2 border"><TextField transaction={transaction}/></td>
                 <td className="p-2 border"><AmountField transaction={transaction}/></td>
-                <td className="p-2 border w-50"><AccountField account={transaction.mappedFrom}/></td>
-                <td className="p-2 border w-50"><AccountField account={transaction.mappedTo}/></td>
+                <td className="p-2 border w-50"><AccountField account={transaction.from}/></td>
+                <td className="p-2 border w-50"><AccountField account={transaction.to}/></td>
                 <td className="p-2 border">
                     <TransactionTypeField transaction={transaction}/>
                 </td>

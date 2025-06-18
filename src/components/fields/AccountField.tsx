@@ -1,5 +1,4 @@
 import React, {useEffect, useRef, useState} from 'react';
-import useOwnedAccounts from '@/hooks/OwnedAccount';
 import {AccountNumber} from "@/model";
 import {useGlobalContext} from "@/context/GlobalContext";
 
@@ -13,7 +12,8 @@ const AccountField: React.FC<AccountFieldProps> = ({account}) => {
         isAccountOwned,
         addOwnedAccount,
         removeOwnedAccount,
-        getAccountMapping
+        getAccountMapping,
+        removeAccountMapping
     } = useGlobalContext();
     const mappedAccount = getAccountMapping(account);
     const owned = isAccountOwned(account);
@@ -52,8 +52,13 @@ const AccountField: React.FC<AccountFieldProps> = ({account}) => {
 
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
-            if (editValue.trim() !== '' && editValue !== mappedAccount) {
-                addAccountMapping(account, editValue.trim());
+            if (editValue.trim() === '') {
+                // If the input is empty, remove the mapping
+                removeAccountMapping(account);
+            } else {
+                if (editValue !== mappedAccount) {
+                    addAccountMapping(account, editValue.trim());
+                }
             }
             setEditing(false);
         } else if (e.key === 'Escape') {
