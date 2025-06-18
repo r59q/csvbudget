@@ -30,8 +30,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ visible, position, onClose, c
             style={{
                 top: position.y,
                 left: position.x,
-            }}
-        >
+            }}>
             {children}
         </ul>
     );

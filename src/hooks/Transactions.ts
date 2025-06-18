@@ -118,7 +118,7 @@ const useTransactions = () => {
         const mappedTo = accountValueMappings[originalTo];
         const originalFrom = mappedRow.mappedFrom;
         const mappedFrom = accountValueMappings[originalFrom];
-        const isTransfer = isAccountOwned(mappedTo) && isAccountOwned(mappedFrom);
+        const isTransfer = isAccountOwned(originalTo) && isAccountOwned(originalFrom);
         const guessedType = isIncome(id) ? "income" : amount < 0 ? "expense" : "unknown";
         const guessedLinks = guessLinks(mappedRow, mappedCSVRows)
 
@@ -135,6 +135,7 @@ const useTransactions = () => {
             to: originalTo,
             mappedTo: mappedTo ? mappedTo : undefined,
             category: getCategory(mappedRow) ?? "Unassigned",
+            guessedCategory: undefined,
             linkedTransactions: storedLinks[id] || [],
             guessedLinkedTransactions: guessedLinks,
             date: getDayJs(mappedRow.mappedDate),

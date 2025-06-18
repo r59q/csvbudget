@@ -60,6 +60,7 @@ export interface Transaction {
     to: AccountNumber;
     mappedTo: AccountNumber | undefined;
     category: Category;
+    guessedCategory: Category | undefined;
     type: TransactionType;
     guessedType: TransactionType;
     isTransfer: boolean;

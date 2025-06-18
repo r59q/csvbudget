@@ -101,7 +101,7 @@ const TransactionTypeConfirmDialog: React.FC<TransactionTypeConfirmDialogProps> 
     <BackdropBlur>
         <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg flex flex-col items-center gap-4 max-w-lg w-full">
             <div>Are you sure you want to change the transaction type to <b>{pendingType}</b> for the selected transactions?</div>
-            <div className="max-h-48 overflow-y-auto w-full">
+            <div className="max-h-90 overflow-y-auto w-full">
                 <table className="w-full text-xs border border-gray-800 bg-gray-900 rounded">
                     <thead>
                         <tr className="bg-gray-800">
