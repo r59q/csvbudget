@@ -17,8 +17,8 @@ const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
 
     const unknownTransactions = (groupedByType.unknown ?? []).filter(tra => !tra.isTransfer);
     const hasUnknownTransactions = unknownTransactions.length > 0
-    const hasUncategorizedTransactions = (groupedByCategory['Unassigned'] ?? []).length > 0;
-    const uncategorizedTransactions = groupedByCategory['Unassigned'] ?? [];
+    const uncategorizedExpenses = (groupedByCategory['Unassigned'] ?? []).filter(tran => tran.type === "expense");
+    const hasUncategorizedTransactions = uncategorizedExpenses.length > 0
 
     if (unmappedSchemas.length > 0) {
         return <BackdropBlur>
@@ -28,13 +28,19 @@ const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
 
     if (hasUnknownTransactions) {
         return <BackdropBlur>
-            <TransactionMapper transactions={unknownTransactions}/>
+            <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">
+                <TransactionMapper transactions={unknownTransactions}/>
+            </div>
         </BackdropBlur>
     }
 
     if (hasUncategorizedTransactions) {
         return <BackdropBlur>
-            <TransactionTable transactions={uncategorizedTransactions}/>
+            <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">
+                <h1 className={"font-bold text-xl"}>Categorize Expenses</h1>
+                <TransactionTable pageSize={10} transactions={uncategorizedExpenses}
+                                  visibleColumns={["id", "type", "date", "text", "amount", "category"]}/>
+            </div>
         </BackdropBlur>
     }
 

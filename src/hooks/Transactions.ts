@@ -169,7 +169,7 @@ const useTransactions = () => {
             })
     }
 
-    const getUncategorizedTransactionsLike = (transaction: Transaction) => {
+    const getUncategorizedExpenseTransactionsLike = (transaction: Transaction) => {
         return transactions
             .filter(tran => {
                 if (tran.id === transaction.id) {
@@ -177,6 +177,9 @@ const useTransactions = () => {
                 }
                 if (tran.category !== "Unassigned") {
                     return false; // Only consider uncategorized transactions
+                }
+                if (tran.type !== "expense") {
+                    return false; // Only consider expense transactions
                 }
                 // Find transactions that seem similar to the given transaction
                 if (tran.text === transaction.text) {
@@ -195,7 +198,7 @@ const useTransactions = () => {
         setTransactionType,
         setTransactionTypes,
         getUnmappedTransactionsLike,
-        getUncategorizedTransactionsLike
+        getUncategorizedExpenseTransactionsLike
     };
 };
 
