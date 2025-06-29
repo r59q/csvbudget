@@ -2,7 +2,13 @@
 
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 import useIncome from "@/hooks/Income";
-import {formatCurrency, formatDayjs, formatEnvelope, groupByEnvelope, transactionsSortedByDate} from "@/utility/datautils";
+import {
+    formatCurrency,
+    formatDayjsToDate,
+    formatEnvelope,
+    groupByDateMonth,
+    transactionsSortedByDate
+} from "@/utility/datautils";
 import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
 import {Envelope, Transaction} from "@/model";
 
@@ -16,7 +22,7 @@ const Page = () => {
 };
 
 const IncomePage = () => {
-    const {transactions} = useTransactionsContext();
+    const {transactions, envelopes} = useTransactionsContext();
     const {filterInterAccountTransaction} = useOwnedAccounts();
     const {getEnvelopeForIncome, setEnvelopeForIncome} = useIncome();
 
@@ -24,9 +30,7 @@ const IncomePage = () => {
 
     const unfilteredRows = incomeTransactions.filter(e => filterInterAccountTransaction(e)).filter(row => row.amount > 0).sort(transactionsSortedByDate);
 
-    const unfilteredRowsGroupedByMonth = groupByEnvelope(unfilteredRows);
-
-    const months = Object.keys(unfilteredRowsGroupedByMonth);
+    const transactionsByMonth = groupByDateMonth(unfilteredRows);
 
     const monthlyIncomeRows: Partial<Record<Envelope, Transaction[]>> = Object.groupBy(incomeTransactions, row => getEnvelopeForIncome(row.id));
     const incomeMonths = Object.keys(monthlyIncomeRows);
@@ -39,7 +43,7 @@ const IncomePage = () => {
         <div className={"p-2"}>
             <div>
                 <p>Average Income: {formatCurrency(averageIncome)}</p>
-                {months.map(month => {
+                {envelopes.map(month => {
                     const rows = monthlyIncomeRows[month];
                     if (!rows) return null;
                     return <div key={month}>
@@ -52,8 +56,8 @@ const IncomePage = () => {
                 })}
             </div>
 
-            {months.map(envelope => {
-                const rows = unfilteredRowsGroupedByMonth[envelope];
+            {envelopes.map(envelope => {
+                const rows = transactionsByMonth[envelope];
                 if (!rows) return null;
                 return <div className={"flex flex-col gap-2 mt-4"} key={envelope}>
                     <p className={"text-2xl"}>{formatEnvelope(envelope)}</p>
@@ -73,7 +77,7 @@ const IncomePage = () => {
                                 <tr key={transaction.id}
                                     className="hover:bg-gray-800 transition-colors duration-150">
                                     <td className="px-4 py-2 border-b border-gray-700">
-                                        {formatDayjs(transaction.date)}
+                                        {formatDayjsToDate(transaction.date)}
                                     </td>
                                     <td className="px-4 py-2 border-b border-gray-700">
                                         {transaction.text}
@@ -89,7 +93,7 @@ const IncomePage = () => {
                                                 value={transactionEnvelope}
                                                 onChange={(e) => setEnvelopeForIncome(transaction, e.target.value)}>
                                                 <option value="Unassigned">Unassigned</option>
-                                                {months.map((opt) => (
+                                                {envelopes.map((opt) => (
                                                     <option key={opt} value={opt}>
                                                         {formatEnvelope(opt)}
                                                     </option>

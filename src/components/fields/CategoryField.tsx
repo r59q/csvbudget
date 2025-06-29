@@ -198,7 +198,7 @@ const CategoryAssignConfirmDialog: React.FC<CategoryAssignConfirmDialogProps> = 
             <div>Are you sure you want to assign the category <b>{pendingCategory}</b> to the selected transactions?
             </div>
             <div className="max-h-90 overflow-y-auto w-full">
-                <table className="w-full text-xs border border-gray-800 bg-gray-900 rounded">
+                <table className="w-full text-xs border select-none border-gray-800 bg-gray-900 rounded">
                     <thead>
                     <tr className="bg-gray-800">
                         <th className="p-1 border">Select</th>
@@ -209,8 +209,11 @@ const CategoryAssignConfirmDialog: React.FC<CategoryAssignConfirmDialogProps> = 
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td className="p-1 border text-center">
+                    <tr
+                        onClick={() => toggleSelect(transaction.id)}
+                        className="cursor-pointer hover:bg-gray-700"
+                    >
+                        <td className="p-1 border text-center" onClick={e => e.stopPropagation()}>
                             <input type="checkbox" checked={selectedIds.includes(transaction.id)}
                                    onChange={() => toggleSelect(transaction.id)}/>
                         </td>
@@ -220,8 +223,11 @@ const CategoryAssignConfirmDialog: React.FC<CategoryAssignConfirmDialogProps> = 
                         <td className="p-1 border">{transaction.amount}</td>
                     </tr>
                     {likeTransactions.map(t => (
-                        <tr key={t.id} className="even:bg-gray-800">
-                            <td className="p-1 border text-center">
+                        <tr key={t.id}
+                            onClick={() => toggleSelect(t.id)}
+                            className="even:bg-gray-800 cursor-pointer hover:bg-gray-700"
+                        >
+                            <td className="p-1 border text-center" onClick={e => e.stopPropagation()}>
                                 <input type="checkbox" checked={selectedIds.includes(t.id)}
                                        onChange={() => toggleSelect(t.id)}/>
                             </td>

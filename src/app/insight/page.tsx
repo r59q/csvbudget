@@ -1,21 +1,12 @@
 "use client";
-import React, {createContext, useMemo, useState} from 'react';
-import {formatCurrency, formatDayjs} from "@/utility/datautils";
-import useCSVRows from "@/hooks/CSVRows";
+import React, {createContext, useState} from 'react';
+import {formatCurrency, formatDayjsToDate, formatEnvelope, groupByEnvelope} from "@/utility/datautils";
 import useCategories from "@/hooks/Categories";
-import useOwnedAccounts from "@/hooks/OwnedAccount";
 import {Category, Envelope, Transaction, TransactionID} from '@/model';
 import SingleLineChart from "@/components/SingleLineChart";
 import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
 import TransactionTable from "@/features/transaction/TransactionTable";
 import useEnvelopeCalculations from "@/hooks/useEnvelopeCalculations";
-
-interface EnvelopeCalculations {
-    income: number;
-    expenses: number;
-    net: number;
-    expensesByCategory: Record<Category, number>;
-}
 
 interface InsightsContextType {
     getCategory: (transactionId: TransactionID) => Category;
@@ -41,21 +32,14 @@ const InsightPage = () => {
     const {envelopes, envelopeSelectedTransactions} = useTransactionsContext();
     const {getCategory, categories} = useCategories();
 
-    const transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>> = useMemo(() => {
-        return Object.groupBy(envelopeSelectedTransactions, row => {
-            return row.envelope;
-        });
-    }, [envelopeSelectedTransactions]);
+    const transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>> = groupByEnvelope(envelopeSelectedTransactions);
     const envelopeCalculations = useEnvelopeCalculations();
-
     const totalExpenses = envelopes.reduce((sum, envelope) => {
         return (envelopeCalculations[envelope]?.expenses ?? 0) + sum;
     }, 0)
-
     const totalIncome = envelopes.reduce((sum, envelope) => {
         return (envelopeCalculations[envelope]?.income ?? 0) + sum;
     }, 0)
-
     const totalNet = totalIncome + totalExpenses;
 
     const monthlyByCategory: Record<Category, number> = {};
@@ -142,7 +126,7 @@ const InsightPage = () => {
                         const envelopeNet = envelopeIncome + envelopeExpenses;
                         const categoryTotals = envelopeCalculations[envelope]?.expensesByCategory ?? {};
                         return <div key={envelope}>
-                            <p>{envelope}</p>
+                            <p>{formatEnvelope(envelope)}</p>
                             <EnvelopeInsight {...{month: envelope}}
                                              transactions={envelopeTransactions}
                                              income={envelopeIncome}
@@ -178,10 +162,10 @@ const MonthInsightsTable = ({
                                 expenses
                             }: Pick<MonthInsightProps, 'month' | "transactions" | 'net' | 'categoryTotals' | "income" | "expenses">) => {
     const [open, setOpen] = useState(false);
-    const expenseTransactions = transactions.filter(tran => tran.type === "expense")
+    const expenseTransactions = transactions.filter(tran => tran.type === "income" || tran.type === "expense")
         .toSorted((a, b) => a.date.valueOf() - b.date.valueOf());
 
-    let balance = income;
+    let balance = 0;
     const burndownChart = expenseTransactions.map((tran) => {
         balance += tran.amount;
         return {
@@ -232,7 +216,7 @@ interface MonthInsightsTableRowProps {
 const MonthInsightsTableRow = ({transaction, category}: MonthInsightsTableRowProps) => {
     return (
         <tr className="even:bg-gray-700 hover:bg-gray-900">
-            <td className="px-4 py-2 border-b">{formatDayjs(transaction.date)}</td>
+            <td className="px-4 py-2 border-b">{formatDayjsToDate(transaction.date)}</td>
             <td className="px-4 py-2 border-b">{transaction.text}</td>
             <td className="px-4 py-2 border-b">{category}</td>
             <td className="px-4 py-2 border-b text-right">

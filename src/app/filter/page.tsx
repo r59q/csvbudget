@@ -3,7 +3,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import useAccountMapping from "@/hooks/AccountMapping";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 import {getAdvancedFiltersData} from "@/data";
-import {advancedFilters, formatDayjs, formatEnvelope} from "@/utility/datautils";
+import {advancedFilters, formatDayjsToDate, formatEnvelope} from "@/utility/datautils";
 
 import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
 
@@ -133,7 +133,7 @@ posting - string: The original posting text
                 <tbody>
                 {transactions.filter(advancedFilters).map((row, idx) => {
                     return <tr key={idx}>
-                        <td>{formatDayjs(row.date)}</td>
+                        <td>{formatDayjsToDate(row.date)}</td>
                         <td>{row.text}</td>
                         <td>{row.amount}</td>
                     </tr>

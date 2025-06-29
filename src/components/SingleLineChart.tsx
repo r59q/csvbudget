@@ -1,4 +1,15 @@
-import {Area, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,} from "recharts";
+import {
+    Area,
+    CartesianGrid,
+    ComposedChart,
+    Legend,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
 import {formatDate} from "@/utility/datautils";
 
 interface Props {
@@ -10,11 +21,11 @@ export default function SingleLineChart({data, zero}: Props) {
     const augmentedBurndown = data.map(e => ({
         ...e,
         zero: zero
-    }))
+    }));
     return (
         <div className="w-full h-96">
             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={augmentedBurndown} margin={{top: 20, right: 30, left: 0, bottom: 5}}>
+                <ComposedChart data={augmentedBurndown} margin={{top: 20, right: 30, left: 0, bottom: 5}}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#444"/>
                     <XAxis dataKey="date" type={"number"} tickFormatter={(millis: number) => formatDate(new Date(millis))} domain={['dataMin', 'dataMax']} stroke="#ccc"/>
                     <YAxis domain={[0, 'dataMax']}
@@ -38,8 +49,9 @@ export default function SingleLineChart({data, zero}: Props) {
                         strokeWidth={2}
                         dot={false}
                     />
-                </LineChart>
+                </ComposedChart>
             </ResponsiveContainer>
         </div>
     );
 }
+

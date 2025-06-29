@@ -1,6 +1,12 @@
 import useCSVRows from "@/hooks/CSVRows";
 import {MappedCSVRow, Transaction, TransactionID, TransactionLinkDescriptor, TransactionType} from "@/model";
-import {getDayJs, getEnvelopeFromDate, predictEnvelope, predictIsCsvRowTransfer} from "@/utility/datautils";
+import {
+    formatDayjsToDate, formatDayjsToMonth,
+    getDayJs,
+    getEnvelopeFromDayjs,
+    predictEnvelope,
+    predictIsCsvRowTransfer
+} from "@/utility/datautils";
 import useIncome from "@/hooks/Income";
 import {useGlobalContext} from "@/context/GlobalContext";
 import useCategoryPredictionIndex from "@/hooks/useCategoryPredictionIndex";
@@ -52,13 +58,13 @@ const useTransactions = () => {
         // If the transaction is a transfer or expense, we don't guess the envelope
         const guessedEnvelope = transactionType === "income" ?
             (getEnvelopeForIncome(id) ?? predictEnvelope(dateDayJs))
-            : getEnvelopeFromDate(dateDayJs);
+            : getEnvelopeFromDayjs(dateDayJs);
 
         const getEnvelope = () => {
             if (transactionType === "income") {
                 return getEnvelopeForIncome(id) ?? "Unassigned";
             } else {
-                return getEnvelopeFromDate(dateDayJs);
+                return getEnvelopeFromDayjs(dateDayJs);
             }
         }
 
@@ -80,7 +86,7 @@ const useTransactions = () => {
             guessedType: guessedType,
             type: transactionType,
             envelope: getEnvelope(),
-            guessedEnvelope: guessedEnvelope,
+            guessedEnvelope: guessedEnvelope
         };
         return transaction;
     })
@@ -129,8 +135,8 @@ const useTransactions = () => {
     const envelopes = useMemo(() => {
         const envelopeSet = new Set<string>();
         transactions.forEach(tran => {
-            if (tran.envelope) {
-                envelopeSet.add(tran.envelope);
+            if (tran.date) {
+                envelopeSet.add(getEnvelopeFromDayjs(tran.date));
             }
         });
         return Array.from(envelopeSet).sort();
@@ -151,7 +157,7 @@ const useTransactions = () => {
         getUncategorizedExpenseTransactionsLike,
         saveSelectedEnvelopes,
         toggleSelectedEnvelope,
-        isEnvelopeSelected
+        isEnvelopeSelected,
     };
 };
 

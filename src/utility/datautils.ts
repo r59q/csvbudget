@@ -1,4 +1,4 @@
-import {MappedCSVRow, Envelope, Transaction, TransactionID, AccountNumber} from "@/model";
+import {AccountNumber, Envelope, MappedCSVRow, Transaction} from "@/model";
 import {getAdvancedFiltersData} from "@/data";
 import dayjs, {Dayjs} from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -36,6 +36,12 @@ export const groupByEnvelope = (rows: Transaction[]): Record<Envelope, Transacti
     }) as Record<Envelope, Transaction[]>;
 }
 
+export const groupByDateMonth = (rows: Transaction[]): Record<string, Transaction[]> => {
+    return Object.groupBy(rows, row => {
+        return getEnvelopeFromDayjs(row.date);
+    }) as Record<Month, Transaction[]>;
+}
+
 export const getSum = (rows: Transaction[]) => {
     return rows.reduce((pre, cur) => pre + cur.amount, 0)
 }
@@ -51,7 +57,7 @@ export const sortedByDate = (a: MappedCSVRow, b: MappedCSVRow) => {
     return bDate.unix() - aDate.unix()
 }
 
-export const intersection = <T,>(arr1: T[], arr2: T[]) => {
+export const intersection = <T, >(arr1: T[], arr2: T[]) => {
     return Array.from(new Set(arr1.filter(value => arr2.includes(value))));
 }
 
@@ -59,11 +65,15 @@ export const getDayJs = (date: string) => {
     return dayjs(date, 'DD-MM-YYYY');
 }
 
-export const formatDayjs = (date: dayjs.Dayjs) => {
+export const formatDayjsToDate = (date: dayjs.Dayjs) => {
     return date.format("DD-MM-YYYY");
 }
 
-export const formatMonth = (date:Date) => {
+export const formatDayjsToMonth = (date: dayjs.Dayjs) => {
+    return date.format("MMMM YYYY");
+}
+
+export const formatMonth = (date: Date) => {
     return dayjs(date).format("MMMM YYYY")
 }
 
@@ -75,7 +85,7 @@ export const getEnvelopeFromDateString = (datestr: string): Envelope => {
     return getDayJs(datestr).format("MM-YYYY")
 }
 
-export const getEnvelopeFromDate = (date: Dayjs): Envelope => {
+export const getEnvelopeFromDayjs = (date: Dayjs): Envelope => {
     if (!date.isValid()) {
         return "Unassigned";
     }
