@@ -1,5 +1,5 @@
 import useCSVRows from "@/hooks/CSVRows";
-import {Envelope, MappedCSVRow, Transaction, TransactionID, TransactionLinkDescriptor, TransactionType} from "@/model";
+import {MappedCSVRow, Transaction, TransactionID, TransactionLinkDescriptor, TransactionType} from "@/model";
 import {getDayJs, getEnvelopeFromDate, predictEnvelope, predictIsCsvRowTransfer} from "@/utility/datautils";
 import useIncome from "@/hooks/Income";
 import {useGlobalContext} from "@/context/GlobalContext";
@@ -14,9 +14,14 @@ const useTransactions = () => {
     const {mappedCSVRows} = useCSVRows();
     const {incomeMap, getEnvelopeForIncome} = useIncome();
     const categoryPredictionIndex = useCategoryPredictionIndex(categoryMap, mappedCSVRows, getCategory);
-    const { storedLinks, setTransactionLink, unsetTransactionLink, setTransactionLinkType } = useTransactionLinks();
-    const { transactionTypeMap, setTransactionType, setTransactionTypes } = useTransactionTypeMap();
-    const { selectedEnvelopes, saveSelectedEnvelopes, toggleSelectedEnvelope, isEnvelopeSelected } = useSelectedEnvelopes();
+    const {storedLinks, setTransactionLink, unsetTransactionLink, setTransactionLinkType} = useTransactionLinks();
+    const {transactionTypeMap, setTransactionType, setTransactionTypes} = useTransactionTypeMap();
+    const {
+        selectedEnvelopes,
+        saveSelectedEnvelopes,
+        toggleSelectedEnvelope,
+        isEnvelopeSelected
+    } = useSelectedEnvelopes();
 
     const isIncomeMapped = (id: TransactionID) => {
         return Object.keys(incomeMap).map(e => parseInt(e)).includes(id);
@@ -133,7 +138,9 @@ const useTransactions = () => {
 
     return {
         envelopes,
+        selectedEnvelopes,
         transactions,
+        envelopeSelectedTransactions: transactions.filter(tran => isEnvelopeSelected(tran.envelope)),
         getTransactions,
         setTransactionLink,
         unsetTransactionLink,

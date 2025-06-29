@@ -8,6 +8,7 @@ import {Category, Envelope, Transaction, TransactionID} from '@/model';
 import SingleLineChart from "@/components/SingleLineChart";
 import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
 import TransactionTable from "@/features/transaction/TransactionTable";
+import useEnvelopeCalculations from "@/hooks/useEnvelopeCalculations";
 
 interface EnvelopeCalculations {
     income: number;
@@ -37,44 +38,15 @@ const Page = () => {
 };
 
 const InsightPage = () => {
-    const {transactions, envelopes, isEnvelopeSelected} = useTransactionsContext();
+    const {envelopes, envelopeSelectedTransactions} = useTransactionsContext();
     const {getCategory, categories} = useCategories();
-
-    const envelopeSelectedTransactions = transactions.filter(tran => {
-        return isEnvelopeSelected(tran.envelope);
-    });
 
     const transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>> = useMemo(() => {
         return Object.groupBy(envelopeSelectedTransactions, row => {
             return row.envelope;
         });
     }, [envelopeSelectedTransactions]);
-
-    const envelopeCalculations: Record<Envelope, EnvelopeCalculations> = useMemo(() => {
-        const calculations: Record<Envelope, EnvelopeCalculations> = {};
-        envelopes.forEach(envelope => {
-            const transactions = transactionsByEnvelope[envelope] || [];
-            const income = transactions.filter(tran => tran.type === "income").reduce((sum, tran) => sum + tran.amount, 0);
-            const expenseTransactions = transactions.filter(tran => tran.type === "expense");
-            const expenses = expenseTransactions.reduce((sum, tran) => sum + tran.amount, 0);
-            const net = income + expenses;
-            const expensesByCategory: Record<Category, number> = {};
-            expenseTransactions.forEach(tran => {
-                const category = getCategory(tran.id);
-                if (!expensesByCategory[category]) {
-                    expensesByCategory[category] = 0;
-                }
-                expensesByCategory[category] += tran.amount;
-            });
-            calculations[envelope] = {
-                income,
-                expenses,
-                net,
-                expensesByCategory
-            };
-        });
-        return calculations;
-    }, [envelopes, transactionsByEnvelope]);
+    const envelopeCalculations = useEnvelopeCalculations();
 
     const totalExpenses = envelopes.reduce((sum, envelope) => {
         return (envelopeCalculations[envelope]?.expenses ?? 0) + sum;

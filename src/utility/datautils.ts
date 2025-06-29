@@ -30,16 +30,10 @@ export const advancedFilters = (row: Transaction) => {
     return false;
 }
 
-export const groupByEnvelope = (rows: Transaction[]): Partial<Record<Envelope, Transaction[]>> => {
-    const grouped: Partial<Record<Envelope, Transaction[]>> = {};
-    rows.forEach(row => {
-        const envelope = getEnvelopeFromDate(row.date);
-        if (!grouped[envelope]) {
-            grouped[envelope] = [];
-        }
-        grouped[envelope]!.push(row);
-    });
-    return grouped;
+export const groupByEnvelope = (rows: Transaction[]): Record<Envelope, Transaction[]> => {
+    return Object.groupBy(rows, row => {
+        return row.envelope;
+    }) as Record<Envelope, Transaction[]>;
 }
 
 export const getSum = (rows: Transaction[]) => {
