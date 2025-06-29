@@ -4,12 +4,21 @@ import useBudget from "@/hooks/Budget";
 import useIncome from "@/hooks/Income";
 import {advancedFilters, formatCurrency, formatMonth, getDayJs, getSum, groupByEnvelope} from "@/utility/datautils";
 import useCategories from "@/hooks/Categories";
-import useCSVRows from "@/hooks/CSVRows";
-import {BudgetPost, Category, CategoryBudgetPostMap, Envelope, MappedCSVRow} from "@/model";
+import {BudgetPost, Category, CategoryBudgetPostMap, Envelope, MappedCSVRow, Transaction, TransactionID} from "@/model";
 import dayjs from "dayjs";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
+import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
 
-export default function BudgetPage() {
+const Page = () => {
+    return (
+        <TransactionsProvider>
+            <BudgetPage/>
+        </TransactionsProvider>
+    );
+};
+
+
+function BudgetPage() {
     const {
         budgetPosts,
         createBudgetPost,
@@ -21,73 +30,48 @@ export default function BudgetPage() {
         setCategoryBudgetMap,
         getCategoriesForPost
     } = useBudget();
-    const {mappedCSVRows} = useCSVRows();
+    const {transactions, envelopes} = useTransactionsContext()
     const {groupByCategory, getCategory, categories} = useCategories();
-    const {incomeRows} = useIncome();
-    const {isAccountOwned} = useOwnedAccounts();
 
     const [selectedFromMonth, setSelectedFromMonth] = useState<number | undefined>(undefined);
     const [selectedToMonth, setSelectedToMonth] = useState<number | undefined>(undefined);
     const [newTitle, setNewTitle] = useState("");
     const [newAmount, setNewAmount] = useState<number>(0);
 
-    const filteredRows: MappedCSVRow[] = useMemo(() => mappedCSVRows.filter(e => {
-        return !(isAccountOwned(e.mappedFrom) && isAccountOwned(e.mappedTo));
-    }).filter(advancedFilters).toSorted((a, b) => {
-        const aDate = dayjs(a.mappedDate, 'DD-MM-YYYY');
-        const bDate = dayjs(b.mappedDate, 'DD-MM-YYYY');
-        return bDate.unix() - aDate.unix()
-    }), [mappedCSVRows, isAccountOwned])
-
-    const groupedByMonth: Record<string, MappedCSVRow[] | undefined> = useMemo(() => Object.groupBy(filteredRows, row => {
-        return dayjs(row.mappedDate, 'DD-MM-YYYY').format("MMMM YYYY");
-    }), [filteredRows]);
-    const months = Object.keys(groupedByMonth).filter(e => e !== "");
+    const groupedByEnvelopes = groupByEnvelope(transactions);
 
     const monthlyTotals: MonthlyTotals = useMemo(() => {
-        return computeMonthlyTotals(months, groupedByMonth, getCategory);
-    }, [mappedCSVRows, months])
+        return computeMonthlyTotals(envelopes, groupedByEnvelopes, getCategory);
+    }, [groupedByEnvelopes, envelopes])
 
 
-    const total = useMemo(() => months.reduce((pre, cur) => {
-        return monthlyTotals.totals[cur] + pre;
-    }, 0), [monthlyTotals, months])
-
-    if (filteredRows.length === 0) {
+    if (transactions.length === 0) {
         return <></>
     }
 
-    const latestDate = dayjs(filteredRows[0].mappedDate, 'DD-MM-YYYY');
-    const earliestDate = dayjs(filteredRows[filteredRows.length - 1].mappedDate, 'DD-MM-YYYY');
-    const durationDays = latestDate.diff(earliestDate, 'days');
-    const dailyAverageExpenses = total / durationDays;
-    const monthlyAverageExpenses = total / months.length;
     const monthlyAverageExpensesPerCategory: Record<string, number> = {};
     categories.forEach(category => {
-        const monthly = months.map(month => {
-            return monthlyTotals.categoryTotals[month][category];
+        const monthly = envelopes.map(envelope => {
+            return monthlyTotals.categoryTotals[envelope][category];
         });
         const total = monthly.reduce((pre, cur) => {
             if (isNaN(cur)) return pre;
             return pre + cur
         }, 0);
-        monthlyAverageExpensesPerCategory[category] = total / months.length;
+        monthlyAverageExpensesPerCategory[category] = total / envelopes.length;
     })
 
-    const incomePerMonth = groupByEnvelope(incomeRows);
+    const incomePerMonth = groupByEnvelope(transactions.filter(e => e.type === "income"));
     const incomeMonths = Object.keys(incomePerMonth);
     const totalIncome = incomeMonths.reduce((pre, cur) => pre + getSum(incomePerMonth[cur] ?? []), 0);
     const averageIncomePerMonth = totalIncome / incomeMonths.length;
-    const averageIncomePerDay = totalIncome / durationDays;
 
     const totalBudget = budgetPosts.reduce((acc, post) => acc + post.amount, 0);
 
-    const categoriesSortedByMonthlyCost = [...categories]
-        .toSorted((a, b) => monthlyAverageExpensesPerCategory[b] - monthlyAverageExpensesPerCategory[a]);
 
 
     const isMonthSelected = (month: Envelope) => {
-        const idx = months.indexOf(month);
+        const idx = envelopes.indexOf(month);
         if (selectedFromMonth === undefined) {
             return true;
         }
@@ -96,32 +80,23 @@ export default function BudgetPage() {
         }
         return idx >= selectedFromMonth && idx <= selectedToMonth;
     }
-    const dateFilteredMonths = (selectedFromMonth !== undefined && selectedToMonth !== undefined) ? months.filter((_ignored, idx) => idx >= selectedFromMonth && idx <= selectedToMonth) : months
-    console.log(dateFilteredMonths)
-    const rowsFilteredByDate = (selectedFromMonth !== undefined && selectedToMonth !== undefined) ? filteredRows.filter(e => {
-            return dateFilteredMonths.includes(formatMonth(getDayJs(e.mappedDate).toDate()))
+    const dateFilteredMonths = (selectedFromMonth !== undefined && selectedToMonth !== undefined) ? envelopes.filter((_ignored, idx) => idx >= selectedFromMonth && idx <= selectedToMonth) : envelopes
+    const rowsFilteredByDate = (selectedFromMonth !== undefined && selectedToMonth !== undefined) ? transactions.filter(e => {
+            return dateFilteredMonths.includes(formatMonth(e.date.toDate()))
         }
-    ) : filteredRows
+    ) : transactions
 
     const dateFilteredGroupedByCategory = groupByCategory(rowsFilteredByDate);
-    const groupedByCategory = groupByCategory(filteredRows);
+    const groupedByCategory = groupByCategory(transactions);
     const averagesByCategory: Record<Category, number> = {}
-    categories.forEach(e => averagesByCategory[e] = getSum(groupedByCategory[e] ?? []) / months.length);
+    categories.forEach(e => averagesByCategory[e] = getSum(groupedByCategory[e] ?? []) / envelopes.length);
     const sortedAveragesByCategory = categories.map(cat => ({
         average: averagesByCategory[cat],
         category: cat
     })).sort((a, b) => a.average - b.average);
     const dateFilteredAveragesByCategory: Record<Category, number> = {}
     categories.forEach(e => dateFilteredAveragesByCategory[e] = getSum(dateFilteredGroupedByCategory[e] ?? []) / dateFilteredMonths.length);
-    console.log(dateFilteredGroupedByCategory)
 
-    /*
-        const expensesByBudgetPost: Record<BudgetPost["title"], { amount: number, category: Category }[]> = {}
-        budgetPosts.map(e => {
-            const categories = getCategoriesForPost(e);
-            expensesByBudgetPost[e.title] = categories.map(cat => ({amount: averagesByCategory[cat], category: cat}));
-        })
-    */
     const dateFilteredExpensesByBudgetPost: Record<BudgetPost["title"], { amount: number, category: Category }[]> = {}
     budgetPosts.map(e => {
         const categories = getCategoriesForPost(e);
@@ -170,7 +145,7 @@ export default function BudgetPage() {
     }
 
     const handleMonthSelect = (month: Envelope) => {
-        const idx = months.indexOf(month);
+        const idx = envelopes.indexOf(month);
         if (idx === -1) return;
         if (selectedFromMonth === undefined) {
             setSelectedFromMonth(idx);
@@ -200,14 +175,14 @@ export default function BudgetPage() {
                     </div>
                     <div className={"flex flex-col flex-1/4 bg-gray-800 p-4 rounded-xl"}>
                         <div className={"grid grid-cols-4 text-sm gap-2"}>
-                            {months.map(month => {
-                                const isSelected = isMonthSelected(month);
+                            {envelopes.map(envelope => {
+                                const isSelected = isMonthSelected(envelope);
                                 if (isSelected) {
                                     return <span className={"px-1 border-2 cursor-pointer select-none bg-green-900"}
-                                                 onClick={() => handleMonthSelect(month)} key={month}>{month}</span>
+                                                 onClick={() => handleMonthSelect(envelope)} key={envelope}>{envelope}</span>
                                 }
                                 return <span className={"px-1 border-2 cursor-pointer select-none"}
-                                             onClick={() => handleMonthSelect(month)} key={month}>{month}</span>
+                                             onClick={() => handleMonthSelect(envelope)} key={envelope}>{envelope}</span>
                             })}
                         </div>
                     </div>
@@ -384,7 +359,7 @@ interface MonthlyTotals {
     totals: Record<string, number>;
 }
 
-const computeMonthlyTotals = (months: string[], groupedByMonth: Record<string, MappedCSVRow[] | undefined>, getCategory: (row: MappedCSVRow) => string | undefined): MonthlyTotals => {
+const computeMonthlyTotals = (months: string[], groupedByMonth: Record<Envelope, Transaction[] | undefined>, getCategory: (row: TransactionID) => Category): MonthlyTotals => {
     const totals: Record<string, number> = {};
     const monthlyCategoryTotals: Record<string, Record<string, number>> = {};
 
@@ -399,8 +374,8 @@ const computeMonthlyTotals = (months: string[], groupedByMonth: Record<string, M
             if (!categoryTotals) {
                 throw new Error("wa")
             }
-            const category = getCategory(row) || "Unassigned";
-            const num = row.mappedAmount;
+            const category: Category = getCategory(row.id);
+            const num = row.amount;
             if (!isNaN(num)) {
                 categoryTotals[category] = (categoryTotals[category] || 0) + num;
                 totalSum += num;
@@ -411,3 +386,5 @@ const computeMonthlyTotals = (months: string[], groupedByMonth: Record<string, M
     })
     return {totals, categoryTotals: monthlyCategoryTotals};
 };
+
+export default Page;

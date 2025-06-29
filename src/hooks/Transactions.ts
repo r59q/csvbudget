@@ -3,119 +3,20 @@ import {Envelope, MappedCSVRow, Transaction, TransactionID, TransactionLinkDescr
 import {getDayJs, getEnvelopeFromDate, predictEnvelope, predictIsCsvRowTransfer} from "@/utility/datautils";
 import useIncome from "@/hooks/Income";
 import {useGlobalContext} from "@/context/GlobalContext";
-import {getSelectedEnvelopesData, getTransactionLinksData, getTransactionTypeMapData} from "@/data";
-import {useEffect, useMemo, useState} from "react";
+import useCategoryPredictionIndex from "@/hooks/useCategoryPredictionIndex";
+import useTransactionLinks from "@/hooks/useTransactionLinks";
+import useTransactionTypeMap from "@/hooks/useTransactionTypeMap";
+import useSelectedEnvelopes from "@/hooks/useSelectedEnvelopes";
+import {useMemo} from "react";
 
 const useTransactions = () => {
     const {isAccountOwned, accountValueMappings, getCategory, categoryMap} = useGlobalContext();
     const {mappedCSVRows} = useCSVRows();
     const {incomeMap, getEnvelopeForIncome} = useIncome();
-    const transactionLinksStore = getTransactionLinksData();
-    const transactionTypeMapStore = getTransactionTypeMapData();
-    const [storedLinks, setStoredLinks] = useState<Record<number, TransactionLinkDescriptor[]>>({});
-    const [transactionTypeMap, setTransactionTypeMap] = useState<Record<TransactionID, TransactionType>>({});
-    const [selectedEnvelopes, setSelectedEnvelopes] = useState<Envelope[]>([]);
-
-    const categoryPredictionIndex = useMemo(() => {
-        const index: Record<string, string> = {};
-        Object.keys(categoryMap).forEach(tranId => {
-            const csvRow = mappedCSVRows.find(row => row.mappedId === parseInt(tranId));
-            if (csvRow) {
-                const category = getCategory(parseInt(tranId));
-                if (category !== "Unassigned") {
-                    index[csvRow.mappedText] = category;
-                }
-            }
-        })
-        return index;
-    }, [categoryMap]);
-
-    useEffect(() => {
-        setStoredLinks(transactionLinksStore.load());
-        setTransactionTypeMap(transactionTypeMapStore.load());
-        setSelectedEnvelopes(getSelectedEnvelopesData().load());
-    }, []);
-
-    const setTransactionLink = (a: Transaction, b: Transaction) => {
-        setStoredLinks(prev => {
-            const newLinks = {...prev};
-            // Add link for a -> b
-            if (!newLinks[a.id]) newLinks[a.id] = [];
-            if (!newLinks[a.id].some(l => l.linkedId === b.id)) {
-                newLinks[a.id] = [...newLinks[a.id], {linkedId: b.id, linkType: "unknown"}];
-            }
-            // Add link for b -> a
-            if (!newLinks[b.id]) newLinks[b.id] = [];
-            if (!newLinks[b.id].some(l => l.linkedId === a.id)) {
-                newLinks[b.id] = [...newLinks[b.id], {linkedId: a.id, linkType: "unknown"}];
-            }
-            transactionLinksStore.save(newLinks);
-            return newLinks;
-        });
-    };
-
-    const unsetTransactionLink = (a: Transaction, b: Transaction) => {
-        setStoredLinks(prev => {
-            const newLinks = {...prev};
-            // Remove link for a -> b
-            if (newLinks[a.id]) {
-                newLinks[a.id] = newLinks[a.id].filter(l => l.linkedId !== b.id);
-                if (newLinks[a.id].length === 0) delete newLinks[a.id];
-            }
-            // Remove link for b -> a
-            if (newLinks[b.id]) {
-                newLinks[b.id] = newLinks[b.id].filter(l => l.linkedId !== a.id);
-                if (newLinks[b.id].length === 0) delete newLinks[b.id];
-            }
-            transactionLinksStore.save(newLinks);
-            return newLinks;
-        });
-    };
-
-    const setTransactionLinkType = (a: Transaction, b: Transaction, linkType: TransactionLinkDescriptor['linkType']) => {
-        setStoredLinks(prev => {
-            const newLinks = {...prev};
-            // Update link for a -> b
-            if (newLinks[a.id]) {
-                newLinks[a.id] = newLinks[a.id].map(l =>
-                    l.linkedId === b.id ? {...l, linkType} : l
-                );
-            }
-            // Update link for b -> a
-            if (newLinks[b.id]) {
-                newLinks[b.id] = newLinks[b.id].map(l =>
-                    l.linkedId === a.id ? {...l, linkType} : l
-                );
-            }
-            transactionLinksStore.save(newLinks);
-            return newLinks;
-        });
-    };
-
-    const setTransactionType = (id: TransactionID, type: TransactionType) => {
-        setTransactionTypeMap(prev => {
-            const newTypeMap = {...prev, [id]: type};
-            if (type === "unknown") {
-                delete newTypeMap[id]
-            }
-            transactionTypeMapStore.save(newTypeMap);
-            return newTypeMap;
-        });
-    };
-
-    const setTransactionTypes = (ids: TransactionID[], type: TransactionType) => {
-        setTransactionTypeMap(prev => {
-            const newTypeMap = {...prev};
-            ids.forEach(id => {
-                newTypeMap[id] = type;
-                if (type === "unknown") {
-                    delete newTypeMap[id];
-                }
-            });
-            transactionTypeMapStore.save(newTypeMap);
-            return newTypeMap;
-        });
-    };
+    const categoryPredictionIndex = useCategoryPredictionIndex(categoryMap, mappedCSVRows, getCategory);
+    const { storedLinks, setTransactionLink, unsetTransactionLink, setTransactionLinkType } = useTransactionLinks();
+    const { transactionTypeMap, setTransactionType, setTransactionTypes } = useTransactionTypeMap();
+    const { selectedEnvelopes, saveSelectedEnvelopes, toggleSelectedEnvelope, isEnvelopeSelected } = useSelectedEnvelopes();
 
     const isIncomeMapped = (id: TransactionID) => {
         return Object.keys(incomeMap).map(e => parseInt(e)).includes(id);
@@ -230,21 +131,6 @@ const useTransactions = () => {
         return Array.from(envelopeSet).sort();
     }, [transactions]).reverse();
 
-    const saveSelectedEnvelopes = (envelopes: Envelope[]) => {
-        setSelectedEnvelopes(getSelectedEnvelopesData().save(envelopes));
-    }
-
-    const toggleSelectedEnvelope = (envelope: Envelope) => {
-        setSelectedEnvelopes(prev => {
-            const newEnvelopes = prev.includes(envelope) ? prev.filter(e => e !== envelope) : [...prev, envelope];
-            return getSelectedEnvelopesData().save(newEnvelopes);
-        });
-    }
-
-    const isEnvelopeSelected = (envelope: Envelope) => {
-        return selectedEnvelopes.includes(envelope);
-    }
-
     return {
         envelopes,
         transactions,
@@ -276,3 +162,4 @@ const predictLinks = (guessingRow: MappedCSVRow, rows: MappedCSVRow[]): Transact
 }
 
 export default useTransactions;
+
