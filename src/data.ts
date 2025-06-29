@@ -4,7 +4,7 @@ import {
     BudgetPost,
     Category,
     CategoryBudgetPostMap,
-    CSVFile,
+    CSVFile, Envelope,
     IncomeEnvelopeMap, TransactionCategoryMap, TransactionID, TransactionLinkDescriptor, TransactionType
 } from "@/model";
 import {SchemaColumnMapping} from "@/utility/csvutils";
@@ -26,6 +26,7 @@ const CATEGORY_BUDGET_MAP_KEY = "category_budgetpost_map";
 const CSV_MAPPING_KEY = "csv_mappings";
 const TRANSACTION_LINKS_KEY = "transaction_links";
 const TRANSACTION_TYPE_MAP_KEY = "transaction_type_map";
+const SELECTED_ENVELOPES_KEY = "selected_envelopes";
 
 /// Used for resetting data
 export const LOCALSTORAGE_KEYS = [
@@ -41,6 +42,7 @@ export const LOCALSTORAGE_KEYS = [
     CSV_MAPPING_KEY,
     TRANSACTION_LINKS_KEY,
     TRANSACTION_TYPE_MAP_KEY,
+    SELECTED_ENVELOPES_KEY,
 ];
 
 export const getCSVFilesData = (): StoredDataWrapper<CSVFile[]> => {
@@ -262,6 +264,26 @@ export const getTransactionTypeMapData = (): StoredDataWrapper<Record<Transactio
                 return {};
             }
             return typeMap;
+        }
+    };
+}
+
+export const getSelectedEnvelopesData = (): StoredDataWrapper<Envelope[]> => {
+    return {
+        load: () => {
+            const raw = localStorage.getItem(SELECTED_ENVELOPES_KEY);
+            if (!raw) return [];
+            try {
+                const parsed = JSON.parse(raw);
+                if (!Array.isArray(parsed)) return [];
+                return parsed;
+            } catch {
+                return [];
+            }
+        },
+        save: (data: Envelope[]) => {
+            localStorage.setItem(SELECTED_ENVELOPES_KEY, JSON.stringify(data));
+            return data;
         }
     };
 }

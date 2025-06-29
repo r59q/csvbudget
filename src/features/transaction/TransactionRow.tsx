@@ -8,7 +8,7 @@ import AmountField from "@/components/fields/AmountField";
 import TransactionTypeField from "@/components/fields/TransactionTypeField";
 import CategoryField from "@/components/fields/CategoryField";
 import {useTransactionsContext} from "@/context/TransactionsContext";
-import {TransactionTableColumn} from "@/features/mapping/TransactionTable";
+import {TransactionTableColumn} from "@/features/transaction/TransactionTable";
 
 
 interface TransactionRowProps {
@@ -16,9 +16,10 @@ interface TransactionRowProps {
     onContextMenu?: (e: React.MouseEvent, transaction: Transaction) => void;
     guessedLinkTransactions: Transaction[];
     visibleColumns?: TransactionTableColumn[];
+    compact: boolean;
 }
 
-const TransactionRow: React.FC<TransactionRowProps> = ({transaction, onContextMenu, guessedLinkTransactions, visibleColumns}) => {
+const TransactionRow: React.FC<TransactionRowProps> = ({transaction, onContextMenu, guessedLinkTransactions, visibleColumns, compact}) => {
     const rowRef = useRef<HTMLTableRowElement>(null);
     const [expanded, setExpanded] = React.useState(false);
 
@@ -28,33 +29,36 @@ const TransactionRow: React.FC<TransactionRowProps> = ({transaction, onContextMe
                 ref={rowRef}
                 onContextMenu={onContextMenu ? (e) => onContextMenu(e, transaction) : undefined}
                 key={transaction.id}
-                className={"even:bg-gray-800 hover:bg-blue-950"}
+                className={[
+                    "even:bg-gray-800 hover:bg-blue-950",
+                    compact ? "text-xs py-1" : "text-base py-3"
+                ].join(" ")}
             >
                 {(!visibleColumns || visibleColumns.includes('id')) && (
-                    <td className="p-2 border cursor-pointer hover:underline" onClick={() => setExpanded(e => !e)}>
+                    <td className={compact ? "p-1 border cursor-pointer hover:underline" : "p-2 border cursor-pointer hover:underline"} onClick={() => setExpanded(e => !e)}>
                         <IDField transaction={transaction}/>
                     </td>
                 )}
                 {(!visibleColumns || visibleColumns.includes('date')) && (
-                    <td className="p-2 border"><DateField transaction={transaction}/></td>
+                    <td className={compact ? "p-1 border" : "p-2 border"}><DateField transaction={transaction}/></td>
                 )}
                 {(!visibleColumns || visibleColumns.includes('text')) && (
-                    <td className="p-2 border"><TextField transaction={transaction}/></td>
+                    <td className={compact ? "p-1 border" : "p-2 border"}><TextField transaction={transaction}/></td>
                 )}
                 {(!visibleColumns || visibleColumns.includes('amount')) && (
-                    <td className="p-2 border"><AmountField transaction={transaction}/></td>
+                    <td className={compact ? "p-1 border" : "p-2 border"}><AmountField transaction={transaction}/></td>
                 )}
                 {(!visibleColumns || visibleColumns.includes('from')) && (
-                    <td className="p-2 border w-50"><AccountField account={transaction.from}/></td>
+                    <td className={compact ? "p-1 border w-50" : "p-2 border w-50"}><AccountField account={transaction.from}/></td>
                 )}
                 {(!visibleColumns || visibleColumns.includes('to')) && (
-                    <td className="p-2 border w-50"><AccountField account={transaction.to}/></td>
+                    <td className={compact ? "p-1 border w-50" : "p-2 border w-50"}><AccountField account={transaction.to}/></td>
                 )}
                 {(!visibleColumns || visibleColumns.includes('type')) && (
-                    <td className="p-2 border"><TransactionTypeField transaction={transaction}/></td>
+                    <td className={compact ? "p-1 border" : "p-2 border"}><TransactionTypeField transaction={transaction}/></td>
                 )}
                 {(!visibleColumns || visibleColumns.includes('category')) && (
-                    <td className="p-2 border"><CategoryField transaction={transaction}/></td>
+                    <td className={compact ? "p-1 border" : "p-2 border"}><CategoryField transaction={transaction}/></td>
                 )}
             </tr>
             {expanded && <ExpandedTransactionRow {...{transaction, guessedLinkTransactions}} />}

@@ -2,13 +2,14 @@ import {Area, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Toolt
 import {formatDate} from "@/utility/datautils";
 
 interface Props {
-    burndown: { value: number, date: number }[]
+    data: { value: number, date: number }[]
+    zero: number;
 }
 
-export default function BurndownChart({burndown}: Props) {
-    const augmentedBurndown = burndown.map(e => ({
+export default function SingleLineChart({data, zero}: Props) {
+    const augmentedBurndown = data.map(e => ({
         ...e,
-        zero: 0
+        zero: zero
     }))
     return (
         <div className="w-full h-96">

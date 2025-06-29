@@ -1,12 +1,20 @@
 "use client";
-import React, {createContext, use, useMemo, useState} from 'react';
-import {advancedFilters, formatCurrency, formatDayjs, getSum, groupByEnvelope} from "@/utility/datautils";
+import React, {createContext, useMemo, useState} from 'react';
+import {formatCurrency, formatDayjs} from "@/utility/datautils";
 import useCSVRows from "@/hooks/CSVRows";
 import useCategories from "@/hooks/Categories";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 import {Category, Envelope, Transaction, TransactionID} from '@/model';
-import BurndownChart from "@/components/BurndownChart";
+import SingleLineChart from "@/components/SingleLineChart";
 import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
+import TransactionTable from "@/features/transaction/TransactionTable";
+
+interface EnvelopeCalculations {
+    income: number;
+    expenses: number;
+    net: number;
+    expensesByCategory: Record<Category, number>;
+}
 
 interface InsightsContextType {
     getCategory: (transactionId: TransactionID) => Category;
@@ -29,64 +37,75 @@ const Page = () => {
 };
 
 const InsightPage = () => {
-    const {mappedCSVRows} = useCSVRows();
-    const {transactions} = useTransactionsContext();
+    const {transactions, envelopes, isEnvelopeSelected} = useTransactionsContext();
     const {getCategory, categories} = useCategories();
-    const {isAccountOwned} = useOwnedAccounts();
 
-    const incomeRows = transactions.filter(tran => tran.type === "income");
+    const envelopeSelectedTransactions = transactions.filter(tran => {
+        return isEnvelopeSelected(tran.envelope);
+    });
 
-    const filteredTransactions: Transaction[] = useMemo(() => transactions.filter(e => {
-        return !(isAccountOwned(e.from) && isAccountOwned(e.to));
-    }).filter(advancedFilters).toSorted((a, b) => {
-        const aDate = a.date;
-        const bDate = b.date;
-        return bDate.unix() - aDate.unix()
-    }), [mappedCSVRows, isAccountOwned])
+    const transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>> = useMemo(() => {
+        return Object.groupBy(envelopeSelectedTransactions, row => {
+            return row.envelope;
+        });
+    }, [envelopeSelectedTransactions]);
 
-    const groupedByEnvelope: Partial<Record<Envelope, Transaction[]>> = useMemo(() => Object.groupBy(filteredTransactions, row => {
-        return row.envelope;
-    }), [filteredTransactions]);
-    const months = Object.keys(groupedByEnvelope).filter(e => e !== "");
+    const envelopeCalculations: Record<Envelope, EnvelopeCalculations> = useMemo(() => {
+        const calculations: Record<Envelope, EnvelopeCalculations> = {};
+        envelopes.forEach(envelope => {
+            const transactions = transactionsByEnvelope[envelope] || [];
+            const income = transactions.filter(tran => tran.type === "income").reduce((sum, tran) => sum + tran.amount, 0);
+            const expenseTransactions = transactions.filter(tran => tran.type === "expense");
+            const expenses = expenseTransactions.reduce((sum, tran) => sum + tran.amount, 0);
+            const net = income + expenses;
+            const expensesByCategory: Record<Category, number> = {};
+            expenseTransactions.forEach(tran => {
+                const category = getCategory(tran.id);
+                if (!expensesByCategory[category]) {
+                    expensesByCategory[category] = 0;
+                }
+                expensesByCategory[category] += tran.amount;
+            });
+            calculations[envelope] = {
+                income,
+                expenses,
+                net,
+                expensesByCategory
+            };
+        });
+        return calculations;
+    }, [envelopes, transactionsByEnvelope]);
 
-    const monthlyTotals: MonthlyTotals = useMemo(() => {
-        return computeMonthlyTotals(months, groupedByEnvelope, getCategory);
-    }, [mappedCSVRows, months, getCategory])
+    const totalExpenses = envelopes.reduce((sum, envelope) => {
+        return (envelopeCalculations[envelope]?.expenses ?? 0) + sum;
+    }, 0)
 
+    const totalIncome = envelopes.reduce((sum, envelope) => {
+        return (envelopeCalculations[envelope]?.income ?? 0) + sum;
+    }, 0)
 
-    const total = useMemo(() => months.reduce((pre, cur) => {
-        return monthlyTotals.totals[cur] + pre;
-    }, 0), [monthlyTotals, months])
+    const totalNet = totalIncome + totalExpenses;
 
-    if (filteredTransactions.length === 0) {
-        return <></>
-    }
-
-    const latestDate = filteredTransactions[0].date;
-    const earliestDate = filteredTransactions[filteredTransactions.length - 1].date;
-    const durationDays = latestDate.diff(earliestDate, 'days');
-    const dailyAverageExpenses = total / durationDays;
-    const monthlyAverageExpenses = total / months.length;
-    const monthlyAverageExpensesPerCategory: Record<string, number> = {};
+    const monthlyByCategory: Record<Category, number> = {};
     categories.forEach(category => {
-        const monthly = months.map(month => {
-            return monthlyTotals.categoryTotals[month][category];
+        const monthly = envelopes.map(envelope => {
+            return envelopeCalculations[envelope]?.expensesByCategory[category] ?? 0;
         });
         const total = monthly.reduce((pre, cur) => {
             if (isNaN(cur)) return pre;
             return pre + cur
         }, 0);
-        monthlyAverageExpensesPerCategory[category] = total / months.length;
-    })
-
-    const incomePerMonth = groupByEnvelope(incomeRows);
-    const incomeMonths = Object.keys(incomePerMonth);
-    const totalIncome = incomeMonths.reduce((pre, cur) => pre + getSum(incomePerMonth[cur] ?? []), 0);
-    const averageIncomePerMonth = totalIncome / incomeMonths.length;
-    const averageIncomePerDay = totalIncome / durationDays;
-
+        monthlyByCategory[category] = total / envelopes.length;
+    });
     const categoriesSortedByMonthlyCost = [...categories]
-        .toSorted((a, b) => monthlyAverageExpensesPerCategory[b] - monthlyAverageExpensesPerCategory[a]);
+        .toSorted((a, b) => monthlyByCategory[a] - monthlyByCategory[b]);
+    const monthlyIncome = totalIncome / envelopes.length;
+    const monthlyExpenses = totalExpenses / envelopes.length;
+    const monthlyNet = totalNet / envelopes.length;
+
+    if (envelopeSelectedTransactions.length === 0) {
+        return <></>
+    }
 
     return (
         <InsightsContext.Provider value={{getCategory}}>
@@ -98,10 +117,8 @@ const InsightPage = () => {
                             <section>
                                 <h3 className="text-lg font-semibold text-red-400 mb-3">Expenses</h3>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <span className="text-zinc-400">Daily</span>
-                                    <span className="text-right">{formatCurrency(dailyAverageExpenses)}</span>
                                     <span className="text-zinc-400">Monthly</span>
-                                    <span className="text-right">{formatCurrency(monthlyAverageExpenses)}</span>
+                                    <span className="text-right">{formatCurrency(monthlyExpenses)}</span>
                                 </div>
 
                                 <hr/>
@@ -113,8 +130,9 @@ const InsightPage = () => {
                                         {categoriesSortedByMonthlyCost.map((category) => (
                                             <React.Fragment key={category}>
                                                 <span>{category}</span>
-                                                <span
-                                                    className="text-right">{formatCurrency(monthlyAverageExpensesPerCategory[category])}</span>
+                                                <span className="text-right">
+                                                    {formatCurrency(monthlyByCategory[category])}
+                                                </span>
                                             </React.Fragment>
                                         ))}
                                     </div>
@@ -125,10 +143,8 @@ const InsightPage = () => {
                             <section>
                                 <h3 className="text-lg font-semibold text-green-400 mb-3">Income</h3>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <span className="text-zinc-400">Daily</span>
-                                    <span className="text-right">{formatCurrency(averageIncomePerDay)}</span>
                                     <span className="text-zinc-400">Monthly</span>
-                                    <span className="text-right">{formatCurrency(averageIncomePerMonth)}</span>
+                                    <span className="text-right">{formatCurrency(monthlyIncome)}</span>
                                 </div>
                             </section>
 
@@ -136,12 +152,9 @@ const InsightPage = () => {
                             <section>
                                 <h3 className="text-lg font-semibold text-blue-400 mb-3">Net</h3>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <span className="text-zinc-400">Daily</span>
-                                    <span
-                                        className="text-right">{formatCurrency(averageIncomePerDay + dailyAverageExpenses)}</span>
                                     <span className="text-zinc-400">Monthly</span>
                                     <span
-                                        className="text-right">{formatCurrency(averageIncomePerMonth + monthlyAverageExpenses)}</span>
+                                        className="text-right">{formatCurrency(monthlyNet)}</span>
                                 </div>
                             </section>
                         </div>
@@ -149,15 +162,21 @@ const InsightPage = () => {
                 </div>
 
                 <div>
-                    {months.map(month => {
-                        const rows = groupedByEnvelope[month];
-                        if (!rows) return null;
-                        return <div key={month}>
-                            <p>{month}</p>
-                            <MonthInsight {...{month, rows}}
-                                          income={getSum(incomePerMonth[month] ?? [])}
-                                          categoryTotals={monthlyTotals.categoryTotals[month]}
-                                          totalSum={monthlyTotals.totals[month]}/>
+                    {envelopes.map(envelope => {
+                        const envelopeTransactions = transactionsByEnvelope[envelope];
+                        if (!envelopeTransactions) return <React.Fragment key={envelope}></React.Fragment>;
+                        const envelopeIncome = envelopeCalculations[envelope]?.income ?? 0;
+                        const envelopeExpenses = envelopeCalculations[envelope]?.expenses ?? 0;
+                        const envelopeNet = envelopeIncome + envelopeExpenses;
+                        const categoryTotals = envelopeCalculations[envelope]?.expensesByCategory ?? {};
+                        return <div key={envelope}>
+                            <p>{envelope}</p>
+                            <EnvelopeInsight {...{month: envelope}}
+                                             transactions={envelopeTransactions}
+                                             income={envelopeIncome}
+                                             expenses={envelopeExpenses}
+                                             categoryTotals={categoryTotals}
+                                             net={envelopeNet}/>
                         </div>
                     })}
                 </div>
@@ -168,42 +187,37 @@ const InsightPage = () => {
 
 interface MonthInsightProps {
     month: string,
-    rows: Transaction[],
+    transactions: Transaction[],
     categoryTotals: Record<string, number>;
-    totalSum: number;
+    net: number;
     income: number;
+    expenses: number;
 }
 
-const MonthInsight = ({month, rows, categoryTotals, totalSum, income}: MonthInsightProps) => {
-    return <MonthInsightsTable {...{month, rows, categoryTotals, totalSum, income}}/>
+const EnvelopeInsight = ({month, transactions, categoryTotals, net, income, expenses}: MonthInsightProps) => {
+    return <MonthInsightsTable {...{month, transactions: transactions, categoryTotals, net: net, income, expenses}}/>
 };
 
 const MonthInsightsTable = ({
-                                rows,
-                                totalSum,
+                                transactions,
+                                net,
                                 categoryTotals,
-                                income
-                            }: Pick<MonthInsightProps, 'month' | "rows" | 'totalSum' | 'categoryTotals' | "income">) => {
-    const {getCategory} = use(InsightsContext);
+                                income,
+                                expenses
+                            }: Pick<MonthInsightProps, 'month' | "transactions" | 'net' | 'categoryTotals' | "income" | "expenses">) => {
     const [open, setOpen] = useState(false);
-    const firstOfMonth = rows[rows.length - 1];
-    const firstDateOfMonth = firstOfMonth.date
+    const expenseTransactions = transactions.filter(tran => tran.type === "expense")
+        .toSorted((a, b) => a.date.valueOf() - b.date.valueOf());
 
-    const burndown: {
-        value: number,
-        date: number
-    }[] = [{
-        value: income,
-        date: firstDateOfMonth.toDate().getTime()
-    }];
+    let balance = income;
+    const burndownChart = expenseTransactions.map((tran) => {
+        balance += tran.amount;
+        return {
+            value: balance,
+            date: tran.date.valueOf()
+        };
+    });
 
-    [...rows].reverse().forEach((row, idx) => {
-        burndown.push({
-            date: row.date.toDate().getTime(),
-            value: burndown[idx].value + row.amount
-        });
-    })
-    const expenses = getSum(rows);
 
     return (
         <div className="rounded-xl shadow p-4 mb-6 bg-gray-800">
@@ -223,28 +237,14 @@ const MonthInsightsTable = ({
                 <div className="mt-4 transition-all duration-300">
                     <div className="overflow-x-auto mb-4">
                         <div className={"flex w-full"}>
-                            <BurndownChart burndown={burndown}/>
+                            <SingleLineChart data={burndownChart} zero={net}/>
                         </div>
-                        <table className="w-full text-sm text-left text-gray-300 border border-gray-700 rounded-lg">
-                            <thead className="bg-gray-900 text-gray-500 font-semibold">
-                            <tr>
-                                <th className="px-4 py-2 border-b">Date</th>
-                                <th className="px-4 py-2 border-b">Posting</th>
-                                <th className="px-4 py-2 border-b">Category</th>
-                                <th className="px-4 py-2 border-b text-right">Amount</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {rows.map((row) => {
-                                const category = getCategory(row.id);
-                                return <MonthInsightsTableRow {...{row, category}} key={row.id}/>
-                            })}
-                            </tbody>
-                        </table>
+                        <TransactionTable transactions={transactions} pageSize={9999} compact
+                                          visibleColumns={["date", "text", "amount", "category"]}/>
                     </div>
 
                     <div className="border-t border-gray-600 pt-2">
-                        <MonthInsightsTableTotals {...{categoryTotals, totalSum}}/>
+                        <MonthInsightsTableTotals {...{categoryTotals, net}}/>
                     </div>
                 </div>
             )}
@@ -253,18 +253,18 @@ const MonthInsightsTable = ({
 }
 
 interface MonthInsightsTableRowProps {
-    row: Transaction;
+    transaction: Transaction;
     category: string | undefined;
 }
 
-const MonthInsightsTableRow = ({row, category}: MonthInsightsTableRowProps) => {
+const MonthInsightsTableRow = ({transaction, category}: MonthInsightsTableRowProps) => {
     return (
         <tr className="even:bg-gray-700 hover:bg-gray-900">
-            <td className="px-4 py-2 border-b">{formatDayjs(row.date)}</td>
-            <td className="px-4 py-2 border-b">{row.text}</td>
+            <td className="px-4 py-2 border-b">{formatDayjs(transaction.date)}</td>
+            <td className="px-4 py-2 border-b">{transaction.text}</td>
             <td className="px-4 py-2 border-b">{category}</td>
             <td className="px-4 py-2 border-b text-right">
-                {row.amount}
+                {transaction.amount}
             </td>
         </tr>
     );
@@ -272,12 +272,12 @@ const MonthInsightsTableRow = ({row, category}: MonthInsightsTableRowProps) => {
 
 interface MonthInsightsTableTotalsProps {
     categoryTotals: Record<string, number>;
-    totalSum: number;
+    net: number;
 }
 
 const MonthInsightsTableTotals = ({
                                       categoryTotals,
-                                      totalSum,
+                                      net,
                                   }: MonthInsightsTableTotalsProps) => {
     const sorted = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
     const maxAbs = Math.max(...Object.values(categoryTotals).map(Math.abs), 1); // Avoid div/0
@@ -299,7 +299,7 @@ const MonthInsightsTableTotals = ({
                 ))}
                 <li className="flex justify-between font-semibold text-gray-200 pt-2 border-t border-gray-700 mt-2">
                     <span>Total</span>
-                    <span>{formatCurrency(totalSum)}</span>
+                    <span>{formatCurrency(net)}</span>
                 </li>
             </ul>
         </>

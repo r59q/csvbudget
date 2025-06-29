@@ -18,6 +18,7 @@ export type TransactionTableColumn =
 interface TransactionTableProps {
     transactions: Transaction[];
     pageSize?: number;
+    compact?: boolean;
     visibleColumns?: TransactionTableColumn[];
 }
 
@@ -45,6 +46,7 @@ function getColumnStyle(col: TransactionTableColumn) {
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
                                                                transactions,
+                                                               compact = false,
                                                                pageSize = 6,
                                                                visibleColumns = DEFAULT_COLUMNS
                                                            }) => {
@@ -58,7 +60,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     const paginatedTransactions = transactions.slice(page * pageSize, (page + 1) * pageSize);
     const totalPages = Math.ceil(transactions.length / pageSize);
 
-    const height = Math.min(paginatedTransactions.length, pageSize) * 65; // Assuming each row is about 65px tall
+    const height = Math.min(paginatedTransactions.length, pageSize) * (compact ? 40 : 65); // Assuming each row is about 65px tall
 
     return (
         <>
@@ -68,7 +70,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         <thead>
                         <tr className="bg-gray-950">
                             {visibleColumns.map(col => (
-                                <th key={col} className="p-2 border" style={getColumnStyle(col)}>
+                                <th key={col} className="px-2 py-1 border" style={getColumnStyle(col)}>
                                     {COLUMN_HEADERS[col]}
                                 </th>
                             ))}
@@ -77,6 +79,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         <tbody>
                         {paginatedTransactions.map(t => (
                             <TransactionRow
+                                compact={compact}
                                 key={t.id}
                                 transaction={t}
                                 guessedLinkTransactions={getTransactions(t.guessedLinkedTransactions.map(e => e.linkedId))}
@@ -88,7 +91,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     </table>
                 )}
             </TransactionContextMenu>
-            <Pagination {...{page, totalPages, setPage}} />
+            {totalPages > 1 && <Pagination {...{page, totalPages, setPage}} />}
         </>
     );
 };

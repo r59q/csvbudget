@@ -1,9 +1,9 @@
 import useCSVRows from "@/hooks/CSVRows";
-import {MappedCSVRow, Transaction, TransactionID, TransactionLinkDescriptor, TransactionType} from "@/model";
-import {getDayJs, predictEnvelope, predictIsCsvRowTransfer} from "@/utility/datautils";
+import {Envelope, MappedCSVRow, Transaction, TransactionID, TransactionLinkDescriptor, TransactionType} from "@/model";
+import {getDayJs, getEnvelopeFromDate, predictEnvelope, predictIsCsvRowTransfer} from "@/utility/datautils";
 import useIncome from "@/hooks/Income";
 import {useGlobalContext} from "@/context/GlobalContext";
-import {getTransactionLinksData, getTransactionTypeMapData} from "@/data";
+import {getSelectedEnvelopesData, getTransactionLinksData, getTransactionTypeMapData} from "@/data";
 import {useEffect, useMemo, useState} from "react";
 
 const useTransactions = () => {
@@ -14,6 +14,7 @@ const useTransactions = () => {
     const transactionTypeMapStore = getTransactionTypeMapData();
     const [storedLinks, setStoredLinks] = useState<Record<number, TransactionLinkDescriptor[]>>({});
     const [transactionTypeMap, setTransactionTypeMap] = useState<Record<TransactionID, TransactionType>>({});
+    const [selectedEnvelopes, setSelectedEnvelopes] = useState<Envelope[]>([]);
 
     const categoryPredictionIndex = useMemo(() => {
         const index: Record<string, string> = {};
@@ -32,6 +33,7 @@ const useTransactions = () => {
     useEffect(() => {
         setStoredLinks(transactionLinksStore.load());
         setTransactionTypeMap(transactionTypeMapStore.load());
+        setSelectedEnvelopes(getSelectedEnvelopesData().load());
     }, []);
 
     const setTransactionLink = (a: Transaction, b: Transaction) => {
@@ -134,12 +136,24 @@ const useTransactions = () => {
         const isTransfer = predictIsCsvRowTransfer(mappedRow, isAccountOwned);
         const guessedType = isIncomeMapped(id) ? "income" : amount < 0 ? "expense" : "unknown";
         const guessedLinks = predictLinks(mappedRow, mappedCSVRows)
-        const guessedEnvelope = getEnvelopeForIncome(id) ?? predictEnvelope(dateDayJs);
         const guessedCategory = categoryPredictionIndex[mappedRow.mappedText] ?? "Unassigned";
 
         let transactionType = getMappedType(id);
         if (transactionType === "unknown") {
             transactionType = (!isTransfer && guessedLinks.length === 0) ? guessedType : "unknown";
+        }
+
+        // If the transaction is a transfer or expense, we don't guess the envelope
+        const guessedEnvelope = transactionType === "income" ?
+            (getEnvelopeForIncome(id) ?? predictEnvelope(dateDayJs))
+            : getEnvelopeFromDate(dateDayJs);
+
+        const getEnvelope = () => {
+            if (transactionType === "income") {
+                return getEnvelopeForIncome(id) ?? "Unassigned";
+            } else {
+                return getEnvelopeFromDate(dateDayJs);
+            }
         }
 
         const transaction: Transaction = {
@@ -159,7 +173,7 @@ const useTransactions = () => {
             text: mappedRow.mappedText,
             guessedType: guessedType,
             type: transactionType,
-            envelope: getEnvelopeForIncome(id),
+            envelope: getEnvelope(),
             guessedEnvelope: guessedEnvelope,
         };
         return transaction;
@@ -206,7 +220,33 @@ const useTransactions = () => {
             })
     }
 
+    const envelopes = useMemo(() => {
+        const envelopeSet = new Set<string>();
+        transactions.forEach(tran => {
+            if (tran.envelope) {
+                envelopeSet.add(tran.envelope);
+            }
+        });
+        return Array.from(envelopeSet).sort();
+    }, [transactions]).reverse();
+
+    const saveSelectedEnvelopes = (envelopes: Envelope[]) => {
+        setSelectedEnvelopes(getSelectedEnvelopesData().save(envelopes));
+    }
+
+    const toggleSelectedEnvelope = (envelope: Envelope) => {
+        setSelectedEnvelopes(prev => {
+            const newEnvelopes = prev.includes(envelope) ? prev.filter(e => e !== envelope) : [...prev, envelope];
+            return getSelectedEnvelopesData().save(newEnvelopes);
+        });
+    }
+
+    const isEnvelopeSelected = (envelope: Envelope) => {
+        return selectedEnvelopes.includes(envelope);
+    }
+
     return {
+        envelopes,
         transactions,
         getTransactions,
         setTransactionLink,
@@ -215,7 +255,10 @@ const useTransactions = () => {
         setTransactionType,
         setTransactionTypes,
         getUnmappedTransactionsLike,
-        getUncategorizedExpenseTransactionsLike
+        getUncategorizedExpenseTransactionsLike,
+        saveSelectedEnvelopes,
+        toggleSelectedEnvelope,
+        isEnvelopeSelected
     };
 };
 

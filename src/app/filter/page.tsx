@@ -1,13 +1,23 @@
 "use client";
 import React, {useEffect, useRef, useState} from 'react';
 import useAccountMapping from "@/hooks/AccountMapping";
-import useCSVRows from "@/hooks/CSVRows";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 import {getAdvancedFiltersData} from "@/data";
-import {advancedFilters} from "@/utility/datautils";
+import {advancedFilters, formatDayjs, formatEnvelope} from "@/utility/datautils";
+
+import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
+
+const Page = () => {
+    return (
+        <TransactionsProvider>
+            <FilterPage/>
+        </TransactionsProvider>
+    );
+};
+
 
 const FilterPage = () => {
-    const {mappedCSVRows} = useCSVRows()
+    const {transactions, envelopes, toggleSelectedEnvelope, isEnvelopeSelected} = useTransactionsContext();
     const {getAccountMapping} = useAccountMapping();
     const {isAccountOwned, removeOwnedAccount, addOwnedAccount} = useOwnedAccounts();
     const [filters, setFilters] = useState<string[]>([])
@@ -17,8 +27,8 @@ const FilterPage = () => {
         setFilters(getAdvancedFiltersData().load());
     }, [])
 
-    const toValues = new Set(mappedCSVRows.map(e => e.mappedTo));
-    const fromValues = new Set(mappedCSVRows.map(e => e.mappedFrom));
+    const toValues = new Set(transactions.map(e => e.to));
+    const fromValues = new Set(transactions.map(e => e.from));
     const accounts = Array.from(new Set([...toValues, ...fromValues]))
         .filter(e => e !== "");
 
@@ -42,6 +52,23 @@ const FilterPage = () => {
 
     return (
         <div className="p-4 max-w-2xl mx-auto flex flex-col gap-8">
+            {/* Envelopes list at the top */}
+            <div className="flex flex-wrap gap-2 mb-4">
+                {envelopes && envelopes.length > 0 ? (
+                    envelopes.map((env) => (
+                        <span key={env} onClick={() => toggleSelectedEnvelope(env)}
+                              className="cursor-pointer px-3 py-1 bg-gray-200 text-gray-800 rounded text-xs font-semibold select-none"
+                                style={{
+                                    backgroundColor: isEnvelopeSelected(env) ? '#4a90e2' : '#e0e0e0',
+                                    color: isEnvelopeSelected(env) ? '#ffffff' : '#000000'
+                                }}>
+                            {formatEnvelope(env)}
+                        </span>
+                    ))
+                ) : (
+                    <span className="text-gray-400 text-xs">No envelopes found</span>
+                )}
+            </div>
             <div>
                 <p className={"text-xl"}>
                     Select which of these accounts are yours.
@@ -104,11 +131,11 @@ posting - string: The original posting text
                 <thead>
                 </thead>
                 <tbody>
-                {mappedCSVRows.filter(advancedFilters).map((row, idx) => {
+                {transactions.filter(advancedFilters).map((row, idx) => {
                     return <tr key={idx}>
-                        <td>{row.mappedDate}</td>
-                        <td>{row.mappedText}</td>
-                        <td>{row.mappedAmount}</td>
+                        <td>{formatDayjs(row.date)}</td>
+                        <td>{row.text}</td>
+                        <td>{row.amount}</td>
                     </tr>
                 })}
                 </tbody>
@@ -117,4 +144,4 @@ posting - string: The original posting text
     );
 };
 
-export default FilterPage;
+export default Page;
