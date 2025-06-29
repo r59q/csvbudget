@@ -2,7 +2,7 @@
 import React, {useMemo, useState} from 'react';
 import useBudget from "@/hooks/Budget";
 import useIncome from "@/hooks/Income";
-import {advancedFilters, formatCurrency, formatMonth, getDayJs, getSum, groupByMonth} from "@/utility/datautils";
+import {advancedFilters, formatCurrency, formatMonth, getDayJs, getSum, groupByEnvelope} from "@/utility/datautils";
 import useCategories from "@/hooks/Categories";
 import useCSVRows from "@/hooks/CSVRows";
 import {BudgetPost, Category, CategoryBudgetPostMap, Envelope, MappedCSVRow} from "@/model";
@@ -74,7 +74,7 @@ export default function BudgetPage() {
         monthlyAverageExpensesPerCategory[category] = total / months.length;
     })
 
-    const incomePerMonth = groupByMonth(incomeRows);
+    const incomePerMonth = groupByEnvelope(incomeRows);
     const incomeMonths = Object.keys(incomePerMonth);
     const totalIncome = incomeMonths.reduce((pre, cur) => pre + getSum(incomePerMonth[cur] ?? []), 0);
     const averageIncomePerMonth = totalIncome / incomeMonths.length;

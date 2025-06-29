@@ -20,19 +20,19 @@ const useIncome = () => {
     return {
         incomeMap,
         incomeRows,
-        getEnvelopeForIncome: (transactionId: TransactionID): Envelope | undefined => {
+        getEnvelopeForIncome: (transactionId: TransactionID): Envelope => {
             const month = incomeMap[transactionId];
             if (month === "") {
-                return undefined;
+                return "Unassigned";
             }
             return month;
         },
-        setMonthForIncome: (row: MappedCSVRow, month: Envelope | undefined) => {
+        setEnvelopeForIncome: (row: Transaction, envelope: Envelope | "" | undefined) => {
             const newState = {...incomeMap};
-            if (month === "" || month == undefined) {
-                delete newState[row.mappedId];
+            if (envelope === "" || envelope == undefined || envelope === "Unassigned") {
+                delete newState[row.id];
             } else {
-                newState[row.mappedId] = month;
+                newState[row.id] = envelope;
             }
             saveIncomeMap(newState);
         }

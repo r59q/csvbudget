@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {getOwnedAccountsData} from "@/data";
-import {AccountNumber, MappedCSVRow} from "@/model";
+import {AccountNumber, MappedCSVRow, Transaction, TransactionID} from "@/model";
 import {advancedFilters} from "@/utility/datautils";
 
 const useOwnedAccounts = () => {
@@ -31,8 +31,8 @@ const useOwnedAccounts = () => {
         filterIntraAccountTransaction: (row: MappedCSVRow) => {
             return !(ownAccounts.includes(row.mappedFrom) && ownAccounts.includes(row.mappedTo));
         },
-        filterInterAccountTransaction: (row: MappedCSVRow) => {
-            return (!ownAccounts.includes(row.mappedFrom) || ownAccounts.includes(row.mappedTo));
+        filterInterAccountTransaction: (row: Transaction) => {
+            return (!ownAccounts.includes(row.from) || ownAccounts.includes(row.to));
         }
     }
 };

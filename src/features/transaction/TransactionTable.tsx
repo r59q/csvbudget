@@ -1,9 +1,19 @@
 import React, {useState} from 'react';
-import TransactionRow, { TransactionTableColumn } from '@/components/TransactionRow';
 import {useTransactionsContext} from '@/context/TransactionsContext';
 import {Transaction} from '@/model';
 import ContextMenu from "@/components/ContextMenu";
 import BackdropBlur from "@/components/BackdropBlur";
+import TransactionRow from "@/features/transaction/TransactionRow";
+
+export type TransactionTableColumn =
+    | 'id'
+    | 'date'
+    | 'text'
+    | 'amount'
+    | 'from'
+    | 'to'
+    | 'type'
+    | 'category';
 
 interface TransactionTableProps {
     transactions: Transaction[];
@@ -26,7 +36,18 @@ const COLUMN_HEADERS: Record<TransactionTableColumn, string> = {
     category: 'Categorize as',
 };
 
-const TransactionTable: React.FC<TransactionTableProps> = ({transactions, pageSize = 6, visibleColumns = DEFAULT_COLUMNS}) => {
+function getColumnStyle(col: TransactionTableColumn) {
+    if (col === "date") {
+        return {width: '100px'};
+    }
+    return col === "id" ? {width: '100px'} : undefined;
+}
+
+const TransactionTable: React.FC<TransactionTableProps> = ({
+                                                               transactions,
+                                                               pageSize = 6,
+                                                               visibleColumns = DEFAULT_COLUMNS
+                                                           }) => {
     const {getTransactions} = useTransactionsContext();
     const [page, setPage] = useState(0);
 
@@ -37,15 +58,17 @@ const TransactionTable: React.FC<TransactionTableProps> = ({transactions, pageSi
     const paginatedTransactions = transactions.slice(page * pageSize, (page + 1) * pageSize);
     const totalPages = Math.ceil(transactions.length / pageSize);
 
+    const height = Math.min(paginatedTransactions.length, pageSize) * 65; // Assuming each row is about 65px tall
+
     return (
         <>
             <TransactionContextMenu>
                 {(handleContextMenu) => (
-                    <table className="w-full text-sm border mb-2 table-fixed">
+                    <table className="w-full text-sm border mb-2 table-fixed" style={{height: `${height}px`}}>
                         <thead>
                         <tr className="bg-gray-950">
                             {visibleColumns.map(col => (
-                                <th key={col} className="p-2 border">
+                                <th key={col} className="p-2 border" style={getColumnStyle(col)}>
                                     {COLUMN_HEADERS[col]}
                                 </th>
                             ))}

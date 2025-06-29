@@ -8,16 +8,8 @@ import AmountField from "@/components/fields/AmountField";
 import TransactionTypeField from "@/components/fields/TransactionTypeField";
 import CategoryField from "@/components/fields/CategoryField";
 import {useTransactionsContext} from "@/context/TransactionsContext";
+import {TransactionTableColumn} from "@/features/mapping/TransactionTable";
 
-export type TransactionTableColumn =
-  | 'id'
-  | 'date'
-  | 'text'
-  | 'amount'
-  | 'from'
-  | 'to'
-  | 'type'
-  | 'category';
 
 interface TransactionRowProps {
     transaction: Transaction;
@@ -133,8 +125,8 @@ const ExpandedTransactionRow = ({ transaction, guessedLinkTransactions }: Expand
                                             <td className="p-1 border">{lt.date.format("YYYY-MM-DD")}</td>
                                             <td className="p-1 border">{lt.text}</td>
                                             <td className="p-1 border">{lt.amount}</td>
-                                            <td className="p-1 border">{lt.mappedFrom}</td>
-                                            <td className="p-1 border">{lt.mappedTo}</td>
+                                            <td className="p-1 border">{lt.mappedFrom || lt.from}</td>
+                                            <td className="p-1 border">{lt.mappedTo || lt.to}</td>
                                         </tr>
                                     );
                                 })}

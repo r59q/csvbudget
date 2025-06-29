@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import {Transaction} from "@/model";
-import TransactionTable from './TransactionTable';
+import TransactionTable from "@/features/transaction/TransactionTable";
 
 interface Props {
     transactions: Transaction[];
@@ -21,7 +21,7 @@ const TransactionMapper = ({transactions}: Props) => {
                 <h2 className="text-lg font-semibold mb-2">
                     Unmapped Transactions
                 </h2>
-                <TransactionTable transactions={unmappedTransactions} pageSize={PAGE_SIZE}/>
+                <TransactionTable transactions={unmappedTransactions} visibleColumns={["id","date","text", "amount", "from","to", "type"]} pageSize={PAGE_SIZE}/>
             </div>
             <div>
                 <h2 className="text-lg font-semibold mb-2">

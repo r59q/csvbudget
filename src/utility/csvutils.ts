@@ -13,7 +13,7 @@ export type ColumnMapping = Record<typeof MAPPED_COLUMNS[number], string>;
 export type SchemaColumnMapping = Record<SchemaKey, ColumnMapping>;
 
 export const getSchemaKeyFromCsvRow = (csvRow: CsvRow) => {
-    return Object.keys(csvRow).filter(e => !e.startsWith("mapped")).join("-")
+    return Object.keys(csvRow).filter(e => !e.startsWith("mapped") && e !== "filename").join("-")
 }
 
 export const getSchemaKeyFromHeaders = (headers: CSVHeaders) => {

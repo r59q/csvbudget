@@ -1,26 +1,38 @@
 "use client";
 
-import useCSVRows from "@/hooks/CSVRows";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 import useIncome from "@/hooks/Income";
-import {formatCurrency, groupByMonth, sortedByDate} from "@/utility/datautils";
+import {formatCurrency, formatDayjs, formatEnvelope, groupByEnvelope, transactionsSortedByDate} from "@/utility/datautils";
+import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
+import {Envelope, Transaction} from "@/model";
+
 
 const Page = () => {
-    const {mappedCSVRows} = useCSVRows()
+    return (
+        <TransactionsProvider>
+            <IncomePage/>
+        </TransactionsProvider>
+    );
+};
+
+const IncomePage = () => {
+    const {transactions} = useTransactionsContext();
     const {filterInterAccountTransaction} = useOwnedAccounts();
-    const {getEnvelopeForIncome, setMonthForIncome, incomeRows, incomeMap} = useIncome();
+    const {getEnvelopeForIncome, setEnvelopeForIncome} = useIncome();
 
-    const unfilteredRows = mappedCSVRows.filter(e => filterInterAccountTransaction(e)).filter(row => row.mappedAmount > 0).sort(sortedByDate);
+    const incomeTransactions = transactions.filter(row => row.type === "income");
 
-    const unfilteredRowsGroupedByMonth = groupByMonth(unfilteredRows);
+    const unfilteredRows = incomeTransactions.filter(e => filterInterAccountTransaction(e)).filter(row => row.amount > 0).sort(transactionsSortedByDate);
+
+    const unfilteredRowsGroupedByMonth = groupByEnvelope(unfilteredRows);
 
     const months = Object.keys(unfilteredRowsGroupedByMonth);
 
-    const monthlyIncomeRows = Object.groupBy(incomeRows, row => incomeMap[row.mappedId]);
+    const monthlyIncomeRows: Partial<Record<Envelope, Transaction[]>> = Object.groupBy(incomeTransactions, row => getEnvelopeForIncome(row.id));
     const incomeMonths = Object.keys(monthlyIncomeRows);
     const averageIncome = incomeMonths.map(month => {
         const incomeRows = monthlyIncomeRows[month] ?? [];
-        return incomeRows.map(row => row.mappedAmount).reduce((pre, cur) => pre + cur, 0);
+        return incomeRows.map(row => row.amount).reduce((pre, cur) => pre + cur, 0);
     }).reduce((pre, cur) => pre + cur, 0) / incomeMonths.length
 
     return (
@@ -33,18 +45,18 @@ const Page = () => {
                     return <div key={month}>
                         <p>{month}</p>
                         {rows.map(row => <span
-                            key={row.mappedId}>
-                        {formatCurrency(row.mappedAmount)}
+                            key={row.id}>
+                        {formatCurrency(row.amount)}
                     </span>)}
                     </div>;
                 })}
             </div>
 
-            {months.map(month => {
-                const rows = unfilteredRowsGroupedByMonth[month];
+            {months.map(envelope => {
+                const rows = unfilteredRowsGroupedByMonth[envelope];
                 if (!rows) return null;
-                return <div className={"flex flex-col gap-2 mt-4"} key={month}>
-                    <p className={"text-2xl"}>{month}</p>
+                return <div className={"flex flex-col gap-2 mt-4"} key={envelope}>
+                    <p className={"text-2xl"}>{formatEnvelope(envelope)}</p>
                     <table>
                         <thead className="bg-gray-900 text-gray-400 uppercase text-xs">
                         <tr>
@@ -55,33 +67,43 @@ const Page = () => {
                         </tr>
                         </thead>
                         <tbody>
-                        {rows.map((row) => {
-                            const assignedMonth = getEnvelopeForIncome(row);
+                        {rows.map((transaction) => {
+                            const transactionEnvelope: Envelope = getEnvelopeForIncome(transaction.id);
                             return (
-                                <tr key={row.mappedId}
+                                <tr key={transaction.id}
                                     className="hover:bg-gray-800 transition-colors duration-150">
                                     <td className="px-4 py-2 border-b border-gray-700">
-                                        {row.mappedDate}
+                                        {formatDayjs(transaction.date)}
                                     </td>
                                     <td className="px-4 py-2 border-b border-gray-700">
-                                        {row.mappedText}
+                                        {transaction.text}
                                     </td>
                                     <td className="px-4 py-2 border-b border-gray-700 text-right">
-                                        {row.mappedAmount}
+                                        {transaction.amount}
                                     </td>
                                     <td className="px-4 py-2 border-b border-gray-700">
-                                        <select
-                                            className="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                            onClick={(e) => e.stopPropagation()}
-                                            value={assignedMonth}
-                                            onChange={(e) => setMonthForIncome(row, e.target.value)}>
-                                            <option value="">Unassigned</option>
-                                            {months.map((opt) => (
-                                                <option key={opt} value={opt}>
-                                                    {opt}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <div className={"flex flex-row"}>
+                                            <select
+                                                className="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                onClick={(e) => e.stopPropagation()}
+                                                value={transactionEnvelope}
+                                                onChange={(e) => setEnvelopeForIncome(transaction, e.target.value)}>
+                                                <option value="Unassigned">Unassigned</option>
+                                                {months.map((opt) => (
+                                                    <option key={opt} value={opt}>
+                                                        {formatEnvelope(opt)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                className="ml-2 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+                                                onClick={() => setEnvelopeForIncome(transaction, transaction.guessedEnvelope)}
+                                                disabled={!transaction.guessedEnvelope || transactionEnvelope === transaction.guessedEnvelope}
+                                                title={transactionEnvelope === formatEnvelope(transaction.guessedEnvelope) ? 'Already assigned' : 'Assign to guessed envelope'}
+                                            >
+                                                {envelope === transaction.guessedEnvelope ? "This month" : "Next month"}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             );

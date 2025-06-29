@@ -3,6 +3,7 @@ import {Transaction, TransactionID, TransactionType} from '@/model';
 import { firstLetterUpper } from '@/utility/strutils';
 import {useTransactionsContext} from "@/context/TransactionsContext";
 import BackdropBlur from '@/components/BackdropBlur';
+import { getTransactionTypeIcon } from './TransactionTypeIcons';
 
 interface MappingFieldProps {
     transaction: Transaction;
@@ -55,15 +56,22 @@ const TransactionTypeField: React.FC<MappingFieldProps> = ({ transaction }) => {
 
     return (
         <>
-            <select
-                className="p-1 border w-full"
-                value={transaction.type || "unknown"}
-                onChange={e => handleTypeChange(e.target.value as TransactionType)}>
-                <option value="" className={"bg-gray-800"}>Select type</option>
-                {TRANSACTION_TYPES.map(opt => (
-                    <option className={"bg-gray-800"} key={opt} value={opt}>{firstLetterUpper(opt)}</option>
-                ))}
-            </select>
+            <div className="flex gap-2 my-1">
+                {TRANSACTION_TYPES.map(opt => {
+                    const Icon = getTransactionTypeIcon(opt);
+                    return (
+                        <button
+                            key={opt}
+                            className={`w-10 h-10 flex items-center justify-center rounded-md border transition-colors text-xl ${transaction.type === opt ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-400 dark:border-gray-600 hover:bg-blue-100 dark:hover:bg-blue-800'}`}
+                            onClick={() => handleTypeChange(opt)}
+                            type="button"
+                            title={firstLetterUpper(opt)}
+                        >
+                            <Icon />
+                        </button>
+                    );
+                })}
+            </div>
             {showDialog && (
                 <TransactionTypeConfirmDialog
                     pendingType={pendingType}

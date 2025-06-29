@@ -146,12 +146,12 @@ export const getCategoryMapdData = (): StoredDataWrapper<TransactionCategoryMap>
             const loaded = localStorage.getItem(ROW_CATEGORY_MAP_KEY) ?? "{}";
             return JSON.parse(loaded)
         },
-        save: rowCategories => {
+        save: (rowCategories: TransactionCategoryMap) => {
             try {
                 localStorage.setItem(ROW_CATEGORY_MAP_KEY, JSON.stringify(rowCategories));
             } catch (e) {
                 console.error(e);
-                return []
+                return {}
             }
             return rowCategories;
         }

@@ -1,16 +1,15 @@
 "use client";
 import React, {createContext, use, useMemo, useState} from 'react';
-import {advancedFilters, formatCurrency, getDayJs, getSum, groupByMonth} from "@/utility/datautils";
-import dayjs from "dayjs";
+import {advancedFilters, formatCurrency, formatDayjs, getSum, groupByEnvelope} from "@/utility/datautils";
 import useCSVRows from "@/hooks/CSVRows";
 import useCategories from "@/hooks/Categories";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
-import {MappedCSVRow} from '@/model';
-import useIncome from "@/hooks/Income";
+import {Category, Envelope, Transaction, TransactionID} from '@/model';
 import BurndownChart from "@/components/BurndownChart";
+import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
 
 interface InsightsContextType {
-    getCategory: (row: MappedCSVRow) => string | undefined;
+    getCategory: (transactionId: TransactionID) => Category;
 }
 
 interface MonthlyTotals {
@@ -20,27 +19,38 @@ interface MonthlyTotals {
 
 const InsightsContext = createContext<InsightsContextType>(null!)
 
+
+const Page = () => {
+    return (
+        <TransactionsProvider>
+            <InsightPage/>
+        </TransactionsProvider>
+    );
+};
+
 const InsightPage = () => {
     const {mappedCSVRows} = useCSVRows();
+    const {transactions} = useTransactionsContext();
     const {getCategory, categories} = useCategories();
     const {isAccountOwned} = useOwnedAccounts();
-    const {incomeRows} = useIncome();
 
-    const filteredRows: MappedCSVRow[] = useMemo(() => mappedCSVRows.filter(e => {
-        return !(isAccountOwned(e.mappedFrom) && isAccountOwned(e.mappedTo));
+    const incomeRows = transactions.filter(tran => tran.type === "income");
+
+    const filteredTransactions: Transaction[] = useMemo(() => transactions.filter(e => {
+        return !(isAccountOwned(e.from) && isAccountOwned(e.to));
     }).filter(advancedFilters).toSorted((a, b) => {
-        const aDate = dayjs(a.mappedDate, 'DD-MM-YYYY');
-        const bDate = dayjs(b.mappedDate, 'DD-MM-YYYY');
+        const aDate = a.date;
+        const bDate = b.date;
         return bDate.unix() - aDate.unix()
     }), [mappedCSVRows, isAccountOwned])
 
-    const groupedByMonth: Record<string, MappedCSVRow[] | undefined> = useMemo(() => Object.groupBy(filteredRows, row => {
-        return dayjs(row.mappedDate, 'DD-MM-YYYY').format("MMMM YYYY");
-    }), [filteredRows]);
-    const months = Object.keys(groupedByMonth).filter(e => e !== "");
+    const groupedByEnvelope: Partial<Record<Envelope, Transaction[]>> = useMemo(() => Object.groupBy(filteredTransactions, row => {
+        return row.envelope;
+    }), [filteredTransactions]);
+    const months = Object.keys(groupedByEnvelope).filter(e => e !== "");
 
     const monthlyTotals: MonthlyTotals = useMemo(() => {
-        return computeMonthlyTotals(months, groupedByMonth, getCategory);
+        return computeMonthlyTotals(months, groupedByEnvelope, getCategory);
     }, [mappedCSVRows, months, getCategory])
 
 
@@ -48,12 +58,12 @@ const InsightPage = () => {
         return monthlyTotals.totals[cur] + pre;
     }, 0), [monthlyTotals, months])
 
-    if (filteredRows.length === 0) {
+    if (filteredTransactions.length === 0) {
         return <></>
     }
 
-    const latestDate = dayjs(filteredRows[0].mappedDate, 'DD-MM-YYYY');
-    const earliestDate = dayjs(filteredRows[filteredRows.length - 1].mappedDate, 'DD-MM-YYYY');
+    const latestDate = filteredTransactions[0].date;
+    const earliestDate = filteredTransactions[filteredTransactions.length - 1].date;
     const durationDays = latestDate.diff(earliestDate, 'days');
     const dailyAverageExpenses = total / durationDays;
     const monthlyAverageExpenses = total / months.length;
@@ -69,7 +79,7 @@ const InsightPage = () => {
         monthlyAverageExpensesPerCategory[category] = total / months.length;
     })
 
-    const incomePerMonth = groupByMonth(incomeRows);
+    const incomePerMonth = groupByEnvelope(incomeRows);
     const incomeMonths = Object.keys(incomePerMonth);
     const totalIncome = incomeMonths.reduce((pre, cur) => pre + getSum(incomePerMonth[cur] ?? []), 0);
     const averageIncomePerMonth = totalIncome / incomeMonths.length;
@@ -140,7 +150,7 @@ const InsightPage = () => {
 
                 <div>
                     {months.map(month => {
-                        const rows = groupedByMonth[month];
+                        const rows = groupedByEnvelope[month];
                         if (!rows) return null;
                         return <div key={month}>
                             <p>{month}</p>
@@ -158,7 +168,7 @@ const InsightPage = () => {
 
 interface MonthInsightProps {
     month: string,
-    rows: MappedCSVRow[],
+    rows: Transaction[],
     categoryTotals: Record<string, number>;
     totalSum: number;
     income: number;
@@ -177,7 +187,7 @@ const MonthInsightsTable = ({
     const {getCategory} = use(InsightsContext);
     const [open, setOpen] = useState(false);
     const firstOfMonth = rows[rows.length - 1];
-    const firstDateOfMonth = getDayJs(firstOfMonth.mappedDate)
+    const firstDateOfMonth = firstOfMonth.date
 
     const burndown: {
         value: number,
@@ -189,8 +199,8 @@ const MonthInsightsTable = ({
 
     [...rows].reverse().forEach((row, idx) => {
         burndown.push({
-            date: getDayJs(row.mappedDate).toDate().getTime(),
-            value: burndown[idx].value + row.mappedAmount
+            date: row.date.toDate().getTime(),
+            value: burndown[idx].value + row.amount
         });
     })
     const expenses = getSum(rows);
@@ -226,8 +236,8 @@ const MonthInsightsTable = ({
                             </thead>
                             <tbody>
                             {rows.map((row) => {
-                                const category = getCategory(row);
-                                return <MonthInsightsTableRow {...{row, category}} key={row.mappedId}/>
+                                const category = getCategory(row.id);
+                                return <MonthInsightsTableRow {...{row, category}} key={row.id}/>
                             })}
                             </tbody>
                         </table>
@@ -243,22 +253,18 @@ const MonthInsightsTable = ({
 }
 
 interface MonthInsightsTableRowProps {
-    row: MappedCSVRow;
+    row: Transaction;
     category: string | undefined;
 }
 
 const MonthInsightsTableRow = ({row, category}: MonthInsightsTableRowProps) => {
     return (
-        <tr key={row.mappedId} className="even:bg-gray-700 hover:bg-gray-900">
-            <td className="px-4 py-2 border-b">{row.mappedDate}</td>
-            <td className="px-4 py-2 border-b">{row.mappedText}</td>
-            <td className="px-4 py-2 border-b">
-                {category || (
-                    <span className="text-gray-500">Unassigned</span>
-                )}
-            </td>
+        <tr className="even:bg-gray-700 hover:bg-gray-900">
+            <td className="px-4 py-2 border-b">{formatDayjs(row.date)}</td>
+            <td className="px-4 py-2 border-b">{row.text}</td>
+            <td className="px-4 py-2 border-b">{category}</td>
             <td className="px-4 py-2 border-b text-right">
-                {row.mappedAmount}
+                {row.amount}
             </td>
         </tr>
     );
@@ -307,7 +313,7 @@ const getHeatColor = (value: number, maxAbs: number) => {
     return `rgb(255, ${white}, ${white})`; // white to red gradient
 };
 
-const computeMonthlyTotals = (months: string[], groupedByMonth: Record<string, MappedCSVRow[] | undefined>, getCategory: (row: MappedCSVRow) => string | undefined): MonthlyTotals => {
+const computeMonthlyTotals = (months: string[], groupedByMonth: Partial<Record<Envelope, Transaction[]>>, getCategory: (transactionId: TransactionID) => Category): MonthlyTotals => {
     const totals: Record<string, number> = {};
     const monthlyCategoryTotals: Record<string, Record<string, number>> = {};
 
@@ -322,8 +328,8 @@ const computeMonthlyTotals = (months: string[], groupedByMonth: Record<string, M
             if (!categoryTotals) {
                 throw new Error("wa")
             }
-            const category = getCategory(row) || "Unassigned";
-            const num = row.mappedAmount;
+            const category = getCategory(row.id);
+            const num = row.amount;
             if (!isNaN(num)) {
                 categoryTotals[category] = (categoryTotals[category] || 0) + num;
                 totalSum += num;
@@ -335,4 +341,4 @@ const computeMonthlyTotals = (months: string[], groupedByMonth: Record<string, M
     return {totals, categoryTotals: monthlyCategoryTotals};
 };
 
-export default InsightPage;
+export default Page;

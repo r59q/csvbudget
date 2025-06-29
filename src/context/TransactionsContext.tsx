@@ -20,4 +20,3 @@ export const useTransactionsContext = () => {
     if (!ctx) throw new Error("useTransactionsContext must be used within a TransactionsProvider");
     return ctx;
 };
-

@@ -3,7 +3,7 @@ import BackdropBlur from "@/components/BackdropBlur";
 import SchemaMapper from "@/features/mapping/SchemaMapper";
 import TransactionMapper from "@/features/mapping/TransactionMapper";
 import {useTransactionsContext} from "@/context/TransactionsContext";
-import TransactionTable from "@/features/mapping/TransactionTable";
+import TransactionTable, {TransactionTableColumn} from "@/features/transaction/TransactionTable";
 
 interface DataMappingProps {
     unmappedSchemas: any[];
@@ -18,7 +18,8 @@ const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
     const unknownTransactions = (groupedByType.unknown ?? []).filter(tra => !tra.isTransfer);
     const hasUnknownTransactions = unknownTransactions.length > 0
     const uncategorizedExpenses = (groupedByCategory['Unassigned'] ?? []).filter(tran => tran.type === "expense");
-    const hasUncategorizedTransactions = uncategorizedExpenses.length > 0
+    const hasUncategorizedTransactions = uncategorizedExpenses.length > 0;
+    const hasExpenseWithPositiveAmount = uncategorizedExpenses.some(tran => tran.amount > 0);
 
     if (unmappedSchemas.length > 0) {
         return <BackdropBlur>
@@ -35,11 +36,14 @@ const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
     }
 
     if (hasUncategorizedTransactions) {
+        const visibleColumns: TransactionTableColumn[] = ["id", "type", "date", "text", "amount", "category"];
+        const visibleColumnsWithoutType: TransactionTableColumn[] = ["id", "date", "text", "amount", "category"];
         return <BackdropBlur>
             <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">
                 <h1 className={"font-bold text-xl"}>Categorize Expenses</h1>
+                <p className={"text-sm text-gray-400"}>All transactions have been marked as expenses or incomes. Please assign a category to your expenses.</p>
                 <TransactionTable pageSize={10} transactions={uncategorizedExpenses}
-                                  visibleColumns={["id", "type", "date", "text", "amount", "category"]}/>
+                                  visibleColumns={hasExpenseWithPositiveAmount ? visibleColumns : visibleColumnsWithoutType}/>
             </div>
         </BackdropBlur>
     }

@@ -1,20 +1,33 @@
 import useCSVRows from "@/hooks/CSVRows";
 import {MappedCSVRow, Transaction, TransactionID, TransactionLinkDescriptor, TransactionType} from "@/model";
-import useCategories from "@/hooks/Categories";
-import {getDayJs, getEnvelope} from "@/utility/datautils";
+import {getDayJs, predictEnvelope, predictIsCsvRowTransfer} from "@/utility/datautils";
 import useIncome from "@/hooks/Income";
 import {useGlobalContext} from "@/context/GlobalContext";
 import {getTransactionLinksData, getTransactionTypeMapData} from "@/data";
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 
 const useTransactions = () => {
-    const {isAccountOwned, accountValueMappings, getCategory} = useGlobalContext();
+    const {isAccountOwned, accountValueMappings, getCategory, categoryMap} = useGlobalContext();
     const {mappedCSVRows} = useCSVRows();
     const {incomeMap, getEnvelopeForIncome} = useIncome();
     const transactionLinksStore = getTransactionLinksData();
     const transactionTypeMapStore = getTransactionTypeMapData();
     const [storedLinks, setStoredLinks] = useState<Record<number, TransactionLinkDescriptor[]>>({});
     const [transactionTypeMap, setTransactionTypeMap] = useState<Record<TransactionID, TransactionType>>({});
+
+    const categoryPredictionIndex = useMemo(() => {
+        const index: Record<string, string> = {};
+        Object.keys(categoryMap).forEach(tranId => {
+            const csvRow = mappedCSVRows.find(row => row.mappedId === parseInt(tranId));
+            if (csvRow) {
+                const category = getCategory(parseInt(tranId));
+                if (category !== "Unassigned") {
+                    index[csvRow.mappedText] = category;
+                }
+            }
+        })
+        return index;
+    }, [categoryMap]);
 
     useEffect(() => {
         setStoredLinks(transactionLinksStore.load());
@@ -102,7 +115,7 @@ const useTransactions = () => {
         });
     };
 
-    const isIncome = (id: TransactionID) => {
+    const isIncomeMapped = (id: TransactionID) => {
         return Object.keys(incomeMap).map(e => parseInt(e)).includes(id);
     }
 
@@ -113,13 +126,16 @@ const useTransactions = () => {
     const transactions = mappedCSVRows.map(mappedRow => {
         const id = mappedRow.mappedId;
         const amount = mappedRow.mappedAmount;
+        const dateDayJs = getDayJs(mappedRow.mappedDate);
         const originalTo = mappedRow.mappedTo;
         const mappedTo = accountValueMappings[originalTo];
         const originalFrom = mappedRow.mappedFrom;
         const mappedFrom = accountValueMappings[originalFrom];
-        const isTransfer = isAccountOwned(originalTo) && isAccountOwned(originalFrom);
-        const guessedType = isIncome(id) ? "income" : amount < 0 ? "expense" : "unknown";
-        const guessedLinks = guessLinks(mappedRow, mappedCSVRows)
+        const isTransfer = predictIsCsvRowTransfer(mappedRow, isAccountOwned);
+        const guessedType = isIncomeMapped(id) ? "income" : amount < 0 ? "expense" : "unknown";
+        const guessedLinks = predictLinks(mappedRow, mappedCSVRows)
+        const guessedEnvelope = getEnvelopeForIncome(id) ?? predictEnvelope(dateDayJs);
+        const guessedCategory = categoryPredictionIndex[mappedRow.mappedText] ?? "Unassigned";
 
         let transactionType = getMappedType(id);
         if (transactionType === "unknown") {
@@ -134,16 +150,17 @@ const useTransactions = () => {
             to: originalTo,
             mappedTo: mappedTo ? mappedTo : undefined,
             category: getCategory(id) ?? "Unassigned",
-            guessedCategory: undefined,
+            guessedCategory: guessedCategory,
             linkedTransactions: storedLinks[id] || [],
             guessedLinkedTransactions: guessedLinks,
-            date: getDayJs(mappedRow.mappedDate),
+            date: dateDayJs,
             isTransfer,
             notes: "",
             text: mappedRow.mappedText,
             guessedType: guessedType,
             type: transactionType,
-            envelope: getEnvelopeForIncome(id) ?? getEnvelope(mappedRow.mappedDate)
+            envelope: getEnvelopeForIncome(id),
+            guessedEnvelope: guessedEnvelope,
         };
         return transaction;
     })
@@ -202,7 +219,7 @@ const useTransactions = () => {
     };
 };
 
-const guessLinks = (guessingRow: MappedCSVRow, rows: MappedCSVRow[]): TransactionLinkDescriptor[] => {
+const predictLinks = (guessingRow: MappedCSVRow, rows: MappedCSVRow[]): TransactionLinkDescriptor[] => {
     const amount = guessingRow.mappedAmount;
     return rows.filter(row => {
         if (-row.mappedAmount !== amount) {

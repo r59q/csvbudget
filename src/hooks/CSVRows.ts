@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {ColumnMapping, getSchemaKeyFromCsvRow} from "@/utility/csvutils";
 import Papa, {ParseResult} from "papaparse";
-import {CSVFile, CSVHeaders, CsvRow, CSVRowId, CSVSchemas, MappedCSVRow} from "@/model";
+import {CSVFile, CsvRow, CSVRowId, CSVSchemas, MappedCSVRow} from "@/model";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import {useGlobalContext} from "@/context/GlobalContext";
@@ -47,7 +47,7 @@ const loadDeduplicatedCsvRows = (files: CSVFile[]): CsvRow[] => {
         });
 
         if (result.data) {
-            const filteredData = blackListFilter(result);
+            const filteredData = blackListFilter(result).map(e => ({...e, filename: file.name}));
             allRows.push(...filteredData);
         }
     }
@@ -55,7 +55,8 @@ const loadDeduplicatedCsvRows = (files: CSVFile[]): CsvRow[] => {
     // Deduplicate based on stringified row content
     const seen = new Set<string>();
     return allRows.filter((row) => {
-        const key = JSON.stringify(row);
+        const { filename, ...rest } = row; // Exclude filename from deduplication
+        const key = JSON.stringify(rest);
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -88,11 +89,11 @@ const mapCsvRow = (unmappedRow: CsvRow, mapping: ColumnMapping | undefined): Map
 
 
 const getCSVSchemas = (csvRows: CsvRow[]) => {
-    const result: { [key: string]: CSVHeaders } = {};
+    const result: CSVSchemas = {};
     csvRows.forEach(row => {
-        const schemaKey = Object.keys(row).join("-");
+        const schemaKey = Object.keys(row).filter(e => e !== "filename").join("-");
         if (!result[schemaKey]) {
-            result[schemaKey] = Object.keys(row);
+            result[schemaKey] = {headers: Object.keys(row), filename: row.filename};
         }
     })
     return result;

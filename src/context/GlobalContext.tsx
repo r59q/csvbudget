@@ -2,7 +2,7 @@ import React, {createContext, useContext} from "react";
 import {AccountNumber, CSVFile, UnmappedSchema} from "@/model";
 import useCSVFiles from "@/hooks/useCSVFiles";
 import useSchemaMapping from "@/hooks/SchemaMapping";
-import {SchemaColumnMapping} from "@/utility/csvutils";
+import {SchemaColumnMapping, SchemaKey} from "@/utility/csvutils";
 import useAccountMapping from "@/hooks/AccountMapping";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 import useCategories, {UseCategoriesResult} from "@/hooks/Categories";
@@ -22,6 +22,7 @@ export interface GlobalContextType extends UseCategoriesResult {
     addOwnedAccount: (accountNumber: AccountNumber) => void;
     removeOwnedAccount: (accountNumber: AccountNumber) => void;
     getAccountMapping: (accountNumber: AccountNumber) => string | AccountNumber;
+    handleRemoveMapping: (schemaKey: SchemaKey) => void;
 }
 
 export const GlobalContext = createContext<GlobalContextType>(undefined!);
@@ -41,7 +42,8 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
     const {
         unmappedSchemas,
         handleSaveMapping,
-        columnMappings
+        columnMappings,
+        handleRemoveMapping
     } = useSchemaMapping(csvFiles);
 
     return (
@@ -60,6 +62,7 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
             addOwnedAccount,
             removeOwnedAccount,
             getAccountMapping,
+            handleRemoveMapping,
             ...categories
         }}>
             {children}

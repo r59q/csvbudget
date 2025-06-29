@@ -1,6 +1,6 @@
-import {MappedCSVRow, Envelope} from "@/model";
+import {MappedCSVRow, Envelope, Transaction, TransactionID, AccountNumber} from "@/model";
 import {getAdvancedFiltersData} from "@/data";
-import dayjs from "dayjs";
+import dayjs, {Dayjs} from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
 dayjs.extend(customParseFormat)
@@ -12,14 +12,14 @@ export const formatCurrency = (amount: number) =>
         minimumFractionDigits: 2,
     });
 
-export const advancedFilters = (row: MappedCSVRow) => {
+export const advancedFilters = (row: Transaction) => {
     const parsedFilters: string[] = getAdvancedFiltersData().load();
     if (parsedFilters.length === 0) return true;
-    const amount = row.mappedAmount;
-    const to = row.mappedTo;
-    const from = row.mappedFrom;
-    const date = row.mappedDate;
-    const posting = row.mappedText;
+    const amount = row.amount;
+    const to = row.to;
+    const from = row.from;
+    const date = row.date;
+    const posting = row.text;
     try {
         const filterEvals = parsedFilters.map(filter => Boolean(eval(filter)));
         return !filterEvals.includes(true);
@@ -30,16 +30,27 @@ export const advancedFilters = (row: MappedCSVRow) => {
     return false;
 }
 
-export const groupByMonth = (rows: MappedCSVRow[]): Partial<Record<Envelope, MappedCSVRow[]>> => {
-    return Object.groupBy(rows, row => {
-        return dayjs(row.mappedDate, 'DD-MM-YYYY').format("MMMM YYYY");
+export const groupByEnvelope = (rows: Transaction[]): Partial<Record<Envelope, Transaction[]>> => {
+    const grouped: Partial<Record<Envelope, Transaction[]>> = {};
+    rows.forEach(row => {
+        const envelope = getEnvelopeFromDate(row.date);
+        if (!grouped[envelope]) {
+            grouped[envelope] = [];
+        }
+        grouped[envelope]!.push(row);
     });
+    return grouped;
 }
 
-export const getSum = (rows: MappedCSVRow[]) => {
-    return rows.reduce((pre, cur) => pre + cur.mappedAmount, 0)
+export const getSum = (rows: Transaction[]) => {
+    return rows.reduce((pre, cur) => pre + cur.amount, 0)
 }
 
+export const transactionsSortedByDate = (a: Transaction, b: Transaction) => {
+    const aDate = a.date;
+    const bDate = b.date;
+    return bDate.unix() - aDate.unix();
+}
 export const sortedByDate = (a: MappedCSVRow, b: MappedCSVRow) => {
     const aDate = dayjs(a.mappedDate, 'DD-MM-YYYY');
     const bDate = dayjs(b.mappedDate, 'DD-MM-YYYY');
@@ -54,6 +65,10 @@ export const getDayJs = (date: string) => {
     return dayjs(date, 'DD-MM-YYYY');
 }
 
+export const formatDayjs = (date: dayjs.Dayjs) => {
+    return date.format("DD-MM-YYYY");
+}
+
 export const formatMonth = (date:Date) => {
     return dayjs(date).format("MMMM YYYY")
 }
@@ -62,6 +77,42 @@ export const formatDate = (date: Date) => {
     return dayjs(date).format("MMM D")
 }
 
-export const getEnvelope = (datestr: string): Envelope => {
+export const getEnvelopeFromDateString = (datestr: string): Envelope => {
     return getDayJs(datestr).format("MM-YYYY")
+}
+
+export const getEnvelopeFromDate = (date: Dayjs): Envelope => {
+    if (!date.isValid()) {
+        return "Unassigned";
+    }
+    return date.format("MM-YYYY");
+}
+
+export const formatEnvelope = (envelope: Envelope): string => {
+    if (envelope === "Unassigned") {
+        return "Unassigned";
+    }
+    const [month, year] = envelope.split("-");
+    return `${dayjs().month(Number(month) - 1).format("MMMM")} ${year}`;
+}
+
+export const predictEnvelope = (date: dayjs.Dayjs): Envelope => {
+    if (!date.isValid()) {
+        return "Unassigned";
+    }
+    // Check if the day is path the 25th of the month, if so, use next month
+    if (date.date() > 25) {
+        date = date.add(1, 'month');
+    }
+    return date.format("MM-YYYY");
+}
+
+export const predictIsCsvRowTransfer = (row: MappedCSVRow, isAccountOwned: (id: AccountNumber) => boolean): boolean => {
+    if (!row.mappedFrom || !row.mappedTo) {
+        return false;
+    }
+    if (row.mappedFrom === row.mappedTo) {
+        return false; // Same account, not a transfer
+    }
+    return isAccountOwned(row.mappedFrom) && isAccountOwned(row.mappedTo);
 }

@@ -5,7 +5,7 @@ import {SchemaKey} from "@/utility/csvutils";
 export type CSVHeaders = string[];
 
 // Schema maps a CSVHeaders type to a key by using string.join("-") on the headers
-export type CSVSchemas = { [key: string]: CSVHeaders }
+export type CSVSchemas = { [key: string]: {headers: CSVHeaders, filename: CSVFile['name']} }
 
 export type CSVFile = { name: string; content: string };
 
@@ -15,7 +15,7 @@ export interface UnmappedSchema {
 }
 
 // one row of CSV as an object
-export type CsvRow = Record<string, string>;
+export type CsvRow = Record<string, string> & {filename: CSVFile['name'];};
 
 export type CSVRowId = number;
 
@@ -23,7 +23,7 @@ export type AccountNumber = string;
 
 // TODO: probably changing to ExpensePost or ExpenseCategory, as it will conflict with budgets?
 export type Category = string | "Unassigned";
-export type Envelope = string;
+export type Envelope = string | "Unassigned";
 
 export type BudgetPost = { title: string; amount: number; }
 
@@ -60,7 +60,7 @@ export interface Transaction {
     to: AccountNumber;
     mappedTo: AccountNumber | undefined;
     category: Category;
-    guessedCategory: Category | undefined;
+    guessedCategory: Category;
     type: TransactionType;
     guessedType: TransactionType;
     isTransfer: boolean;
@@ -69,4 +69,5 @@ export interface Transaction {
     linkedTransactions: TransactionLinkDescriptor[];
     guessedLinkedTransactions: TransactionLinkDescriptor[];
     envelope: Envelope;
+    guessedEnvelope: Envelope;
 }

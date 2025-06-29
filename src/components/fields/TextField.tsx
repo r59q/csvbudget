@@ -7,11 +7,14 @@ interface TextFieldProps {
 
 const TextField: React.FC<TextFieldProps> = ({ transaction }) => {
     return (
-        <span className="text-sm text-gray-200" title={transaction.text}>
+        <span
+            className="text-sm text-gray-200 truncate block max-w-full cursor-pointer"
+            title={transaction.text}
+            style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
+        >
             {transaction.text}
         </span>
     );
 };
 
 export default TextField;
-
