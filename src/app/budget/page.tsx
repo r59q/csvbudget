@@ -176,7 +176,7 @@ function BudgetPage() {
                         {Object.entries(expenseByCategory).sort(([a], [b]) => a.localeCompare(b)).map(([category, transactions]) => {
                             const total = (transactions ?? []).reduce((sum, tran) => sum + tran.amount, 0);
                             const average = envelopes.length > 0 ? total / envelopes.length : 0;
-                            return <div className={"flex flex-row justify-between items-center"} key={category}>
+                            return <div className={"flex flex-row justify-between items-center py-1.5 px-1 rounded hover:bg-gray-700 transition-colors duration-100"} key={category}>
                                 <div className={"flex flex-row flex-grow justify-between"}>
                                     <p>{category}</p>
                                     <p className={"pr-4"}>{formatCurrency(average)}</p>
@@ -225,15 +225,14 @@ function BudgetPage() {
                             Use expense as budget post
                         </button>
 
-                       {/* <h2 className="text-xl font-semibold mb-2 mt-6">Budget Posts</h2>
+                        <h2 className="text-xl font-semibold mb-2 mt-6">Budget Posts</h2>
                         {budgetPosts.length === 0 ? (
                             <p className="text-gray-400">No budget posts yet.</p>
                         ) : (
                             <ul className="divide-y divide-gray-700">
                                 {budgetPosts.map((post, index) => (
                                     <li key={index} className="py-2">
-                                        <div
-                                            className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
                                             <input
                                                 type="text"
                                                 className="bg-gray-700 border border-gray-600 text-white p-2 rounded w-full sm:w-2/3"
@@ -258,11 +257,10 @@ function BudgetPage() {
                                     </li>
                                 ))}
                             </ul>
-                        )}*/}
-
+                        )}
                     </div>
                     <div className={"flex-1/4 bg-gray-800 p-4 rounded-xl shadow-md flex flex-col"}>
-                        <BudgetSummary {...{budgetPosts, dateFilteredExpensesByBudgetPost}}/>
+                        <BudgetSummary {...{budgetPosts}}/>
                     </div>
 
                 </section>
@@ -293,39 +291,10 @@ function BudgetPage() {
 
 interface BudgetSummaryProps {
     budgetPosts: BudgetPost[]
-    dateFilteredExpensesByBudgetPost: Record<BudgetPost["title"], { amount: number, category: Category }[]>
 }
 
-const BudgetSummary = ({budgetPosts, dateFilteredExpensesByBudgetPost}: BudgetSummaryProps) => {
+const BudgetSummary = ({budgetPosts}: BudgetSummaryProps) => {
     return <>
-       {/* <h2 className="text-xl font-semibold mb-2">Budget Posts</h2>
-        <div>Controls</div>
-        <div className={"flex flex-col flex-grow divide-y divide-gray-400 gap-4"}>
-            {budgetPosts.map(post => {
-                const expenses = dateFilteredExpensesByBudgetPost[post.title]
-                const sum = post.amount + expenses.reduce((pre, cur) => pre + cur.amount, 0)
-                const isSumNegative = sum < 0;
-                return <div key={post.title} className={"flex flex-col"}>
-                    <div className={"font-bold flex flex-row justify-between"}>
-                        <p>{post.title}</p>
-                        <p className={"text-green-700"}>{formatCurrency(post.amount)}</p>
-                    </div>
-                    <div className={"flex flex-row text-gray-500"}>
-                        {expenses.map(e => {
-                            return <div className={"flex flex-row justify-between flex-grow"} key={e.category}>
-                                <p>{e.category}</p>
-                                <p>{formatCurrency(e.amount)}</p>
-                            </div>
-                        })}
-                    </div>
-                    <div className={"flex flex-row justify-between text-gray-500"}>
-                        <p>Sum</p>
-                        {isSumNegative && <p className={"text-amber-500"}>{formatCurrency(sum)}</p>}
-                        {!isSumNegative && <p className={"text-green-500"}>{formatCurrency(sum)}</p>}
-                    </div>
-                </div>
-            })}
-        </div>*/}
     </>
 }
 
@@ -363,4 +332,3 @@ const computeMonthlyTotals = (months: string[], groupedByMonth: Record<Envelope,
 };
 
 export default Page;
-
