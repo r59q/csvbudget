@@ -1,12 +1,9 @@
 "use client";
 import React, {useMemo, useState} from 'react';
 import useBudget from "@/hooks/Budget";
-import useIncome from "@/hooks/Income";
-import {advancedFilters, formatCurrency, formatMonth, getDayJs, getSum, groupByEnvelope} from "@/utility/datautils";
+import {formatCurrency, formatMonth, getSum, groupByEnvelope} from "@/utility/datautils";
 import useCategories from "@/hooks/Categories";
-import {BudgetPost, Category, CategoryBudgetPostMap, Envelope, MappedCSVRow, Transaction, TransactionID} from "@/model";
-import dayjs from "dayjs";
-import useOwnedAccounts from "@/hooks/OwnedAccount";
+import {BudgetPost, Category, CategoryBudgetPostMap, Envelope, Transaction, TransactionID} from "@/model";
 import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
 
 const Page = () => {
@@ -67,7 +64,6 @@ function BudgetPage() {
     const averageIncomePerMonth = totalIncome / incomeMonths.length;
 
     const totalBudget = budgetPosts.reduce((acc, post) => acc + post.amount, 0);
-
 
 
     const isMonthSelected = (month: Envelope) => {
@@ -179,10 +175,12 @@ function BudgetPage() {
                                 const isSelected = isMonthSelected(envelope);
                                 if (isSelected) {
                                     return <span className={"px-1 border-2 cursor-pointer select-none bg-green-900"}
-                                                 onClick={() => handleMonthSelect(envelope)} key={envelope}>{envelope}</span>
+                                                 onClick={() => handleMonthSelect(envelope)}
+                                                 key={envelope}>{envelope}</span>
                                 }
                                 return <span className={"px-1 border-2 cursor-pointer select-none"}
-                                             onClick={() => handleMonthSelect(envelope)} key={envelope}>{envelope}</span>
+                                             onClick={() => handleMonthSelect(envelope)}
+                                             key={envelope}>{envelope}</span>
                             })}
                         </div>
                     </div>
