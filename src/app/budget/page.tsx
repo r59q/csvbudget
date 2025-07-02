@@ -37,10 +37,10 @@ function BudgetPage() {
     const expenseByCategory = groupByCategory(envelopeSelectedTransactions.filter(e => e.type === "expense"));
     const averageIncomePerMonth = useMemo(() => {
         const incomeTransactions = envelopeSelectedTransactions.filter(e => e.type === "income");
+        if (incomeTransactions.length === 0) return 0;
         const totalIncome = getSum(incomeTransactions);
-        const uniqueEnvelopes = new Set(incomeTransactions.map(tran => tran.envelope));
-        return uniqueEnvelopes.size > 0 ? totalIncome / uniqueEnvelopes.size : 0;
-    }, [envelopeSelectedTransactions]);
+        return totalIncome / envelopes.length; // Average income per month
+    } , [envelopeSelectedTransactions, envelopes.length]);
 
 
     // Transactions in the selected budget envelopes these are the envelopes for the budget
