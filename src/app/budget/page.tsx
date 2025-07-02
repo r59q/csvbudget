@@ -27,80 +27,61 @@ function BudgetPage() {
         setCategoryBudgetMap,
         getCategoriesForPost
     } = useBudget();
-    const {transactions, envelopes} = useTransactionsContext()
+    const {envelopes, envelopeSelectedTransactions} = useTransactionsContext()
     const {groupByCategory, getCategory, categories} = useCategories();
-
-    const [selectedFromMonth, setSelectedFromMonth] = useState<number | undefined>(undefined);
-    const [selectedToMonth, setSelectedToMonth] = useState<number | undefined>(undefined);
     const [newTitle, setNewTitle] = useState("");
-    const [newAmount, setNewAmount] = useState<number>(0);
+    const [newAmount, setNewAmount] = useState(0);
+    const [budgetEnvelopeFrom, setBudgetEnvelopeFrom] = useState<number | undefined>(undefined);
+    const [budgetEnvelopeTo, setBudgetEnvelopeTo] = useState<number | undefined>(undefined);
 
-    const groupedByEnvelopes = groupByEnvelope(transactions);
+    // All the transactions in the selected envelopes. These are the global selected transactions
+    const expenseByEnvelope = groupByEnvelope(envelopeSelectedTransactions.filter(e => e.type === "expense"));
+    const expenseByCategory = groupByCategory(envelopeSelectedTransactions.filter(e => e.type === "expense"));
+    const incomeByEnvelope = groupByEnvelope(envelopeSelectedTransactions.filter(e => e.type === "income"));
+    const averageIncomePerMonth = envelopes.length > 0 ? getSum(incomeByEnvelope[envelopes[0]] || []) / envelopes.length : 0;
 
-    const monthlyTotals: MonthlyTotals = useMemo(() => {
-        return computeMonthlyTotals(envelopes, groupedByEnvelopes, getCategory);
-    }, [groupedByEnvelopes, envelopes])
-
-
-    if (transactions.length === 0) {
-        return <></>
-    }
-
-    const monthlyAverageExpensesPerCategory: Record<string, number> = {};
-    categories.forEach(category => {
-        const monthly = envelopes.map(envelope => {
-            return monthlyTotals.categoryTotals[envelope][category];
+    // Transactions in the selected budget envelopes these are the envelopes for the budget
+    const budgetSelectedEnvelopes = budgetEnvelopeFrom !== undefined && budgetEnvelopeTo !== undefined
+        ? envelopes.slice(budgetEnvelopeFrom, budgetEnvelopeTo + 1)
+        : budgetEnvelopeFrom !== undefined
+            ? envelopes.slice(budgetEnvelopeFrom)
+            : envelopes;
+    const budgetTransactions = budgetSelectedEnvelopes.flatMap(envelope => expenseByEnvelope[envelope] || []);
+    const budgetTransactionsByCategory = groupByCategory(budgetTransactions);
+    const budgetEnvelopeAverages = Object.entries(budgetTransactionsByCategory).map(([category, transactions]) => {
+        const totalAmount = (transactions ?? []).reduce((sum, tran) => sum + tran.amount, 0);
+        const average = totalAmount / budgetSelectedEnvelopes.length;
+        return {category, average};
+    });
+    const budgetEnvelopeTotals = budgetSelectedEnvelopes.map(envelope => {
+        const transactions = expenseByEnvelope[envelope] || [];
+        const totalAmount = transactions.reduce((sum, tran) => sum + tran.amount, 0);
+        return {envelope, total: totalAmount};
+    });
+    const budgetTotal = budgetEnvelopeTotals.reduce((sum, envelope) => sum + envelope.total, 0);
+    const budgetAveragesByCategory = budgetEnvelopeAverages.sort((a, b) => a.category.localeCompare(b.category));
+    const dateFilteredExpensesByBudgetPost = useMemo(() => {
+        const result: Record<BudgetPost["title"], { amount: number, category: Category }[]> = {};
+        budgetPosts.forEach(post => {
+            const transactions = budgetTransactionsByCategory[post.title] || [];
+            result[post.title] = transactions.map(tran => ({
+                amount: tran.amount,
+                category: getCategory(tran.id)
+            }));
         });
-        const total = monthly.reduce((pre, cur) => {
-            if (isNaN(cur)) return pre;
-            return pre + cur
-        }, 0);
-        monthlyAverageExpensesPerCategory[category] = total / envelopes.length;
-    })
-
-    const incomePerMonth = groupByEnvelope(transactions.filter(e => e.type === "income"));
-    const incomeMonths = Object.keys(incomePerMonth);
-    const totalIncome = incomeMonths.reduce((pre, cur) => pre + getSum(incomePerMonth[cur] ?? []), 0);
-    const averageIncomePerMonth = totalIncome / incomeMonths.length;
-
-    const totalBudget = budgetPosts.reduce((acc, post) => acc + post.amount, 0);
-
+        return result;
+    }, [budgetPosts, budgetTransactionsByCategory, getCategory]);
 
     const isMonthSelected = (month: Envelope) => {
         const idx = envelopes.indexOf(month);
-        if (selectedFromMonth === undefined) {
+        if (budgetEnvelopeFrom === undefined) {
             return true;
         }
-        if (selectedToMonth === undefined) {
-            return idx >= selectedFromMonth;
+        if (budgetEnvelopeTo === undefined) {
+            return idx >= budgetEnvelopeFrom;
         }
-        return idx >= selectedFromMonth && idx <= selectedToMonth;
+        return idx >= budgetEnvelopeFrom && idx <= budgetEnvelopeTo;
     }
-    const dateFilteredMonths = (selectedFromMonth !== undefined && selectedToMonth !== undefined) ? envelopes.filter((_ignored, idx) => idx >= selectedFromMonth && idx <= selectedToMonth) : envelopes
-    const rowsFilteredByDate = (selectedFromMonth !== undefined && selectedToMonth !== undefined) ? transactions.filter(e => {
-            return dateFilteredMonths.includes(formatMonth(e.date.toDate()))
-        }
-    ) : transactions
-
-    const dateFilteredGroupedByCategory = groupByCategory(rowsFilteredByDate);
-    const groupedByCategory = groupByCategory(transactions);
-    const averagesByCategory: Record<Category, number> = {}
-    categories.forEach(e => averagesByCategory[e] = getSum(groupedByCategory[e] ?? []) / envelopes.length);
-    const sortedAveragesByCategory = categories.map(cat => ({
-        average: averagesByCategory[cat],
-        category: cat
-    })).sort((a, b) => a.average - b.average);
-    const dateFilteredAveragesByCategory: Record<Category, number> = {}
-    categories.forEach(e => dateFilteredAveragesByCategory[e] = getSum(dateFilteredGroupedByCategory[e] ?? []) / dateFilteredMonths.length);
-
-    const dateFilteredExpensesByBudgetPost: Record<BudgetPost["title"], { amount: number, category: Category }[]> = {}
-    budgetPosts.map(e => {
-        const categories = getCategoriesForPost(e);
-        dateFilteredExpensesByBudgetPost[e.title] = categories.map(cat => ({
-            amount: dateFilteredAveragesByCategory[cat],
-            category: cat
-        }));
-    })
 
     const handleCreatePost = () => {
         if (!newTitle || newAmount === 0) return;
@@ -131,8 +112,10 @@ function BudgetPage() {
         const newPosts: BudgetPost[] = []
         const newCategoryBudgetMap: CategoryBudgetPostMap = {}
         categories.forEach(category => {
-            const amount = averagesByCategory[category]
-            const post = {amount: Math.round(-amount), title: category}
+            const transactions = expenseByCategory[category] || [];
+            const totalAmount = transactions.reduce((sum, tran) => sum + tran.amount, 0);
+            const average = budgetSelectedEnvelopes.length > 0 ? totalAmount / budgetSelectedEnvelopes.length : 0;
+            const post = { amount: Math.round(-average), title: category };
             newPosts.push(post);
             newCategoryBudgetMap[category] = category;
         })
@@ -143,16 +126,16 @@ function BudgetPage() {
     const handleMonthSelect = (month: Envelope) => {
         const idx = envelopes.indexOf(month);
         if (idx === -1) return;
-        if (selectedFromMonth === undefined) {
-            setSelectedFromMonth(idx);
+        if (budgetEnvelopeFrom === undefined) {
+            setBudgetEnvelopeFrom(idx);
             return;
         }
-        if (selectedToMonth === undefined) {
-            setSelectedToMonth(idx);
+        if (budgetEnvelopeTo === undefined) {
+            setBudgetEnvelopeTo(idx);
             return;
         }
-        setSelectedToMonth(undefined)
-        setSelectedFromMonth(idx);
+        setBudgetEnvelopeTo(undefined)
+        setBudgetEnvelopeFrom(idx);
     }
 
     return (
@@ -166,7 +149,7 @@ function BudgetPage() {
                     <div className={"flex flex-col flex-1/3 bg-gray-800 p-4 rounded-xl"}>
                         <h2 className="text-xl font-semibold mb-2">Income Summary</h2>
                         <p className="text-green-400 font-medium">
-                            Monthly income: {formatCurrency(averageIncomePerMonth)}
+                            Monthly income: AVERAGE INCOME WAS HERE {/*formatCurrency(averageIncomePerMonth)*/}
                         </p>
                     </div>
                     <div className={"flex flex-col flex-1/4 bg-gray-800 p-4 rounded-xl"}>
@@ -190,12 +173,13 @@ function BudgetPage() {
                 <section className="w-full flex gap-2 flex-row">
                     <div className={"bg-gray-800 p-4 rounded-xl flex flex-col gap-1 divide-y flex-1/4"}>
                         <h2 className="text-xl font-semibold mb-2">Expense Categories</h2>
-                        {sortedAveragesByCategory.map(e => {
-                            const category = e.category;
+                        {Object.entries(expenseByCategory).sort(([a], [b]) => a.localeCompare(b)).map(([category, transactions]) => {
+                            const total = (transactions ?? []).reduce((sum, tran) => sum + tran.amount, 0);
+                            const average = envelopes.length > 0 ? total / envelopes.length : 0;
                             return <div className={"flex flex-row justify-between items-center"} key={category}>
                                 <div className={"flex flex-row flex-grow justify-between"}>
                                     <p>{category}</p>
-                                    <p className={"pr-4"}>{formatCurrency(e.average)}</p>
+                                    <p className={"pr-4"}>{formatCurrency(average)}</p>
                                 </div>
                                 <select
                                     value={getBudgetPostForCategory(category)?.title ?? ""}
@@ -241,7 +225,7 @@ function BudgetPage() {
                             Use expense as budget post
                         </button>
 
-                        <h2 className="text-xl font-semibold mb-2 mt-6">Budget Posts</h2>
+                       {/* <h2 className="text-xl font-semibold mb-2 mt-6">Budget Posts</h2>
                         {budgetPosts.length === 0 ? (
                             <p className="text-gray-400">No budget posts yet.</p>
                         ) : (
@@ -274,7 +258,7 @@ function BudgetPage() {
                                     </li>
                                 ))}
                             </ul>
-                        )}
+                        )}*/}
 
                     </div>
                     <div className={"flex-1/4 bg-gray-800 p-4 rounded-xl shadow-md flex flex-col"}>
@@ -289,25 +273,18 @@ function BudgetPage() {
                     <div className={"bg-gray-800 p-4 rounded-xl flex-1/3"}>
                         <h2 className="text-xl font-semibold mb-2">Summary</h2>
                         <p>
-                            Budgeted Total:{" "}
-                            <span className="font-semibold">${totalBudget.toFixed(2)}</span>
+                            Total Expenses: <span className="font-semibold">{formatCurrency(Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0))}</span>
                         </p>
                         <p>
-                            Remaining:{" "}
-                            <span
-                                className={`font-semibold ${
-                                    averageIncomePerMonth - totalBudget < 0
-                                        ? "text-red-400"
-                                        : "text-green-400"
-                                }`}
-                            >
-                            ${(averageIncomePerMonth - totalBudget).toFixed(2)}
-                        </span>
+                            Average Monthly Expenses: <span className="font-semibold">{formatCurrency(envelopes.length > 0 ? Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length : 0)}</span>
+                        </p>
+                        <p>
+                            Remaining: <span className={`font-semibold ${averageIncomePerMonth - (Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length) < 0 ? "text-red-400" : "text-green-400"}`}>
+                                {formatCurrency(averageIncomePerMonth - (Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length))}
+                            </span>
                         </p>
                     </div>
-                    <div className={"flex-1/4"}>
-
-                    </div>
+                    <div className={"flex-1/4"}></div>
                 </section>
             </div>
         </div>
@@ -321,7 +298,7 @@ interface BudgetSummaryProps {
 
 const BudgetSummary = ({budgetPosts, dateFilteredExpensesByBudgetPost}: BudgetSummaryProps) => {
     return <>
-        <h2 className="text-xl font-semibold mb-2">Budget Posts</h2>
+       {/* <h2 className="text-xl font-semibold mb-2">Budget Posts</h2>
         <div>Controls</div>
         <div className={"flex flex-col flex-grow divide-y divide-gray-400 gap-4"}>
             {budgetPosts.map(post => {
@@ -348,7 +325,7 @@ const BudgetSummary = ({budgetPosts, dateFilteredExpensesByBudgetPost}: BudgetSu
                     </div>
                 </div>
             })}
-        </div>
+        </div>*/}
     </>
 }
 
@@ -386,3 +363,4 @@ const computeMonthlyTotals = (months: string[], groupedByMonth: Record<Envelope,
 };
 
 export default Page;
+
