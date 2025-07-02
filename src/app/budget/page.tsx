@@ -1,9 +1,9 @@
 "use client";
 import React, {useMemo, useState} from 'react';
 import useBudget from "@/hooks/Budget";
-import {formatCurrency, formatMonth, getSum, groupByEnvelope} from "@/utility/datautils";
+import {formatCurrency, getSum, groupByEnvelope} from "@/utility/datautils";
 import useCategories from "@/hooks/Categories";
-import {BudgetPost, Category, CategoryBudgetPostMap, Envelope, Transaction, TransactionID} from "@/model";
+import {BudgetPost, CategoryBudgetPostMap, Envelope, Transaction} from "@/model";
 import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
 
 const Page = () => {
@@ -41,38 +41,26 @@ function BudgetPage() {
     const averageIncomePerMonth = envelopes.length > 0 ? getSum(incomeByEnvelope[envelopes[0]] || []) / envelopes.length : 0;
 
     // Transactions in the selected budget envelopes these are the envelopes for the budget
-    const budgetSelectedEnvelopes = budgetEnvelopeFrom !== undefined && budgetEnvelopeTo !== undefined
-        ? envelopes.slice(budgetEnvelopeFrom, budgetEnvelopeTo + 1)
-        : budgetEnvelopeFrom !== undefined
-            ? envelopes.slice(budgetEnvelopeFrom)
-            : envelopes;
-    const budgetTransactions = budgetSelectedEnvelopes.flatMap(envelope => expenseByEnvelope[envelope] || []);
-    const budgetTransactionsByCategory = groupByCategory(budgetTransactions);
-    const budgetEnvelopeAverages = Object.entries(budgetTransactionsByCategory).map(([category, transactions]) => {
-        const totalAmount = (transactions ?? []).reduce((sum, tran) => sum + tran.amount, 0);
-        const average = totalAmount / budgetSelectedEnvelopes.length;
-        return {category, average};
-    });
-    const budgetEnvelopeTotals = budgetSelectedEnvelopes.map(envelope => {
-        const transactions = expenseByEnvelope[envelope] || [];
-        const totalAmount = transactions.reduce((sum, tran) => sum + tran.amount, 0);
-        return {envelope, total: totalAmount};
-    });
-    const budgetTotal = budgetEnvelopeTotals.reduce((sum, envelope) => sum + envelope.total, 0);
-    const budgetAveragesByCategory = budgetEnvelopeAverages.sort((a, b) => a.category.localeCompare(b.category));
-    const dateFilteredExpensesByBudgetPost = useMemo(() => {
-        const result: Record<BudgetPost["title"], { amount: number, category: Category }[]> = {};
-        budgetPosts.forEach(post => {
-            const transactions = budgetTransactionsByCategory[post.title] || [];
-            result[post.title] = transactions.map(tran => ({
-                amount: tran.amount,
-                category: getCategory(tran.id)
-            }));
+    const getBudgetEnvelopes = () => {
+        if (budgetEnvelopeFrom === undefined) {
+            return envelopes;
+        }
+        if (budgetEnvelopeTo === undefined) {
+            return envelopes.slice(budgetEnvelopeFrom);
+        }
+        return envelopes.slice(budgetEnvelopeFrom, budgetEnvelopeTo + 1);
+    }
+    const budgetSelectedEnvelopes = useMemo(() => {
+        const selectedEnvelopes = getBudgetEnvelopes();
+        return selectedEnvelopes.map(envelope => {
+            return {
+                envelope,
+                transactions: envelopeSelectedTransactions.filter(tran => tran.envelope === envelope)
+            };
         });
-        return result;
-    }, [budgetPosts, budgetTransactionsByCategory, getCategory]);
+    }, [envelopeSelectedTransactions, budgetEnvelopeFrom, budgetEnvelopeTo, envelopes]);
 
-    const isMonthSelected = (month: Envelope) => {
+    const isEnvelopedBudgetSelected = (month: Envelope) => {
         const idx = envelopes.indexOf(month);
         if (budgetEnvelopeFrom === undefined) {
             return true;
@@ -82,6 +70,17 @@ function BudgetPage() {
         }
         return idx >= budgetEnvelopeFrom && idx <= budgetEnvelopeTo;
     }
+
+    const budgetEnvelopes = useMemo(() => {
+        return envelopes.filter(envelope => isEnvelopedBudgetSelected(envelope));
+    }, [envelopes, budgetEnvelopeFrom, budgetEnvelopeTo]);
+    const budgetSelectedTransactions = useMemo(() => {
+        return envelopeSelectedTransactions.filter(tran => budgetEnvelopes.includes(tran.envelope));
+    }, [envelopeSelectedTransactions, budgetSelectedEnvelopes]);
+    const expenseByBudgetEnvelope = useMemo(() => {
+        return groupByEnvelope(budgetSelectedTransactions.filter(e => e.type === "expense"));
+    }, [budgetSelectedTransactions]);
+
 
     const handleCreatePost = () => {
         if (!newTitle || newAmount === 0) return;
@@ -115,7 +114,7 @@ function BudgetPage() {
             const transactions = expenseByCategory[category] || [];
             const totalAmount = transactions.reduce((sum, tran) => sum + tran.amount, 0);
             const average = budgetSelectedEnvelopes.length > 0 ? totalAmount / budgetSelectedEnvelopes.length : 0;
-            const post = { amount: Math.round(-average), title: category };
+            const post = {amount: Math.round(-average), title: category};
             newPosts.push(post);
             newCategoryBudgetMap[category] = category;
         })
@@ -138,6 +137,19 @@ function BudgetPage() {
         setBudgetEnvelopeFrom(idx);
     }
 
+    const groupByPost = (transactions: Transaction[]) => {
+        const grouped: Partial<Record<BudgetPost['title'], Transaction[]>> = {};
+        transactions.forEach(tran => {
+            const post = getBudgetPostForCategory(getCategory(tran.id))?.title ?? "Unassigned";
+            if (!post) return;
+            if (!grouped[post]) {
+                grouped[post] = [];
+            }
+            grouped[post]!.push(tran);
+        });
+        return grouped;
+    }
+
     return (
         <div className="min-h-screen text-gray-100 w-full">
             <div className="p-4 space-y-6 flex flex-col justify-center items-center flex-grow">
@@ -155,7 +167,7 @@ function BudgetPage() {
                     <div className={"flex flex-col flex-1/4 bg-gray-800 p-4 rounded-xl"}>
                         <div className={"grid grid-cols-4 text-sm gap-2"}>
                             {envelopes.map(envelope => {
-                                const isSelected = isMonthSelected(envelope);
+                                const isSelected = isEnvelopedBudgetSelected(envelope);
                                 if (isSelected) {
                                     return <span className={"px-1 border-2 cursor-pointer select-none bg-green-900"}
                                                  onClick={() => handleMonthSelect(envelope)}
@@ -176,7 +188,9 @@ function BudgetPage() {
                         {Object.entries(expenseByCategory).sort(([a], [b]) => a.localeCompare(b)).map(([category, transactions]) => {
                             const total = (transactions ?? []).reduce((sum, tran) => sum + tran.amount, 0);
                             const average = envelopes.length > 0 ? total / envelopes.length : 0;
-                            return <div className={"flex flex-row justify-between items-center py-1.5 px-1 rounded hover:bg-gray-700 transition-colors duration-100"} key={category}>
+                            return <div
+                                className={"flex flex-row justify-between items-center py-1.5 px-1 rounded hover:bg-gray-700 transition-colors duration-100"}
+                                key={category}>
                                 <div className={"flex flex-row flex-grow justify-between"}>
                                     <p>{category}</p>
                                     <p className={"pr-4"}>{formatCurrency(average)}</p>
@@ -260,7 +274,7 @@ function BudgetPage() {
                         )}
                     </div>
                     <div className={"flex-1/4 bg-gray-800 p-4 rounded-xl shadow-md flex flex-col"}>
-                        <BudgetSummary {...{budgetPosts}}/>
+                        <BudgetSummary {...{budgetPosts, budgetEnvelopes, expenseByBudgetEnvelope, groupByPost}}/>
                     </div>
 
                 </section>
@@ -271,13 +285,16 @@ function BudgetPage() {
                     <div className={"bg-gray-800 p-4 rounded-xl flex-1/3"}>
                         <h2 className="text-xl font-semibold mb-2">Summary</h2>
                         <p>
-                            Total Expenses: <span className="font-semibold">{formatCurrency(Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0))}</span>
+                            Total Expenses: <span
+                            className="font-semibold">{formatCurrency(Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0))}</span>
                         </p>
                         <p>
-                            Average Monthly Expenses: <span className="font-semibold">{formatCurrency(envelopes.length > 0 ? Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length : 0)}</span>
+                            Average Monthly Expenses: <span
+                            className="font-semibold">{formatCurrency(envelopes.length > 0 ? Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length : 0)}</span>
                         </p>
                         <p>
-                            Remaining: <span className={`font-semibold ${averageIncomePerMonth - (Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length) < 0 ? "text-red-400" : "text-green-400"}`}>
+                            Remaining: <span
+                            className={`font-semibold ${averageIncomePerMonth - (Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length) < 0 ? "text-red-400" : "text-green-400"}`}>
                                 {formatCurrency(averageIncomePerMonth - (Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length))}
                             </span>
                         </p>
@@ -290,45 +307,55 @@ function BudgetPage() {
 }
 
 interface BudgetSummaryProps {
-    budgetPosts: BudgetPost[]
+    budgetPosts: BudgetPost[];
+    expenseByBudgetEnvelope: Record<Envelope, Transaction[]>;
+    budgetEnvelopes: Envelope[]
+    groupByPost: (transactions: Transaction[]) => Partial<Record<BudgetPost['title'], Transaction[]>>;
 }
 
-const BudgetSummary = ({budgetPosts}: BudgetSummaryProps) => {
+const BudgetSummary = ({budgetPosts, expenseByBudgetEnvelope, budgetEnvelopes, groupByPost}: BudgetSummaryProps) => {
+    const totalBudget = budgetPosts.reduce((sum, post) => sum + post.amount * budgetEnvelopes.length, 0);
+    const totalExpenses = Object.values(expenseByBudgetEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0);
+    const budgetPostGroups = useMemo(() => {
+        return groupByPost(Object.values(expenseByBudgetEnvelope).flat());
+    }, [expenseByBudgetEnvelope, groupByPost]);
+
     return <>
+        <h2 className="text-xl font-semibold mb-2">Budget Summary</h2>
+        <p className="text-gray-400 mb-2">Total Budget: <span
+            className="text-green-400 font-mono">{formatCurrency(totalBudget)}</span></p>
+        <p className="text-gray-400 mb-2">Total Expenses: <span
+            className="text-red-400 font-mono">{formatCurrency(totalExpenses)}</span></p>
+        {budgetPosts.length === 0 ? (
+            <p className="text-gray-400">No budget posts yet.</p>
+        ) : (
+            <ul className="divide-y divide-gray-700">
+                {budgetPosts.map((post, index) => {
+                    const numberOfEnvelopes = budgetEnvelopes.length;
+                    const budgetedAmount = post.amount * numberOfEnvelopes;
+                    const postExpenses = budgetPostGroups[post.title] || [];
+                    const totalPostExpenses = postExpenses.reduce((sum, tran) => sum + tran.amount, 0);
+                    const isOverBudget = totalPostExpenses > budgetedAmount;
+                    const formattedAmount = formatCurrency(budgetedAmount);
+                    const formattedTotal = formatCurrency(totalPostExpenses);
+                    const difference = budgetedAmount + totalPostExpenses;
+
+                    return <li key={index} className="py-2 flex justify-between">
+                        <div>
+                            <p className="text-gray-200">{post.title}</p>
+                        </div>
+                        <div>
+                            <p className={`font-mono ${isOverBudget ? "text-red-400" : "text-green-400"}`}>{formattedAmount}</p>
+                            <p>{formattedTotal}</p>
+                            <p className={`font-mono ${difference < 0 ? "text-red-400" : "text-green-400"}`}>
+                                {formatCurrency(difference)}
+                            </p>
+                        </div>
+                    </li>;
+                })}
+            </ul>
+        )}
     </>
 }
-
-interface MonthlyTotals {
-    categoryTotals: Record<string, Record<string, number>>;
-    totals: Record<string, number>;
-}
-
-const computeMonthlyTotals = (months: string[], groupedByMonth: Record<Envelope, Transaction[] | undefined>, getCategory: (row: TransactionID) => Category): MonthlyTotals => {
-    const totals: Record<string, number> = {};
-    const monthlyCategoryTotals: Record<string, Record<string, number>> = {};
-
-    months.forEach(month => {
-        const rows = groupedByMonth[month];
-        if (!rows) return;
-
-        const categoryTotals: Record<string, number> = {};
-        let totalSum = 0;
-
-        rows.forEach((row) => {
-            if (!categoryTotals) {
-                throw new Error("wa")
-            }
-            const category: Category = getCategory(row.id);
-            const num = row.amount;
-            if (!isNaN(num)) {
-                categoryTotals[category] = (categoryTotals[category] || 0) + num;
-                totalSum += num;
-            }
-        });
-        totals[month] = totalSum;
-        monthlyCategoryTotals[month] = categoryTotals;
-    })
-    return {totals, categoryTotals: monthlyCategoryTotals};
-};
 
 export default Page;
