@@ -7,6 +7,7 @@ import TextField from "@/components/fields/TextField";
 import AmountField from "@/components/fields/AmountField";
 import TransactionTypeField from "@/components/fields/TransactionTypeField";
 import CategoryField from "@/components/fields/CategoryField";
+import EnvelopeField from "@/components/fields/EnvelopeField";
 import {useTransactionsContext} from "@/context/TransactionsContext";
 import {TransactionTableColumn} from "@/features/transaction/TransactionTable";
 
@@ -59,6 +60,9 @@ const TransactionRow: React.FC<TransactionRowProps> = ({transaction, onContextMe
                 )}
                 {(!visibleColumns || visibleColumns.includes('category')) && (
                     <td className={compact ? "p-1 border" : "p-2 border"}><CategoryField transaction={transaction}/></td>
+                )}
+                {(!visibleColumns || visibleColumns.includes('envelope')) && (
+                    <td className={compact ? "p-1 border" : "p-2 border"}><EnvelopeField transaction={transaction} /></td>
                 )}
             </tr>
             {expanded && <ExpandedTransactionRow {...{transaction, guessedLinkTransactions}} />}

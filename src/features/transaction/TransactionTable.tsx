@@ -13,7 +13,8 @@ export type TransactionTableColumn =
     | 'from'
     | 'to'
     | 'type'
-    | 'category';
+    | 'category'
+    | 'envelope';
 
 interface TransactionTableProps {
     transactions: Transaction[];
@@ -23,7 +24,7 @@ interface TransactionTableProps {
 }
 
 const DEFAULT_COLUMNS: TransactionTableColumn[] = [
-    'id', 'date', 'text', 'amount', 'from', 'to', 'type', 'category'
+    'id', 'date', 'text', 'amount', 'from', 'to', 'type', 'category', 'envelope'
 ];
 
 const COLUMN_HEADERS: Record<TransactionTableColumn, string> = {
@@ -35,11 +36,18 @@ const COLUMN_HEADERS: Record<TransactionTableColumn, string> = {
     to: 'To',
     type: 'Map as',
     category: 'Categorize as',
+    envelope: 'Envelope',
 };
 
 function getColumnStyle(col: TransactionTableColumn) {
     if (col === "date") {
         return {width: '100px'};
+    }
+    if (col === "amount") {
+        return {width: '150px'};
+    }
+    if (col === "envelope") {
+        return {width: '260px'};
     }
     return col === "id" ? {width: '100px'} : undefined;
 }

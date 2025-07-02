@@ -39,7 +39,7 @@ export const groupByEnvelope = (rows: Transaction[]): Record<Envelope, Transacti
 export const groupByDateMonth = (rows: Transaction[]): Record<string, Transaction[]> => {
     return Object.groupBy(rows, row => {
         return getEnvelopeFromDayjs(row.date);
-    }) as Record<Month, Transaction[]>;
+    }) as Record<string, Transaction[]>;
 }
 
 export const getSum = (rows: Transaction[]) => {
@@ -50,11 +50,6 @@ export const transactionsSortedByDate = (a: Transaction, b: Transaction) => {
     const aDate = a.date;
     const bDate = b.date;
     return bDate.unix() - aDate.unix();
-}
-export const sortedByDate = (a: MappedCSVRow, b: MappedCSVRow) => {
-    const aDate = dayjs(a.mappedDate, 'DD-MM-YYYY');
-    const bDate = dayjs(b.mappedDate, 'DD-MM-YYYY');
-    return bDate.unix() - aDate.unix()
 }
 
 export const intersection = <T, >(arr1: T[], arr2: T[]) => {
@@ -119,4 +114,12 @@ export const predictIsCsvRowTransfer = (row: MappedCSVRow, isAccountOwned: (id: 
         return false; // Same account, not a transfer
     }
     return isAccountOwned(row.mappedFrom) && isAccountOwned(row.mappedTo);
+}
+
+// Sort envelopes by date (format MM-YYYY)
+export function compareEnvelopesByDate(a: string, b: string) {
+    const [ma, ya] = a.split("-").map(Number);
+    const [mb, yb] = b.split("-").map(Number);
+    if (ya !== yb) return ya - yb;
+    return ma - mb;
 }

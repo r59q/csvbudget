@@ -1,42 +1,40 @@
 import {useEffect, useState} from "react";
-import {MappedCSVRow, Envelope, IncomeEnvelopeMap, Transaction, TransactionID} from "@/model";
+import {Envelope, EnvelopeMap, Transaction, TransactionID} from "@/model";
 import {getRowIncomeData} from "@/data";
-import useCSVRows from "@/hooks/CSVRows";
 
-const useIncome = () => {
-    const {getById} = useCSVRows()
-    const [incomeMap, setIncomeMap] = useState<IncomeEnvelopeMap>({})
+const useEnvelopeMapping = () => {
+    const [envelopeMap, setEnvelopeMap] = useState<EnvelopeMap>({})
 
     useEffect(() => {
-        setIncomeMap(getRowIncomeData().load())
+        setEnvelopeMap(getRowIncomeData().load())
     }, []);
 
-    const saveIncomeMap = (map: IncomeEnvelopeMap) => {
-        setIncomeMap(getRowIncomeData().save(map));
+    const saveIncomeMap = (map: EnvelopeMap) => {
+        setEnvelopeMap(getRowIncomeData().save(map));
     }
 
-    const incomeRows = Object.keys(incomeMap).map(rowId => getById(parseInt(rowId))).filter(e => !!e);
-
-    return {
-        incomeMap,
-        incomeRows,
-        getEnvelopeForIncome: (transactionId: TransactionID): Envelope => {
-            const month = incomeMap[transactionId];
-            if (month === "") {
-                return "Unassigned";
-            }
-            return month;
-        },
-        setEnvelopeForIncome: (row: Transaction, envelope: Envelope | "" | undefined) => {
-            const newState = {...incomeMap};
-            if (envelope === "" || envelope == undefined || envelope === "Unassigned") {
-                delete newState[row.id];
-            } else {
-                newState[row.id] = envelope;
-            }
-            saveIncomeMap(newState);
+    const getEnvelopeForTransaction = (transactionId: TransactionID): Envelope => {
+        const envelope = envelopeMap[transactionId];
+        if (envelope === "") {
+            return "Unassigned";
         }
+        return envelope;
+    };
+
+    const setEnvelopeForTransaction = (row: Transaction, envelope: Envelope | "" | undefined) => {
+        const newState = {...envelopeMap};
+        if (envelope === "" || envelope == undefined || envelope === "Unassigned") {
+            delete newState[row.id];
+        } else {
+            newState[row.id] = envelope;
+        }
+        saveIncomeMap(newState);
+    };
+    return {
+        incomeMap: envelopeMap,
+        getEnvelopeForTransaction,
+        setEnvelopeForTransaction
     }
 };
 
-export default useIncome;
+export default useEnvelopeMapping;

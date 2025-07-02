@@ -28,7 +28,7 @@ export type Envelope = string | "Unassigned";
 export type BudgetPost = { title: string; amount: number; }
 
 export type TransactionCategoryMap = Record<string, Category>;
-export type IncomeEnvelopeMap = Record<TransactionID, Envelope>;
+export type EnvelopeMap = Record<TransactionID, Envelope>;
 export type CategoryBudgetPostMap = Record<Category, BudgetPost["title"]>;
 
 export type MappedCSVRow = {

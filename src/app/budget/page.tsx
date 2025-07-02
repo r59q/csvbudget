@@ -16,6 +16,7 @@ const Page = () => {
 
 
 function BudgetPage() {
+    const {envelopes, selectedEnvelopes, envelopeSelectedTransactions} = useTransactionsContext()
     const {
         budgetPosts,
         createBudgetPost,
@@ -25,9 +26,7 @@ function BudgetPage() {
         setCategoryBudgetMapping,
         setBudgetPosts,
         setCategoryBudgetMap,
-        getCategoriesForPost
     } = useBudget();
-    const {envelopes, envelopeSelectedTransactions} = useTransactionsContext()
     const {groupByCategory, getCategory, categories} = useCategories();
     const [newTitle, setNewTitle] = useState("");
     const [newAmount, setNewAmount] = useState(0);
@@ -35,10 +34,14 @@ function BudgetPage() {
     const [budgetEnvelopeTo, setBudgetEnvelopeTo] = useState<number | undefined>(undefined);
 
     // All the transactions in the selected envelopes. These are the global selected transactions
-    const expenseByEnvelope = groupByEnvelope(envelopeSelectedTransactions.filter(e => e.type === "expense"));
     const expenseByCategory = groupByCategory(envelopeSelectedTransactions.filter(e => e.type === "expense"));
-    const incomeByEnvelope = groupByEnvelope(envelopeSelectedTransactions.filter(e => e.type === "income"));
-    const averageIncomePerMonth = envelopes.length > 0 ? getSum(incomeByEnvelope[envelopes[0]] || []) / envelopes.length : 0;
+    const averageIncomePerMonth = useMemo(() => {
+        const incomeTransactions = envelopeSelectedTransactions.filter(e => e.type === "income");
+        const totalIncome = getSum(incomeTransactions);
+        const uniqueEnvelopes = new Set(incomeTransactions.map(tran => tran.envelope));
+        return uniqueEnvelopes.size > 0 ? totalIncome / uniqueEnvelopes.size : 0;
+    }, [envelopeSelectedTransactions]);
+
 
     // Transactions in the selected budget envelopes these are the envelopes for the budget
     const getBudgetEnvelopes = () => {
@@ -80,6 +83,9 @@ function BudgetPage() {
     const expenseByBudgetEnvelope = useMemo(() => {
         return groupByEnvelope(budgetSelectedTransactions.filter(e => e.type === "expense"));
     }, [budgetSelectedTransactions]);
+    const incomeByBudgetEnvelope = useMemo(() => {
+        return groupByEnvelope(budgetSelectedTransactions.filter(e => e.type === "income"));
+    }, [budgetSelectedTransactions]);
 
 
     const handleCreatePost = () => {
@@ -108,16 +114,20 @@ function BudgetPage() {
     };
 
     const handleUseExpenseAsBudget = () => {
-        const newPosts: BudgetPost[] = []
-        const newCategoryBudgetMap: CategoryBudgetPostMap = {}
+        const newPosts: BudgetPost[] = [];
+        const newCategoryBudgetMap: CategoryBudgetPostMap = {};
         categories.forEach(category => {
-            const transactions = expenseByCategory[category] || [];
-            const totalAmount = transactions.reduce((sum, tran) => sum + tran.amount, 0);
-            const average = budgetSelectedEnvelopes.length > 0 ? totalAmount / budgetSelectedEnvelopes.length : 0;
+            // Sum all expenses for this category across selectedEnvelopes
+            const totalAmount = selectedEnvelopes.reduce((sum, envelope) => {
+                const transactions = (expenseByCategory[category] || []).filter(tran => tran.envelope === envelope);
+                return sum + transactions.reduce((s, tran) => s + tran.amount, 0);
+            }, 0);
+            // Divide by the total number of selected envelopes
+            const average = selectedEnvelopes.length > 0 ? totalAmount / selectedEnvelopes.length : 0;
             const post = {amount: Math.round(-average), title: category};
             newPosts.push(post);
             newCategoryBudgetMap[category] = category;
-        })
+        });
         setBudgetPosts(newPosts);
         setCategoryBudgetMap(newCategoryBudgetMap);
     }
@@ -158,12 +168,12 @@ function BudgetPage() {
                 {/* Income Summary */}
                 <section className="w-full gap-2 flex flex-row">
                     <div className={"flex flex-1/4"}></div>
-                    <div className={"flex flex-col flex-1/3 bg-gray-800 p-4 rounded-xl"}>
+                    <div className={"flex flex-col flex-1/3 bg-gray-800 p-4 rounded-xl"}>{/*
                         <h2 className="text-xl font-semibold mb-2">Income Summary</h2>
                         <p className="text-green-400 font-medium">
-                            Monthly income: AVERAGE INCOME WAS HERE {/*formatCurrency(averageIncomePerMonth)*/}
+                            Monthly income: AVERAGE INCOME WAS HERE formatCurrency(averageIncomePerMonth)
                         </p>
-                    </div>
+                    */}</div>
                     <div className={"flex flex-col flex-1/4 bg-gray-800 p-4 rounded-xl"}>
                         <div className={"grid grid-cols-4 text-sm gap-2"}>
                             {envelopes.map(envelope => {
@@ -187,7 +197,7 @@ function BudgetPage() {
                         <h2 className="text-xl font-semibold mb-2">Expense Categories</h2>
                         {Object.entries(expenseByCategory).sort(([a], [b]) => a.localeCompare(b)).map(([category, transactions]) => {
                             const total = (transactions ?? []).reduce((sum, tran) => sum + tran.amount, 0);
-                            const average = envelopes.length > 0 ? total / envelopes.length : 0;
+                            const average = selectedEnvelopes.length > 0 ? total / selectedEnvelopes.length : 0;
                             return <div
                                 className={"flex flex-row justify-between items-center py-1.5 px-1 rounded hover:bg-gray-700 transition-colors duration-100"}
                                 key={category}>
@@ -274,7 +284,13 @@ function BudgetPage() {
                         )}
                     </div>
                     <div className={"flex-1/4 bg-gray-800 p-4 rounded-xl shadow-md flex flex-col"}>
-                        <BudgetSummary {...{budgetPosts, budgetEnvelopes, expenseByBudgetEnvelope, groupByPost}}/>
+                        <BudgetSummary {...{
+                            budgetPosts,
+                            budgetEnvelopes,
+                            expenseByBudgetEnvelope,
+                            incomeByBudgetEnvelope,
+                            groupByPost
+                        }}/>
                     </div>
 
                 </section>
@@ -284,20 +300,46 @@ function BudgetPage() {
                     <div className={"bg-gray-800 p-4 rounded-xl flex-1/4"}></div>
                     <div className={"bg-gray-800 p-4 rounded-xl flex-1/3"}>
                         <h2 className="text-xl font-semibold mb-2">Summary</h2>
-                        <p>
-                            Total Expenses: <span
-                            className="font-semibold">{formatCurrency(Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0))}</span>
-                        </p>
-                        <p>
-                            Average Monthly Expenses: <span
-                            className="font-semibold">{formatCurrency(envelopes.length > 0 ? Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length : 0)}</span>
-                        </p>
-                        <p>
-                            Remaining: <span
-                            className={`font-semibold ${averageIncomePerMonth - (Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length) < 0 ? "text-red-400" : "text-green-400"}`}>
-                                {formatCurrency(averageIncomePerMonth - (Object.values(expenseByEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0) / envelopes.length))}
-                            </span>
-                        </p>
+                        <div className="flex flex-col gap-1 mb-4">
+                            <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
+                                <span>Average Income:</span>
+                                <span className="font-semibold">{formatCurrency(averageIncomePerMonth)}</span>
+                            </div>
+                            <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
+                                <span>Total Budget:</span>
+                                <span
+                                    className="font-semibold">{formatCurrency(budgetPosts.reduce((sum, post) => sum + post.amount, 0))}</span>
+                            </div>
+                            <div className="flex flex-row justify-between items-center text-gray-400 mb-4">
+                                <span>Difference:</span>
+                                <span
+                                    className={`font-semibold ${averageIncomePerMonth - budgetPosts.reduce((sum, post) => sum + post.amount, 0) < 0 ? "text-red-400" : "text-green-400"}`}>
+                                    {formatCurrency(averageIncomePerMonth - budgetPosts.reduce((sum, post) => sum + post.amount, 0))}
+                                </span>
+                            </div>
+                            <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
+                                <span>Average Expense:</span>
+                                <span className="font-semibold">{formatCurrency(
+                                    (() => {
+                                        const allExpenses = Object.values(expenseByBudgetEnvelope).flat();
+                                        if (allExpenses.length === 0) return 0;
+                                        const total = allExpenses.reduce((sum, tran) => sum + tran.amount, 0);
+                                        return total / Object.keys(expenseByBudgetEnvelope).length;
+                                    })()
+                                )}</span>
+                            </div>
+                            {/* Average Income - Average Expense */}
+                            <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
+                                <span>Avg Income - Avg Expense:</span>
+                                <span className="font-semibold">{formatCurrency(
+                                    (() => {
+                                        const allExpenses = Object.values(expenseByBudgetEnvelope).flat();
+                                        const avgExpense = allExpenses.length === 0 ? 0 : allExpenses.reduce((sum, tran) => sum + tran.amount, 0) / (Object.keys(expenseByBudgetEnvelope).length || 1);
+                                        return averageIncomePerMonth + avgExpense;
+                                    })()
+                                )}</span>
+                            </div>
+                        </div>
                     </div>
                     <div className={"flex-1/4"}></div>
                 </section>
@@ -309,23 +351,23 @@ function BudgetPage() {
 interface BudgetSummaryProps {
     budgetPosts: BudgetPost[];
     expenseByBudgetEnvelope: Record<Envelope, Transaction[]>;
+    incomeByBudgetEnvelope: Record<Envelope, Transaction[]>;
     budgetEnvelopes: Envelope[]
     groupByPost: (transactions: Transaction[]) => Partial<Record<BudgetPost['title'], Transaction[]>>;
 }
 
-const BudgetSummary = ({budgetPosts, expenseByBudgetEnvelope, budgetEnvelopes, groupByPost}: BudgetSummaryProps) => {
-    const totalBudget = budgetPosts.reduce((sum, post) => sum + post.amount * budgetEnvelopes.length, 0);
-    const totalExpenses = Object.values(expenseByBudgetEnvelope).flat().reduce((sum, tran) => sum + tran.amount, 0);
+const BudgetSummary = ({
+                           budgetPosts,
+                           expenseByBudgetEnvelope,
+                           incomeByBudgetEnvelope,
+                           budgetEnvelopes,
+                           groupByPost
+                       }: BudgetSummaryProps) => {
     const budgetPostGroups = useMemo(() => {
         return groupByPost(Object.values(expenseByBudgetEnvelope).flat());
     }, [expenseByBudgetEnvelope, groupByPost]);
 
     return <>
-        <h2 className="text-xl font-semibold mb-2">Budget Summary</h2>
-        <p className="text-gray-400 mb-2">Total Budget: <span
-            className="text-green-400 font-mono">{formatCurrency(totalBudget)}</span></p>
-        <p className="text-gray-400 mb-2">Total Expenses: <span
-            className="text-red-400 font-mono">{formatCurrency(totalExpenses)}</span></p>
         {budgetPosts.length === 0 ? (
             <p className="text-gray-400">No budget posts yet.</p>
         ) : (
