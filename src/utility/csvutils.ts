@@ -6,7 +6,7 @@ import Papa from "papaparse";
 
 dayjs.extend(customParseFormat)
 
-export const MAPPED_COLUMNS = ['from', 'to', 'posting', 'amount', 'date'] as const;
+export const MAPPED_COLUMNS = ['from', 'to', 'text', 'amount', 'date'] as const;
 export type SchemaKey = string;
 
 export type ColumnMapping = Record<typeof MAPPED_COLUMNS[number], string>;

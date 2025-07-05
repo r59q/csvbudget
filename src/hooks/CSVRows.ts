@@ -79,7 +79,7 @@ const mapCsvRow = (unmappedRow: CsvRow, mapping: ColumnMapping | undefined): Map
             mappedAmount: parseFloat(unmappedRow[mapping["amount"]]),
             mappedId: hashId,
             mappedDate: unmappedRow[mapping["date"]],
-            mappedText: unmappedRow[mapping["posting"]],
+            mappedText: unmappedRow[mapping["text"]],
         } as MappedCSVRow;
     } catch (e) {
         alert(e)

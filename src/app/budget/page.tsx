@@ -61,7 +61,7 @@ function BudgetPage() {
                 transactions: envelopeSelectedTransactions.filter(tran => tran.envelope === envelope)
             };
         });
-    }, [envelopeSelectedTransactions, budgetEnvelopeFrom, budgetEnvelopeTo, envelopes]);
+    }, [envelopeSelectedTransactions, getBudgetEnvelopes, budgetEnvelopeFrom, budgetEnvelopeTo, envelopes]);
 
     const isEnvelopedBudgetSelected = (month: Envelope) => {
         const idx = envelopes.indexOf(month);

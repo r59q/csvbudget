@@ -68,16 +68,16 @@ const ImportPage = () => {
             )}
             <DataMapping unmappedSchemas={unmappedSchemas} onSaveMapping={handleSaveMapping}/>
             <div className={"w-2/3 mt-10 gap-4 flex flex-col"}>
-                <CSVImport
-                    csvFiles={csvFiles}
-                    onFileImport={handleFileImport}
-                    onDelete={handleDelete}
-                />
+                <CSVImport onFileImport={handleFileImport}/>
                 <FileSchemasList csvSchemas={csvSchemas} onReset={handleRemoveMapping}/>
             </div>
             <div className={"w-2/3 p-4"}>
-                <p>All transactions</p>
-                <TransactionTable transactions={transactions}/>
+                {transactions.length > 0 && (
+                    <>
+                        <p>All transactions</p>
+                        <TransactionTable transactions={transactions}/>
+                    </>
+                )}
             </div>
         </div>
     );
