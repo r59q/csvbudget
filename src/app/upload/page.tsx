@@ -2,12 +2,12 @@
 
 import React from 'react';
 import {TransactionsProvider} from "@/context/TransactionsContext";
-import UploadPage from "@/features/upload/UploadPage";
+import ImportPage from "@/features/upload/ImportPage";
 
 const Page = () => {
     return (
         <TransactionsProvider>
-            <UploadPage/>
+            <ImportPage/>
         </TransactionsProvider>
     );
 };

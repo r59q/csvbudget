@@ -8,7 +8,7 @@ import CSVUpload from "@/features/upload/CSVUpload";
 import FileSchemasList from "@/features/upload/FileSchemasList";
 import TransactionTable from "@/features/transaction/TransactionTable";
 
-const UploadPage = () => {
+const ImportPage = () => {
     const {csvFiles, setCSVFiles, unmappedSchemas, handleSaveMapping, handleRemoveMapping} = useGlobalContext();
     const {transactions} = useTransactionsContext();
     const {csvSchemas} = useCSVRows();
@@ -70,5 +70,5 @@ const UploadPage = () => {
     );
 };
 
-export default UploadPage;
+export default ImportPage;
 
