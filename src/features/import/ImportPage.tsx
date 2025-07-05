@@ -5,7 +5,7 @@ import {useGlobalContext} from "@/context/GlobalContext";
 import useCSVRows from "@/hooks/CSVRows";
 import {useTransactionsContext} from "@/context/TransactionsContext";
 import CSVImport from "@/features/import/CSVImport";
-import FileSchemasList from "@/features/import/FileSchemasList";
+import CSVFileList from "@/features/import/CSVFileList";
 import TransactionTable from "@/features/transaction/TransactionTable";
 import ImportSteps from "@/features/import/ImportSteps";
 
@@ -69,7 +69,7 @@ const ImportPage = () => {
             <DataMapping unmappedSchemas={unmappedSchemas} onSaveMapping={handleSaveMapping}/>
             <div className={"w-2/3 mt-10 gap-4 flex flex-col"}>
                 <CSVImport onFileImport={handleFileImport}/>
-                <FileSchemasList csvSchemas={csvSchemas} onReset={handleRemoveMapping}/>
+                <CSVFileList csvSchemas={csvSchemas} onReset={handleRemoveMapping}/>
             </div>
             <div className={"w-2/3 p-4"}>
                 {transactions.length > 0 && (

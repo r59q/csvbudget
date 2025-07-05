@@ -33,7 +33,7 @@ function BudgetPage() {
     const [budgetEnvelopeFrom, setBudgetEnvelopeFrom] = useState<number | undefined>(undefined);
     const [budgetEnvelopeTo, setBudgetEnvelopeTo] = useState<number | undefined>(undefined);
 
-    // All the transactions in the selected envelopes. These are the global selected transactions
+    // All the transactions in the selected envelopes. These are the global-selected transactions
     const expenseByCategory = groupByCategory(envelopeSelectedTransactions.filter(e => e.type === "expense"));
     const averageIncomePerMonth = useMemo(() => {
         const incomeTransactions = envelopeSelectedTransactions.filter(e => e.type === "income");
@@ -43,27 +43,7 @@ function BudgetPage() {
     } , [envelopeSelectedTransactions, envelopes.length]);
 
 
-    // Transactions in the selected budget envelopes these are the envelopes for the budget
-    const getBudgetEnvelopes = () => {
-        if (budgetEnvelopeFrom === undefined) {
-            return envelopes;
-        }
-        if (budgetEnvelopeTo === undefined) {
-            return envelopes.slice(budgetEnvelopeFrom);
-        }
-        return envelopes.slice(budgetEnvelopeFrom, budgetEnvelopeTo + 1);
-    }
-    const budgetSelectedEnvelopes = useMemo(() => {
-        const selectedEnvelopes = getBudgetEnvelopes();
-        return selectedEnvelopes.map(envelope => {
-            return {
-                envelope,
-                transactions: envelopeSelectedTransactions.filter(tran => tran.envelope === envelope)
-            };
-        });
-    }, [envelopeSelectedTransactions, getBudgetEnvelopes, budgetEnvelopeFrom, budgetEnvelopeTo, envelopes]);
-
-    const isEnvelopedBudgetSelected = (month: Envelope) => {
+    const isEnvelopedBudgetSelected = React.useCallback((month: Envelope) => {
         const idx = envelopes.indexOf(month);
         if (budgetEnvelopeFrom === undefined) {
             return true;
@@ -72,14 +52,14 @@ function BudgetPage() {
             return idx >= budgetEnvelopeFrom;
         }
         return idx >= budgetEnvelopeFrom && idx <= budgetEnvelopeTo;
-    }
+    }, [envelopes, budgetEnvelopeFrom, budgetEnvelopeTo]);
 
     const budgetEnvelopes = useMemo(() => {
         return envelopes.filter(envelope => isEnvelopedBudgetSelected(envelope));
-    }, [envelopes, budgetEnvelopeFrom, budgetEnvelopeTo]);
+    }, [envelopes, isEnvelopedBudgetSelected]);
     const budgetSelectedTransactions = useMemo(() => {
         return envelopeSelectedTransactions.filter(tran => budgetEnvelopes.includes(tran.envelope));
-    }, [envelopeSelectedTransactions, budgetSelectedEnvelopes]);
+    }, [envelopeSelectedTransactions, budgetEnvelopes]);
     const expenseByBudgetEnvelope = useMemo(() => {
         return groupByEnvelope(budgetSelectedTransactions.filter(e => e.type === "expense"));
     }, [budgetSelectedTransactions]);

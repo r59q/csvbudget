@@ -4,10 +4,12 @@ import SchemaMapper from "@/features/mapping/SchemaMapper";
 import TransactionMapper from "@/features/mapping/TransactionMapper";
 import {useTransactionsContext} from "@/context/TransactionsContext";
 import TransactionTable, {TransactionTableColumn} from "@/features/transaction/TransactionTable";
+import {ColumnMapping, SchemaKey} from "@/utility/csvutils";
+import {UnmappedSchema} from "@/model";
 
 interface DataMappingProps {
-    unmappedSchemas: any[];
-    onSaveMapping: (mapping: any, schemaKey: any) => void;
+    unmappedSchemas: UnmappedSchema[];
+    onSaveMapping: (mapping: ColumnMapping, schemaKey: SchemaKey) => void
 }
 
 const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {

@@ -2,9 +2,7 @@ import React from 'react';
 import { MdFileDownload, MdUploadFile, MdSchema } from 'react-icons/md';
 import {LinkButton} from "@/components/LinkButton";
 
-interface ImportStepsProps {}
-
-const ImportSteps = ({}: ImportStepsProps) => {
+const ImportSteps = ({}: object) => {
     return (
         <>
             <ol className="w-2/3 bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-10 list-decimal list-inside space-y-4 border border-gray-200 dark:border-gray-700">

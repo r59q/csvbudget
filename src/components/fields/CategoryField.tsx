@@ -149,7 +149,7 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
                         {inputValue.trim() && !categories.includes(inputValue.trim()) && (
                             <div className="px-2 py-1 text-blue-400 hover:bg-gray-800 cursor-pointer"
                                  onClick={handleAddCategory}>
-                                + Add "{inputValue.trim()}"
+                                + Add &quot;{inputValue.trim()}&quot;
                             </div>
                         )}
                     </div>

@@ -3,14 +3,15 @@ import { Transaction, TransactionLinkDescriptor, TransactionID } from "@/model";
 import { getTransactionLinksData } from "@/data";
 
 export default function useTransactionLinks() {
-    const transactionLinksStore = getTransactionLinksData();
     const [storedLinks, setStoredLinks] = useState<Record<number, TransactionLinkDescriptor[]>>({});
 
     useEffect(() => {
+        const transactionLinksStore = getTransactionLinksData();
         setStoredLinks(transactionLinksStore.load());
     }, []);
 
     const setTransactionLink = (a: Transaction, b: Transaction) => {
+        const transactionLinksStore = getTransactionLinksData();
         setStoredLinks(prev => {
             const newLinks = { ...prev };
             if (!newLinks[a.id]) newLinks[a.id] = [];
@@ -27,6 +28,7 @@ export default function useTransactionLinks() {
     };
 
     const unsetTransactionLink = (a: Transaction, b: Transaction) => {
+        const transactionLinksStore = getTransactionLinksData();
         setStoredLinks(prev => {
             const newLinks = { ...prev };
             if (newLinks[a.id]) {
@@ -43,6 +45,7 @@ export default function useTransactionLinks() {
     };
 
     const setTransactionLinkType = (a: Transaction, b: Transaction, linkType: TransactionLinkDescriptor['linkType']) => {
+        const transactionLinksStore = getTransactionLinksData();
         setStoredLinks(prev => {
             const newLinks = { ...prev };
             if (newLinks[a.id]) {
@@ -67,4 +70,3 @@ export default function useTransactionLinks() {
         setTransactionLinkType,
     };
 }
-
