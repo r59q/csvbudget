@@ -1,6 +1,6 @@
 import React from "react";
 import {FaChartBar, FaFileCsv, FaWallet} from "react-icons/fa";
-import {Button} from "@/components/Button";
+import {LinkButton} from "@/components/LinkButton";
 import {MdOutlinePrivacyTip} from "react-icons/md";
 
 const subsections = [
@@ -45,7 +45,7 @@ export default function Home() {
                     </p>
                 </div>
                 <div className="flex justify-end max-w-4xl mx-auto w-full mt-4 absolute left-1/2 -translate-x-1/2 bottom-6">
-                    <Button>Get Started</Button>
+                    <LinkButton href={"/upload"}>Get Started</LinkButton>
                 </div>
             </section>
 
