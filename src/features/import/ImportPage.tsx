@@ -6,7 +6,7 @@ import useCSVRows from "@/hooks/CSVRows";
 import {useTransactionsContext} from "@/context/TransactionsContext";
 import CSVImport from "@/features/import/CSVImport";
 import CSVFileList from "@/features/import/CSVFileList";
-import TransactionTable from "@/features/transaction/TransactionTable";
+import TransactionsSection from '@/features/import/TransactionsSection';
 import ImportSteps from "@/features/import/ImportSteps";
 
 const ImportPage = () => {
@@ -61,9 +61,10 @@ const ImportPage = () => {
         <div className="min-h-screen flex flex-col items-center">
             <div className="w-2/3 mt-10 mb-6">
                 <h1 className="text-2xl font-bold mb-2">Import Your Transactions</h1>
-                <p className="text-gray-600">Easily import your CSV files, map your data, and review your transactions below. Get started by importing your CSV files!</p>
+                <p className="text-gray-600">Easily import your CSV files, map your data, and review your transactions
+                    below. Get started by importing your CSV files!</p>
             </div>
-            <ImportSteps />
+            <ImportSteps/>
             <DataMapping unmappedSchemas={unmappedSchemas} onSaveMapping={handleSaveMapping}/>
             <div className={"w-2/3 mt-10 gap-4 flex flex-col"}>
                 <CSVImport onFileImport={handleFileImport}/>
@@ -73,13 +74,8 @@ const ImportPage = () => {
             <div className="w-full flex justify-center my-10">
                 <div className="w-2/3 border-t border-gray-300 dark:border-gray-700"></div>
             </div>
-            <div className={"m-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-10"}>
-                {transactions.length > 0 && (
-                    <>
-                        <p className="font-semibold mb-2">All transactions</p>
-                        <TransactionTable compact transactions={transactions}/>
-                    </>
-                )}
+            <div className={"px-4"}>
+                <TransactionsSection/>
             </div>
         </div>
     );
