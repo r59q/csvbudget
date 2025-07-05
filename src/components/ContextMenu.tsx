@@ -9,7 +9,6 @@ interface ContextMenuProps {
 
 const ContextMenu: React.FC<ContextMenuProps> = ({ visible, position, onClose, children }) => {
     const menuRef = useRef<HTMLUListElement>(null);
-    console.log("ContextMenu rendered", { visible, position });
     useEffect(() => {
         if (!visible) return;
         const handleClick = (e: MouseEvent) => {

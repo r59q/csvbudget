@@ -39,7 +39,7 @@ const COLUMN_HEADERS: Record<TransactionTableColumn, string> = {
     envelope: 'Envelope',
 };
 
-function getColumnStyle(col: TransactionTableColumn) {
+function getColumnStyle(col: TransactionTableColumn, compact: boolean = false) {
     if (col === "date") {
         return {width: '100px'};
     }
@@ -47,9 +47,18 @@ function getColumnStyle(col: TransactionTableColumn) {
         return {width: '150px'};
     }
     if (col === "envelope") {
-        return {width: '260px'};
+        if (compact) {
+            return {maxWidth: '230px', width: "200px"};
+        }
+        return {maxWidth: '260px', width: '240px'};
     }
-    return col === "id" ? {width: '100px'} : undefined;
+    if (col === "id") {
+        if (compact) {
+            return {width: '85px'};
+        }
+        return {maxWidth: '120px', width: '100px'};
+    }
+    return undefined;
 }
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
@@ -78,7 +87,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         <thead>
                         <tr className="bg-gray-950">
                             {visibleColumns.map(col => (
-                                <th key={col} className="px-2 py-1 border" style={getColumnStyle(col)}>
+                                <th key={col} className="px-2 py-1 border" style={getColumnStyle(col, compact)}>
                                     {COLUMN_HEADERS[col]}
                                 </th>
                             ))}

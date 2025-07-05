@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { MdFileUpload, MdInsertDriveFile } from "react-icons/md";
+import {MdFileDownload, MdFileUpload, MdInsertDriveFile} from "react-icons/md";
 
 interface CSVImportProps {
   onFileImport: (e: React.ChangeEvent<HTMLInputElement> | FileList) => void;
@@ -26,8 +26,8 @@ const CSVImport = ({ onFileImport }: CSVImportProps) => {
 
   return (
     <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm flex flex-col items-center">
-      <div className="flex items-center gap-2 mb-4">
-        <MdFileUpload className="text-blue-500" size={28} />
+      <div className="flex self-start gap-2 mb-4">
+        <MdFileDownload className="text-blue-500" size={28} />
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Import Budget CSVs</h2>
       </div>
       <label
