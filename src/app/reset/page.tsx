@@ -1,16 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { LOCALSTORAGE_KEYS } from '@/data';
 
 export default function ResetPage() {
-    const router = useRouter();
-
     useEffect(() => {
         LOCALSTORAGE_KEYS.forEach(key => localStorage.removeItem(key));
-        router.replace('/import');
-    }, [router]);
+        setTimeout(() => {
+            window.location.replace('/import');
+        }, 1000); // Delay to show the reset message
+    }, []);
 
     return <div className="p-8 text-center">Resetting app...</div>;
 }

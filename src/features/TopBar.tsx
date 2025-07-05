@@ -12,14 +12,14 @@ const TopBar = () => {
                 </Link>
                 <nav className="flex gap-2">
                     <NavLink href="/import" icon={<FiDownload />}>Import</NavLink>
-                    <NavLink href="/filter" icon={<FiFilter />}>Filter</NavLink>
                     <NavLink href="/income" icon={<FiDollarSign />}>Income</NavLink>
+                    <NavLink href="/filter" icon={<FiFilter />}>Filter</NavLink>
                     <NavLink href="/insight" icon={<FiBarChart2 />}>Insight</NavLink>
                     <NavLink href="/budget" icon={<FiPieChart />}>Budget</NavLink>
                 </nav>
             </div>
             <div>
-                <NavLink href="/reset" icon={<FiRefreshCw />} border>Reset</NavLink>
+                <NavLink warning={"Are you sure? This will reset all data"} href="/reset" icon={<FiRefreshCw />} border>Reset</NavLink>
             </div>
         </header>
     );

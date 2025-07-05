@@ -9,7 +9,7 @@ interface FileSchemasListProps {
 }
 
 const CSVFileList: React.FC<FileSchemasListProps> = ({ csvSchemas, onRemove, onReset }) => (
-    <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+    <div className="p-6 rounded-lg border border-gray-700 bg-gray-900 shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <MdInsertDriveFile className="text-blue-500" size={22} /> Imported Files
         </h2>
@@ -22,7 +22,7 @@ const CSVFileList: React.FC<FileSchemasListProps> = ({ csvSchemas, onRemove, onR
                     return (
                         <li
                             key={schema}
-                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 transition">
+                            className="flex items-center justify-between p-3 bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 transition">
                             <div className="flex items-center gap-3">
                                 <MdInsertDriveFile className="text-blue-400" size={20} />
                                 <span className="font-medium text-gray-800 dark:text-gray-100 text-base">{schemaData.filename}</span>

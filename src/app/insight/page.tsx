@@ -60,7 +60,7 @@ const InsightPage = () => {
     const monthlyNet = totalNet / envelopes.length;
 
     if (envelopeSelectedTransactions.length === 0) {
-        return <></>
+        return <>NO ENVELOPES SELECTED!!</>
     }
 
     return (

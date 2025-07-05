@@ -25,19 +25,19 @@ const CSVImport = ({ onFileImport }: CSVImportProps) => {
   };
 
   return (
-    <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm flex flex-col items-center">
+    <div className="p-6 rounded-lg border border-gray-700 bg-gray-900 shadow-sm flex flex-col items-center">
       <div className="flex self-start gap-2 mb-4">
         <MdFileDownload className="text-blue-500" size={28} />
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Import Budget CSVs</h2>
       </div>
       <label
-        className="w-full flex flex-col items-center px-4 py-6 bg-white dark:bg-gray-700 text-blue-600 rounded-lg shadow-md tracking-wide uppercase border border-blue-300 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-600 transition mb-4"
+        className="w-full flex flex-col items-center px-4 py-6 bg-gray-800 text-blue-600 rounded-lg shadow-md tracking-wide uppercase border border-blue-300 cursor-pointer hover:bg-gray-700 transition mb-4"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onClick={handleClick}
       >
         <MdInsertDriveFile size={32} className="mb-2 text-blue-400" />
-        <span className="mt-2 text-base leading-normal text-gray-800 dark:text-gray-200">Select or drag & drop CSV files</span>
+        <span className="mt-2 text-base leading-normal text-gray-200">Select or drag & drop CSV files</span>
         <input
           ref={inputRef}
           type="file"

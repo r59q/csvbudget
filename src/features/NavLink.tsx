@@ -8,9 +8,10 @@ interface NavLinkProps {
     activeColor?: string;
     inactiveColor?: string;
     border?: boolean;
+    warning?: string;
 }
 
-const NavLink = ({ href, icon, activeColor, inactiveColor, border, children }: PropsWithChildren<NavLinkProps>) => {
+const NavLink = ({ href, icon, activeColor, inactiveColor, border, warning, children }: PropsWithChildren<NavLinkProps>) => {
     const pathname = usePathname();
     const isActive = pathname === href;
 
@@ -25,8 +26,17 @@ const NavLink = ({ href, icon, activeColor, inactiveColor, border, children }: P
         borderClass
     ].join(' ');
 
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        if (warning) {
+            const confirmed = window.confirm(warning);
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        }
+    };
+
     return (
-        <Link href={href} className={className}>
+        <Link href={href} className={className} onClick={handleClick}>
             {icon}
             {children}
         </Link>

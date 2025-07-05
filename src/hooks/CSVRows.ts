@@ -5,6 +5,7 @@ import {CSVFile, CsvRow, CSVRowId, CSVSchemas, MappedCSVRow} from "@/model";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import {useGlobalContext} from "@/context/GlobalContext";
+import {detectDateFormat} from "@/utility/datautils";
 
 dayjs.extend(customParseFormat)
 
@@ -16,6 +17,7 @@ const useCSVRows = () => {
     const [csvRows, setCsvRows] = useState<CsvRow[]>([]);
     const [mappedCSVRows, setMappedCSVRows] = useState<MappedCSVRow[]>([]);
     const [csvSchemas, setCSVSchemas] = useState<CSVSchemas>({});
+    const [dateFormat, setDateFormat] = useState<string>("DD.MM.YYYY");
 
     useEffect(() => {
         const loaded = loadDeduplicatedCsvRows(csvFiles);
@@ -23,6 +25,7 @@ const useCSVRows = () => {
         const mapped = loaded
             .map(e => mapCsvRow(e, columnMappings[getSchemaKeyFromCsvRow(e)]))
             .filter(e => !!e);
+        setDateFormat(detectDateFormat(mapped));
         setMappedCSVRows(mapped);
         setCSVSchemas(getCSVSchemas(loaded));
     }, [csvFiles, columnMappings])
@@ -31,7 +34,7 @@ const useCSVRows = () => {
         return mappedCSVRows.find(row => row.mappedId === rowId);
     }
 
-    return {csvRows, mappedCSVRows, csvSchemas, getById};
+    return {csvRows, mappedCSVRows, csvSchemas, getById, dateFormat};
 };
 
 /**

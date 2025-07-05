@@ -59,14 +59,18 @@ const ImportPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center gap-4">
+        <div className="min-h-screen flex flex-col items-center gap-4 bg-gradient-to-b from-gray-950 to-[#0a0a0a]">
+            {/* Data mapping is a popup that will be used to map data */}
+            <DataMapping unmappedSchemas={unmappedSchemas} onSaveMapping={handleSaveMapping}/>
+
             <div className="w-2/3 mt-10 mb-6">
                 <h1 className="text-2xl font-bold mb-2">Import Your Transactions</h1>
-                <p className="text-gray-600">Easily import your CSV files, map your data, and review your transactions
+                <p className="text-gray-500">Easily import your CSV files, map your data, and review your transactions
                     below. Get started by importing your CSV files!</p>
             </div>
             <ImportSteps/>
-            <DataMapping unmappedSchemas={unmappedSchemas} onSaveMapping={handleSaveMapping}/>
+
+
             <div className={"w-2/3 mt-10 gap-4 flex flex-col"}>
                 <CSVImport onFileImport={handleFileImport}/>
                 <CSVFileList csvSchemas={csvSchemas} onReset={handleRemoveMapping} onRemove={handleDelete}/>
@@ -77,7 +81,7 @@ const ImportPage = () => {
                 {csvFiles.length > 0 && <>
                     <span className="text-green-500 font-medium mb-1">CSV file(s) added successfully!</span>
                     <span className="text-gray-200 mb-2">You can now review your transactions below or continue to the next step to filter and categorize your data.</span>
-                    <LinkButton href="/filter" className="mt-2">Continue to Filter</LinkButton>
+                    <LinkButton href="/income" className="mt-2">Continue to Income</LinkButton>
                 </>}
             </div>
             {/* Separation line and section for transactions table */}

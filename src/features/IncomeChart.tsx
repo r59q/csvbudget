@@ -11,8 +11,9 @@ const IncomeChart: React.FC<IncomeChartProps> = ({ averageIncome, chartData }) =
     return (
         <div>
             <p>Average Income: {formatCurrency(averageIncome)}</p>
-            <div className="w-screen -mx-2 my-4">
+            <div className="w-full h-80">
                 <SingleLineChart
+                    lineName={"Income"}
                     zeroLineName={"Average"}
                     data={chartData}
                     zero={parseFloat(averageIncome.toFixed(0))}

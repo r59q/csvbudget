@@ -56,14 +56,32 @@ export const intersection = <T, >(arr1: T[], arr2: T[]) => {
     return Array.from(new Set(arr1.filter(value => arr2.includes(value))));
 }
 
-export const getDayJs = (date: string) => {
-    return dayjs(date, 'DD-MM-YYYY');
+export const getDayJs = (date: string, format: string) => {
+    return dayjs(date, format);
+}
+
+export const detectDateFormat = (csvRows: MappedCSVRow[]): string => {
+    const dateFormats = ["DD-MM-YYYY", "MM-DD-YYYY", "YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY/MM/DD"];
+    const sampleDates = csvRows.map(row => row.mappedDate).slice(0, 10); // Take first 10 dates for detection
+
+    for (const format of dateFormats) {
+        if (sampleDates.every(date => dayjs(date, format, true).isValid())) {
+            return format;
+        }
+    }
+    return "DD-MM-YYYY"; // Default fallback
 }
 
 export const formatDayjsToDate = (date: dayjs.Dayjs) => {
-    return date.format("DD-MM-YYYY");
+    return date.format("MMM DD YYYY");
 }
-
+export const parseEnvelopeToDate = (envelope: Envelope): dayjs.Dayjs | undefined => {
+    if (envelope === "Unassigned") {
+        return undefined;
+    }
+    const [month, year] = envelope.split("-");
+    return dayjs(`${year}-${month}-01`, "YYYY-MM-DD");
+}
 export const formatDayjsToMonth = (date: dayjs.Dayjs) => {
     return date.format("MMMM YYYY");
 }
@@ -74,10 +92,6 @@ export const formatMonth = (date: Date) => {
 
 export const formatDate = (date: Date) => {
     return dayjs(date).format("MMM D")
-}
-
-export const getEnvelopeFromDateString = (datestr: string): Envelope => {
-    return getDayJs(datestr).format("MM-YYYY")
 }
 
 export const getEnvelopeFromDayjs = (date: Dayjs): Envelope => {
