@@ -7,6 +7,7 @@ import {useTransactionsContext} from "@/context/TransactionsContext";
 import CSVImport from "@/features/import/CSVImport";
 import FileSchemasList from "@/features/import/FileSchemasList";
 import TransactionTable from "@/features/transaction/TransactionTable";
+import ImportSteps from "@/features/import/ImportSteps";
 
 const ImportPage = () => {
     const {csvFiles, setCSVFiles, unmappedSchemas, handleSaveMapping, handleRemoveMapping} = useGlobalContext();
@@ -52,9 +53,16 @@ const ImportPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col items-center">
+            <div className="w-2/3 mt-10 mb-6">
+                <h1 className="text-2xl font-bold mb-2">Import Your Transactions</h1>
+                <p className="text-gray-600">Easily import your CSV files, map your data, and review your transactions below. Get started by importing your CSV files!</p>
+            </div>
+            {csvFiles.length === 0 && (
+                <ImportSteps />
+            )}
             <DataMapping unmappedSchemas={unmappedSchemas} onSaveMapping={handleSaveMapping}/>
-            <div className={"w-full max-w-md mx-auto mt-10 gap-4 flex flex-col"}>
+            <div className={"w-2/3 mt-10 gap-4 flex flex-col"}>
                 <CSVImport
                     csvFiles={csvFiles}
                     onFileImport={handleFileImport}
@@ -62,7 +70,7 @@ const ImportPage = () => {
                 />
                 <FileSchemasList csvSchemas={csvSchemas} onReset={handleRemoveMapping}/>
             </div>
-            <div className={"p-4"}>
+            <div className={"w-2/3 p-4"}>
                 <p>All transactions</p>
                 <TransactionTable transactions={transactions}/>
             </div>
@@ -71,4 +79,3 @@ const ImportPage = () => {
 };
 
 export default ImportPage;
-
