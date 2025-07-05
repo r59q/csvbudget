@@ -14,8 +14,13 @@ const ImportPage = () => {
     const {transactions} = useTransactionsContext();
     const {csvSchemas} = useCSVRows();
 
-    const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
+    const handleFileImport = (e: React.ChangeEvent<HTMLInputElement> | FileList) => {
+        let files: File[] = [];
+        if (e instanceof FileList) {
+            files = Array.from(e);
+        } else {
+            files = Array.from(e.target.files || []);
+        }
         if (files.length === 0) return;
 
         const fileDataPromises = files.map((file) => {

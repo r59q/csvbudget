@@ -1,7 +1,7 @@
 import React from "react";
 import Link, { LinkProps } from "next/link";
 
-interface ButtonLinkProps extends Omit<LinkProps, 'href'> {
+interface ButtonLinkProps extends Omit<LinkProps, 'href'>, Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
     href: LinkProps['href'];
     children: React.ReactNode;
     className?: string;
