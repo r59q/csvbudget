@@ -4,8 +4,8 @@ import DataMapping from "@/features/mapping/DataMapping";
 import {useGlobalContext} from "@/context/GlobalContext";
 import useCSVRows from "@/hooks/CSVRows";
 import {useTransactionsContext} from "@/context/TransactionsContext";
-import CSVUpload from "@/features/upload/CSVUpload";
-import FileSchemasList from "@/features/upload/FileSchemasList";
+import CSVImport from "@/features/import/CSVImport";
+import FileSchemasList from "@/features/import/FileSchemasList";
 import TransactionTable from "@/features/transaction/TransactionTable";
 
 const ImportPage = () => {
@@ -13,7 +13,7 @@ const ImportPage = () => {
     const {transactions} = useTransactionsContext();
     const {csvSchemas} = useCSVRows();
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
@@ -52,12 +52,12 @@ const ImportPage = () => {
     };
 
     return (
-        <>
+        <div className="min-h-screen flex flex-col">
             <DataMapping unmappedSchemas={unmappedSchemas} onSaveMapping={handleSaveMapping}/>
             <div className={"w-full max-w-md mx-auto mt-10 gap-4 flex flex-col"}>
-                <CSVUpload
+                <CSVImport
                     csvFiles={csvFiles}
-                    onFileUpload={handleFileUpload}
+                    onFileImport={handleFileImport}
                     onDelete={handleDelete}
                 />
                 <FileSchemasList csvSchemas={csvSchemas} onReset={handleRemoveMapping}/>
@@ -66,7 +66,7 @@ const ImportPage = () => {
                 <p>All transactions</p>
                 <TransactionTable transactions={transactions}/>
             </div>
-        </>
+        </div>
     );
 };
 

@@ -11,7 +11,7 @@ const TopBar = () => {
                     CSVBudget
                 </Link>
                 <nav className="flex gap-2">
-                    <NavLink href="/upload" icon={<FiDownload />}>Import</NavLink>
+                    <NavLink href="/import" icon={<FiDownload />}>Import</NavLink>
                     <NavLink href="/filter" icon={<FiFilter />}>Filter</NavLink>
                     <NavLink href="/income" icon={<FiDollarSign />}>Income</NavLink>
                     <NavLink href="/insight" icon={<FiBarChart2 />}>Insight</NavLink>

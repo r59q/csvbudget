@@ -6,7 +6,7 @@ import {MdOutlinePrivacyTip} from "react-icons/md";
 const subsections = [
     {
         title: "Import Your CSVs",
-        text: "Easily upload your transactions in form of CSV files. This tool helps you convert your data to a financial overview.",
+        text: "Easily import your transactions in form of CSV files. This tool helps you convert your data to a financial overview.",
         icon: <FaFileCsv size={64} className="text-blue-500 dark:text-blue-400"/>,
         imgRight: false,
     },
@@ -45,7 +45,7 @@ export default function Home() {
                     </p>
                 </div>
                 <div className="flex justify-end max-w-4xl mx-auto w-full mt-4 absolute left-1/2 -translate-x-1/2 bottom-6">
-                    <LinkButton href={"/upload"}>Get Started</LinkButton>
+                    <LinkButton href={"/import"}>Get Started</LinkButton>
                 </div>
             </section>
 

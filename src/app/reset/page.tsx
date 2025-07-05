@@ -9,7 +9,7 @@ export default function ResetPage() {
 
     useEffect(() => {
         LOCALSTORAGE_KEYS.forEach(key => localStorage.removeItem(key));
-        router.replace('/upload');
+        router.replace('/import');
     }, [router]);
 
     return <div className="p-8 text-center">Resetting app...</div>;

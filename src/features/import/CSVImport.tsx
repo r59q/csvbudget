@@ -1,19 +1,19 @@
 import React from "react";
 
-interface FileUploadProps {
+interface CSVImportProps {
   csvFiles: { name: string }[];
-  onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDelete: (fileName: string) => void;
 }
 
-const CSVUpload: React.FC<FileUploadProps> = ({ csvFiles, onFileUpload, onDelete }) => (
+const CSVImport: React.FC<CSVImportProps> = ({ csvFiles, onFileImport, onDelete }) => (
   <div className="p-4 rounded-lg border border-gray-300">
-    <h2 className="text-xl font-semibold mb-4">Upload Budget CSVs</h2>
+    <h2 className="text-xl font-semibold mb-4">Import Budget CSVs</h2>
     <input
       type="file"
       accept=".csv"
       multiple
-      onChange={onFileUpload}
+      onChange={onFileImport}
       className="mb-4"
     />
     {csvFiles.length > 0 ? (
@@ -34,10 +34,10 @@ const CSVUpload: React.FC<FileUploadProps> = ({ csvFiles, onFileUpload, onDelete
         ))}
       </ul>
     ) : (
-      <p className="text-sm text-gray-500">No CSVs uploaded yet.</p>
+      <p className="text-sm text-gray-500">No CSVs imported yet.</p>
     )}
   </div>
 );
 
-export default CSVUpload;
+export default CSVImport;
 

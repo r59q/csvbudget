@@ -2,7 +2,7 @@
 
 import React from 'react';
 import {TransactionsProvider} from "@/context/TransactionsContext";
-import ImportPage from "@/features/upload/ImportPage";
+import ImportPage from "@/features/import/ImportPage";
 
 const Page = () => {
     return (
