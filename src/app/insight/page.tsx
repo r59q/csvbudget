@@ -6,7 +6,7 @@ import {Category, Envelope, Transaction, TransactionID} from '@/model';
 import SingleLineChart from "@/components/SingleLineChart";
 import {TransactionsProvider, useTransactionsContext} from "@/context/TransactionsContext";
 import TransactionTable from "@/features/transaction/TransactionTable";
-import useEnvelopeCalculations from "@/hooks/useEnvelopeCalculations";
+import useAverages from "@/hooks/Averages";
 
 interface InsightsContextType {
     getCategory: (transactionId: TransactionID) => Category;
@@ -31,33 +31,13 @@ const Page = () => {
 const InsightPage = () => {
     const {envelopes, envelopeSelectedTransactions} = useTransactionsContext();
     const {getCategory, categories} = useCategories();
+    const averages = useAverages(envelopeSelectedTransactions);
 
     const transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>> = groupByEnvelope(envelopeSelectedTransactions);
-    const envelopeCalculations = useEnvelopeCalculations();
-    const totalExpenses = envelopes.reduce((sum, envelope) => {
-        return (envelopeCalculations[envelope]?.expenses ?? 0) + sum;
-    }, 0)
-    const totalIncome = envelopes.reduce((sum, envelope) => {
-        return (envelopeCalculations[envelope]?.income ?? 0) + sum;
-    }, 0)
-    const totalNet = totalIncome + totalExpenses;
 
-    const monthlyByCategory: Record<Category, number> = {};
-    categories.forEach(category => {
-        const monthly = envelopes.map(envelope => {
-            return envelopeCalculations[envelope]?.expensesByCategory[category] ?? 0;
-        });
-        const total = monthly.reduce((pre, cur) => {
-            if (isNaN(cur)) return pre;
-            return pre + cur
-        }, 0);
-        monthlyByCategory[category] = total / envelopes.length;
-    });
-    const categoriesSortedByMonthlyCost = [...categories]
-        .toSorted((a, b) => monthlyByCategory[a] - monthlyByCategory[b]);
-    const monthlyIncome = totalIncome / envelopes.length;
-    const monthlyExpenses = totalExpenses / envelopes.length;
-    const monthlyNet = totalNet / envelopes.length;
+    // For sorting categories by average expense
+    const categoriesSortedByMonthlyCost = [...averages.categories]
+        .toSorted((a, b) => (averages.averageExpenseByCategoryPerEnvelope[a] ?? 0) - (averages.averageExpenseByCategoryPerEnvelope[b] ?? 0));
 
     if (envelopeSelectedTransactions.length === 0) {
         return <>NO ENVELOPES SELECTED!!</>
@@ -74,11 +54,9 @@ const InsightPage = () => {
                                 <h3 className="text-lg font-semibold text-red-400 mb-3">Expenses</h3>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                     <span className="text-zinc-400">Monthly</span>
-                                    <span className="text-right">{formatCurrency(monthlyExpenses)}</span>
+                                    <span className="text-right">{formatCurrency(averages.averageExpensePerEnvelope)}</span>
                                 </div>
-
                                 <hr/>
-
                                 <div>
                                     <div className="grid grid-cols-2 gap-2 text-sm mt-4">
                                         <span className="text-zinc-400">Category</span>
@@ -87,30 +65,27 @@ const InsightPage = () => {
                                             <React.Fragment key={category}>
                                                 <span>{category}</span>
                                                 <span className="text-right">
-                                                    {formatCurrency(monthlyByCategory[category])}
+                                                    {formatCurrency(averages.averageExpenseByCategoryPerEnvelope[category] ?? 0)}
                                                 </span>
                                             </React.Fragment>
                                         ))}
                                     </div>
                                 </div>
                             </section>
-
                             {/* Section: Income */}
                             <section>
                                 <h3 className="text-lg font-semibold text-green-400 mb-3">Income</h3>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                     <span className="text-zinc-400">Monthly</span>
-                                    <span className="text-right">{formatCurrency(monthlyIncome)}</span>
+                                    <span className="text-right">{formatCurrency(averages.averageIncomePerEnvelope)}</span>
                                 </div>
                             </section>
-
                             {/* Section: Net */}
                             <section>
                                 <h3 className="text-lg font-semibold text-blue-400 mb-3">Net</h3>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                     <span className="text-zinc-400">Monthly</span>
-                                    <span
-                                        className="text-right">{formatCurrency(monthlyNet)}</span>
+                                    <span className="text-right">{formatCurrency(averages.averageNetPerEnvelope)}</span>
                                 </div>
                             </section>
                         </div>
@@ -121,18 +96,15 @@ const InsightPage = () => {
                     {envelopes.map(envelope => {
                         const envelopeTransactions = transactionsByEnvelope[envelope];
                         if (!envelopeTransactions) return <React.Fragment key={envelope}></React.Fragment>;
-                        const envelopeIncome = envelopeCalculations[envelope]?.income ?? 0;
-                        const envelopeExpenses = envelopeCalculations[envelope]?.expenses ?? 0;
-                        const envelopeNet = envelopeIncome + envelopeExpenses;
-                        const categoryTotals = envelopeCalculations[envelope]?.expensesByCategory ?? {};
+                        const envelopeStats = averages.envelopeStats[envelope] || { income: 0, expenses: 0, net: 0, expensesByCategory: {} };
                         return <div key={envelope}>
                             <p>{formatEnvelope(envelope)}</p>
                             <EnvelopeInsight {...{month: envelope}}
                                              transactions={envelopeTransactions}
-                                             income={envelopeIncome}
-                                             expenses={envelopeExpenses}
-                                             categoryTotals={categoryTotals}
-                                             net={envelopeNet}/>
+                                             income={envelopeStats.income}
+                                             expenses={envelopeStats.expenses}
+                                             categoryTotals={envelopeStats.expensesByCategory}
+                                             net={envelopeStats.net}/>
                         </div>
                     })}
                 </div>

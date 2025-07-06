@@ -146,7 +146,7 @@ const useTransactions = () => {
         });
         // Sort envelopes by date (format MM-YYYY) using utility function
         return Array.from(envelopeSet).sort(compareEnvelopesByDate);
-    }, [transactions]).reverse();
+    }, [transactions]);
 
     const envelopeSelectedTransactions = useMemo(() => {
         return transactions.filter(tran => isEnvelopeSelected(tran.envelope));
