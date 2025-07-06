@@ -63,10 +63,36 @@ export default function useTransactionLinks() {
         });
     };
 
+    const setTransactionLinkAndType = (a: Transaction, b: Transaction, linkType: TransactionLinkDescriptor['linkType']) => {
+        const transactionLinksStore = getTransactionLinksData();
+        setStoredLinks(prev => {
+            const newLinks = { ...prev };
+            if (!newLinks[a.id]) newLinks[a.id] = [];
+            if (!newLinks[a.id].some(l => l.linkedId === b.id)) {
+                newLinks[a.id].push({ linkedId: b.id, linkType });
+            } else {
+                newLinks[a.id] = newLinks[a.id].map(l =>
+                    l.linkedId === b.id ? { ...l, linkType } : l
+                );
+            }
+            if (!newLinks[b.id]) newLinks[b.id] = [];
+            if (!newLinks[b.id].some(l => l.linkedId === a.id)) {
+                newLinks[b.id].push({ linkedId: a.id, linkType });
+            } else {
+                newLinks[b.id] = newLinks[b.id].map(l =>
+                    l.linkedId === a.id ? { ...l, linkType } : l
+                );
+            }
+            transactionLinksStore.save(newLinks);
+            return newLinks;
+        });
+    }
+
     return {
         storedLinks,
         setTransactionLink,
         unsetTransactionLink,
         setTransactionLinkType,
+        setTransactionLinkAndType
     };
 }

@@ -19,7 +19,7 @@ const useTransactions = () => {
     const {isAccountOwned, accountValueMappings, getCategory, categoryMap} = useGlobalContext();
     const {mappedCSVRows, dateFormat} = useCSVRows();
     const categoryPredictionIndex = useCategoryPredictionIndex(categoryMap, mappedCSVRows, getCategory);
-    const {storedLinks, setTransactionLink, unsetTransactionLink, setTransactionLinkType} = useTransactionLinks();
+    const {storedLinks, setTransactionLink, unsetTransactionLink, setTransactionLinkType, setTransactionLinkAndType} = useTransactionLinks();
     const {transactionTypeMap, setTransactionType, setTransactionTypes} = useTransactionTypeMap();
     const {
         selectedEnvelopes,
@@ -162,6 +162,10 @@ const useTransactions = () => {
         return incomeTransactions.filter(tran => isEnvelopeSelected(tran.envelope));
     }, [incomeTransactions, isEnvelopeSelected]);
 
+    const getTransaction = (id: TransactionID): Transaction | undefined => {
+        return transactions.find(tran => tran.id === id);
+    }
+
     return {
         getEnvelopeForTransaction,
         setEnvelopeForTransaction,
@@ -171,10 +175,12 @@ const useTransactions = () => {
         envelopeSelectedIncomeTransactions,
         transactions,
         envelopeSelectedTransactions,
+        getTransaction,
         getTransactions,
         setTransactionLink,
         unsetTransactionLink,
         setTransactionLinkType,
+        setTransactionLinkAndType,
         setTransactionType,
         setTransactionTypes,
         getUnmappedTransactionsLike,
@@ -182,7 +188,7 @@ const useTransactions = () => {
         saveSelectedEnvelopes,
         toggleSelectedEnvelope,
         isEnvelopeSelected,
-        incomeTransactionsGroupedByEnvelope
+        incomeTransactionsGroupedByEnvelope,
     };
 };
 
