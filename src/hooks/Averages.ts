@@ -1,13 +1,21 @@
-import {Transaction} from "@/model";
+import {Transaction, Envelope} from "@/model";
 
-const useAverages = (transactions: Transaction[]) => {
+interface UseAveragesOptions {
+    envelopesFilter?: Envelope[];
+}
+
+const useAverages = (transactions: Transaction[], options?: UseAveragesOptions) => {
+    let filteredTransactions = transactions;
+    if (options?.envelopesFilter) {
+        filteredTransactions = transactions.filter(t => options.envelopesFilter!.includes(t.envelope));
+    }
     // Get unique envelopes and categories
-    const envelopes = Array.from(new Set(transactions.map(t => t.envelope)));
-    const categories = Array.from(new Set(transactions.map(t => t.category)));
+    const envelopes = Array.from(new Set(filteredTransactions.map(t => t.envelope)));
+    const categories = Array.from(new Set(filteredTransactions.map(t => t.category)));
 
     // Filter by type
-    const incomeTransactions = transactions.filter(t => t.type === "income");
-    const expenseTransactions = transactions.filter(t => t.type === "expense");
+    const incomeTransactions = filteredTransactions.filter(t => t.type === "income");
+    const expenseTransactions = filteredTransactions.filter(t => t.type === "expense");
 
     // Totals
     const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
@@ -31,7 +39,7 @@ const useAverages = (transactions: Transaction[]) => {
     const types = ["income", "expense", "transfer", "refund", "unknown"] as const;
     const averageByType: Record<string, number> = {};
     types.forEach(type => {
-        const typeTotal = transactions.filter(t => t.type === type).reduce((sum, t) => sum + t.amount, 0);
+        const typeTotal = filteredTransactions.filter(t => t.type === type).reduce((sum, t) => sum + t.amount, 0);
         averageByType[type] = typeTotal / envelopeCount;
     });
 
@@ -43,7 +51,7 @@ const useAverages = (transactions: Transaction[]) => {
         expensesByCategory: Record<string, number>;
     }> = {};
     envelopes.forEach(envelope => {
-        const envelopeTransactions = transactions.filter(t => t.envelope === envelope);
+        const envelopeTransactions = filteredTransactions.filter(t => t.envelope === envelope);
         const income = envelopeTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
         const expenseTransactions = envelopeTransactions.filter(t => t.type === "expense");
         const expenses = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);

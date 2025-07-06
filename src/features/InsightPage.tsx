@@ -11,22 +11,17 @@ interface InsightsContextType {
     getCategory: (transactionId: TransactionID) => Category;
 }
 
-interface MonthlyTotals {
-    categoryTotals: Record<string, Record<string, number>>;
-    totals: Record<string, number>;
-}
-
 const InsightsContext = createContext<InsightsContextType>(null!)
 
 const InsightPage = () => {
     const {envelopes, envelopeSelectedTransactions} = useTransactionsContext();
-    const {getCategory, categories} = useCategories();
+    const {getCategory} = useCategories();
     const averages = useAverages(envelopeSelectedTransactions);
 
     const transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>> = groupByEnvelope(envelopeSelectedTransactions);
 
     // For sorting categories by average expense
-    const categoriesSortedByMonthlyCost = [...averages.categories]
+const categoriesSortedByMonthlyCost = [...averages.categories].filter(e => e !== "Unassigned" || (e === "Unassigned" && averages.averageExpenseByCategoryPerEnvelope[e] !== 0))
         .toSorted((a, b) => (averages.averageExpenseByCategoryPerEnvelope[a] ?? 0) - (averages.averageExpenseByCategoryPerEnvelope[b] ?? 0));
 
     if (envelopeSelectedTransactions.length === 0) {
@@ -178,24 +173,6 @@ const MonthInsightsTable = ({
     );
 }
 
-interface MonthInsightsTableRowProps {
-    transaction: Transaction;
-    category: string | undefined;
-}
-
-const MonthInsightsTableRow = ({transaction, category}: MonthInsightsTableRowProps) => {
-    return (
-        <tr className="even:bg-gray-700 hover:bg-gray-900">
-            <td className="px-4 py-2 border-b">{formatDayjsToDate(transaction.date)}</td>
-            <td className="px-4 py-2 border-b">{transaction.text}</td>
-            <td className="px-4 py-2 border-b">{category}</td>
-            <td className="px-4 py-2 border-b text-right">
-                {transaction.amount}
-            </td>
-        </tr>
-    );
-};
-
 interface MonthInsightsTableTotalsProps {
     categoryTotals: Record<string, number>;
     net: number;
@@ -237,34 +214,6 @@ const getHeatColor = (value: number, maxAbs: number) => {
     const red = Math.round(255 * intensity);
     const white = 255 - red;
     return `rgb(255, ${white}, ${white})`; // white to red gradient
-};
-
-const computeMonthlyTotals = (months: string[], groupedByMonth: Partial<Record<Envelope, Transaction[]>>, getCategory: (transactionId: TransactionID) => Category): MonthlyTotals => {
-    const totals: Record<string, number> = {};
-    const monthlyCategoryTotals: Record<string, Record<string, number>> = {};
-
-    months.forEach(month => {
-        const rows = groupedByMonth[month];
-        if (!rows) return;
-
-        const categoryTotals: Record<string, number> = {};
-        let totalSum = 0;
-
-        rows.forEach((row) => {
-            if (!categoryTotals) {
-                throw new Error("wa")
-            }
-            const category = getCategory(row.id);
-            const num = row.amount;
-            if (!isNaN(num)) {
-                categoryTotals[category] = (categoryTotals[category] || 0) + num;
-                totalSum += num;
-            }
-        });
-        totals[month] = totalSum;
-        monthlyCategoryTotals[month] = categoryTotals;
-    })
-    return {totals, categoryTotals: monthlyCategoryTotals};
 };
 
 export default InsightPage;
