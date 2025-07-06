@@ -9,7 +9,7 @@ interface MappingFieldProps {
     transaction: Transaction;
 }
 
-const TRANSACTION_TYPES: TransactionType[] = ["income", "expense", "transfer", "unknown"];
+const TRANSACTION_TYPES: TransactionType[] = ["income", "expense", "transfer", "refund", "unknown"];
 
 const TransactionTypeField: React.FC<MappingFieldProps> = ({ transaction }) => {
     const {setTransactionTypes, getUnmappedTransactionsLike} = useTransactionsContext();

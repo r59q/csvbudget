@@ -68,28 +68,30 @@ const AccountField: React.FC<AccountFieldProps> = ({account}) => {
     };
 
     return (
-        <div className="flex items-center gap-2">
-            {editing ? (
-                <input
-                    ref={inputRef}
-                    className="px-1 py-0.5 rounded border border-gray-400 text-sm bg-gray-800 text-white w-28"
-                    value={editValue}
-                    onChange={handleInputChange}
-                    onBlur={handleInputBlur}
-                    onKeyDown={handleInputKeyDown}
-                />
-            ) : (
-                <span
-                    className={owned ? "font-bold text-green-600 cursor-pointer" : "text-gray-300 cursor-pointer"}
-                    onClick={handleEdit}
-                    title="Click to edit account name"
-                >
-                    {mappedAccount}
-                </span>
-            )}
+        <div className="flex items-center gap-2 justify-between w-full">
+            <div className="flex-1 min-w-0">
+                {editing ? (
+                    <input
+                        ref={inputRef}
+                        className="px-1 py-0.5 rounded border border-gray-400 text-sm bg-gray-800 text-white w-28"
+                        value={editValue}
+                        onChange={handleInputChange}
+                        onBlur={handleInputBlur}
+                        onKeyDown={handleInputKeyDown}
+                    />
+                ) : (
+                    <span
+                        className={owned ? "font-bold text-green-600 cursor-pointer" : "text-gray-300 cursor-pointer"}
+                        onClick={handleEdit}
+                        title="Click to edit account name"
+                    >
+                        {mappedAccount}
+                    </span>
+                )}
+            </div>
             {account !== "" && (
                 <button
-                    className={`px-2 py-0.5 rounded text-xs border ${owned ? 'bg-green-700 text-white border-green-700 hover:bg-green-800' : 'bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-800'}`}
+                    className={`px-2 py-0.5 rounded text-xs border ${owned ? 'bg-green-700 text-white border-green-700 hover:bg-green-800' : 'bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-800'} ml-2`}
                     onClick={handleToggle}
                     title={owned ? 'Remove from owned accounts' : 'Mark as owned account'}
                 >
