@@ -1,12 +1,12 @@
 import React from 'react';
-import { BudgetPost, Transaction } from "@/model";
+import {BudgetPost, Transaction} from "@/model";
 import useCategories from "@/hooks/Categories";
 import useBudget from "@/hooks/Budget";
-import { useTransactionsContext } from "@/context/TransactionsContext";
+import {useTransactionsContext} from "@/context/TransactionsContext";
 import useAverages from "@/hooks/Averages";
 
 export const useBudgetPage = () => {
-    const { envelopes, selectedEnvelopes, envelopeSelectedTransactions } = useTransactionsContext();
+    const {envelopes, selectedEnvelopes, envelopeSelectedTransactions, transactions} = useTransactionsContext();
     const {
         budgetPosts,
         createBudgetPost,
@@ -17,7 +17,7 @@ export const useBudgetPage = () => {
         setBudgetPosts,
         setCategoryBudgetMap
     } = useBudget();
-    const { groupByCategory, getCategory, categories } = useCategories();
+    const {groupByCategory, getCategory, categories} = useCategories();
     const [newTitle, setNewTitle] = React.useState("");
     const [newAmount, setNewAmount] = React.useState(0);
     const [budgetEnvelopeFrom, setBudgetEnvelopeFrom] = React.useState<number | undefined>(undefined);
@@ -38,11 +38,11 @@ export const useBudgetPage = () => {
     }, [envelopes, isEnvelopedBudgetSelected]);
 
     const budgetSelectedTransactions = React.useMemo(() => {
-        return envelopeSelectedTransactions.filter(tran => budgetEnvelopes.includes(tran.envelope));
-    }, [envelopeSelectedTransactions, budgetEnvelopes]);
+        return transactions.filter(tran => budgetEnvelopes.includes(tran.envelope));
+    }, [transactions, budgetEnvelopes]);
 
-    const averages = useAverages(envelopeSelectedTransactions, { envelopesFilter: selectedEnvelopes });
-    const budgetAverages = useAverages(budgetSelectedTransactions, { envelopesFilter: selectedEnvelopes });
+    const averages = useAverages(envelopeSelectedTransactions, {envelopesFilter: selectedEnvelopes});
+    const budgetAverages = useAverages(budgetSelectedTransactions, {envelopesFilter: selectedEnvelopes});
 
     const groupByPost = (transactions: Transaction[]) => {
         const grouped: Partial<Record<BudgetPost['title'], Transaction[]>> = {};
@@ -60,29 +60,45 @@ export const useBudgetPage = () => {
     const handleMonthSelect = (month: any) => {
         const idx = envelopes.indexOf(month);
         if (idx === -1) return;
+
         // If no selection, start new selection
         if (budgetEnvelopeFrom === undefined || budgetEnvelopeTo === undefined) {
             setBudgetEnvelopeFrom(idx);
             setBudgetEnvelopeTo(idx);
             return;
         }
-        // If both are set, start new selection
+
+        // If clicking the same single envelope that's already selected, deselect it
+        if (budgetEnvelopeFrom === budgetEnvelopeTo && idx === budgetEnvelopeFrom) {
+            setBudgetEnvelopeFrom(undefined);
+            setBudgetEnvelopeTo(undefined);
+            return;
+        }
+
+        // If both are set and different, extend the range to include the clicked envelope
         if (budgetEnvelopeFrom !== undefined && budgetEnvelopeTo !== undefined) {
-            // If user clicks one of the ends, reset to single selection
-            if (idx === budgetEnvelopeFrom && idx === budgetEnvelopeTo) {
-                setBudgetEnvelopeFrom(undefined);
-                setBudgetEnvelopeTo(undefined);
+            const currentStart = Math.min(budgetEnvelopeFrom, budgetEnvelopeTo);
+            const currentEnd = Math.max(budgetEnvelopeFrom, budgetEnvelopeTo);
+
+            // If clicking within or at the boundary of current range, reset to single selection
+            if (idx >= currentStart && idx <= currentEnd) {
+                setBudgetEnvelopeFrom(idx);
+                setBudgetEnvelopeTo(idx);
                 return;
             }
-            setBudgetEnvelopeFrom(idx);
-            setBudgetEnvelopeTo(idx);
+
+            // Extend the range to include the new envelope
+            const newStart = Math.min(currentStart, idx);
+            const newEnd = Math.max(currentEnd, idx);
+            setBudgetEnvelopeFrom(newStart);
+            setBudgetEnvelopeTo(newEnd);
             return;
         }
     };
 
     const handleCreatePost = () => {
         if (!newTitle || newAmount === 0) return;
-        createBudgetPost({ title: newTitle, amount: newAmount });
+        createBudgetPost({title: newTitle, amount: newAmount});
         setNewTitle("");
         setNewAmount(0);
     };
@@ -111,7 +127,7 @@ export const useBudgetPage = () => {
         Object.entries(averages.averageExpenseByCategoryPerEnvelope)
             .filter(([, average]) => average < 0)
             .forEach(([category, average]) => {
-                const post = { amount: Math.round(-average), title: category };
+                const post = {amount: Math.round(-average), title: category};
                 newPosts.push(post);
                 newCategoryBudgetMap[category] = category;
             });

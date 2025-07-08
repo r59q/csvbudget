@@ -31,7 +31,7 @@ const TransactionsSection = ({}: TransactionsSectionProps) => {
             >
                 <div className={collapsed ? "hidden" : "block w-full"}>
                     <p className={"py-2"}>These are all the transactions we detected.</p>
-                    <TransactionTable compact transactions={transactions}/>
+                    <TransactionTable compact pageSize={50} transactions={transactions}/>
                 </div>
             </div>
         </div>
