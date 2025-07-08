@@ -53,7 +53,7 @@ const FilterPage = () => {
                         title="About Envelope Selection"
                         description={<>Select which <span className="font-semibold">envelopes</span> (months) to include in your monthly averages. This is useful if your imported CSV covers partial months—only selected envelopes will be used for average calculations.</>}
                         secondary={<>For example, if your data covers 1.5 months, select just the full month to avoid skewed averages. This ensures only complete months are used for your envelope (monthly) statistics.</>}
-                        tip={<><span className="font-semibold">Tip:</span> Selecting all but the last and newest envelope is a good rule of thumb to ensure your averages are accurate. These envelopes are often incomplete and can distort your monthly average.</>}
+                        tip={<><span className="font-semibold">Tip:</span> Selecting all but the last and earliest envelope is a good rule of thumb to ensure your averages are accurate. These envelopes are often incomplete and can distort your monthly average.</>}
                     />
                     <div className="flex flex-wrap gap-2 mb-4">
                         {envelopes && envelopes.length > 0 ? (

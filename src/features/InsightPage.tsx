@@ -2,108 +2,119 @@ import {useTransactionsContext} from "@/context/TransactionsContext";
 import useCategories from "@/hooks/Categories";
 import useAverages from "@/hooks/Averages";
 import {Category, Envelope, Transaction, TransactionID} from "@/model";
-import {formatCurrency, formatDayjsToDate, formatEnvelope, groupByEnvelope} from "@/utility/datautils";
-import React, {createContext, useState} from "react";
+import {formatCurrency, formatEnvelope, groupByEnvelope} from "@/utility/datautils";
+import React, {createContext, use, useState} from "react";
 import SingleLineChart from "@/components/SingleLineChart";
 import TransactionTable from "@/features/transaction/TransactionTable";
 
 interface InsightsContextType {
     getCategory: (transactionId: TransactionID) => Category;
+    transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>>;
+    categoriesSortedByMonthlyCost: Category[];
+    averages: ReturnType<typeof useAverages>;
+    envelopes: Envelope[];
 }
 
 const InsightsContext = createContext<InsightsContextType>(null!)
 
 const InsightPage = () => {
-    const {envelopes, envelopeSelectedTransactions} = useTransactionsContext();
+    const {envelopeSelectedTransactions, envelopes} = useTransactionsContext();
     const {getCategory} = useCategories();
     const averages = useAverages(envelopeSelectedTransactions);
 
     const transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>> = groupByEnvelope(envelopeSelectedTransactions);
 
     // For sorting categories by average expense
-const categoriesSortedByMonthlyCost = [...averages.categories].filter(e => e !== "Unassigned" || (e === "Unassigned" && averages.averageExpenseByCategoryPerEnvelope[e] !== 0))
+    const categoriesSortedByMonthlyCost = [...averages.categories].filter(e => e !== "Unassigned" || (e === "Unassigned" && averages.averageExpenseByCategoryPerEnvelope[e] !== 0))
         .toSorted((a, b) => (averages.averageExpenseByCategoryPerEnvelope[a] ?? 0) - (averages.averageExpenseByCategoryPerEnvelope[b] ?? 0));
 
     if (envelopeSelectedTransactions.length === 0) {
-        return <>NO ENVELOPES SELECTED!!</>
+        return <>NO ENVELOPES SELECTED!!</> // Todo: Show a proper message
     }
 
     return (
-        <InsightsContext.Provider value={{getCategory}}>
-            <div className={"p-2 flex flex-col gap-8 pt-4"}>
-                <div className="gap-4">
-                    <div className={"flex flex-row"}>
-                        <div className="bg-zinc-900 text-zinc-100 p-6 rounded-2xl shadow-xl space-y-6">
-                            {/* Section: Expenses */}
-                            <section>
-                                <h3 className="text-lg font-semibold text-red-400 mb-3">Expenses</h3>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <span className="text-zinc-400">Monthly</span>
-                                    <span
-                                        className="text-right">{formatCurrency(averages.averageExpensePerEnvelope)}</span>
-                                </div>
-                                <hr/>
-                                <div>
-                                    <div className="grid grid-cols-2 gap-2 text-sm mt-4">
-                                        <span className="text-zinc-400">Category</span>
-                                        <span className="text-right text-zinc-400">Monthly Average</span>
-                                        {categoriesSortedByMonthlyCost.map((category) => (
-                                            <React.Fragment key={category}>
-                                                <span>{category}</span>
-                                                <span className="text-right">
-                                                    {formatCurrency(averages.averageExpenseByCategoryPerEnvelope[category] ?? 0)}
-                                                </span>
-                                            </React.Fragment>
-                                        ))}
-                                    </div>
-                                </div>
-                            </section>
-                            {/* Section: Income */}
-                            <section>
-                                <h3 className="text-lg font-semibold text-green-400 mb-3">Income</h3>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <span className="text-zinc-400">Monthly</span>
-                                    <span
-                                        className="text-right">{formatCurrency(averages.averageIncomePerEnvelope)}</span>
-                                </div>
-                            </section>
-                            {/* Section: Net */}
-                            <section>
-                                <h3 className="text-lg font-semibold text-blue-400 mb-3">Net</h3>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <span className="text-zinc-400">Monthly</span>
-                                    <span className="text-right">{formatCurrency(averages.averageNetPerEnvelope)}</span>
-                                </div>
-                            </section>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    {envelopes.map(envelope => {
-                        const envelopeTransactions = transactionsByEnvelope[envelope];
-                        if (!envelopeTransactions) return <React.Fragment key={envelope}></React.Fragment>;
-                        const envelopeStats = averages.envelopeStats[envelope] || {
-                            income: 0,
-                            expenses: 0,
-                            net: 0,
-                            expensesByCategory: {}
-                        };
-                        return <div key={envelope}>
-                            <p>{formatEnvelope(envelope)}</p>
-                            <EnvelopeInsight {...{month: envelope}}
-                                             transactions={envelopeTransactions}
-                                             income={envelopeStats.income}
-                                             expenses={envelopeStats.expenses}
-                                             categoryTotals={envelopeStats.expensesByCategory}
-                                             net={envelopeStats.net}/>
-                        </div>
-                    })}
-                </div>
-            </div>
+        <InsightsContext.Provider value={{getCategory, transactionsByEnvelope, categoriesSortedByMonthlyCost, averages, envelopes}}>
+            <PageView/>
         </InsightsContext.Provider>
     );
 };
+
+
+const PageView = () => {
+    const {transactionsByEnvelope, categoriesSortedByMonthlyCost, averages, envelopes} = use(InsightsContext);
+
+    return <div className={"p-2 bg-gradient-to-b from-gray-950 to-[#0a0a0a] flex flex-col gap-8 pt-4"}>
+        <div className="gap-4">
+            <div className={"flex flex-row"}>
+                <div className="bg-zinc-900 text-zinc-100 p-6 rounded-2xl shadow-xl space-y-6">
+                    {/* Section: Expenses */}
+                    <section>
+                        <h3 className="text-lg font-semibold text-red-400 mb-3">Expenses</h3>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                            <span className="text-zinc-400">Monthly</span>
+                            <span
+                                className="text-right">{formatCurrency(averages.averageExpensePerEnvelope)}</span>
+                        </div>
+                        <hr/>
+                        <div>
+                            <div className="grid grid-cols-2 gap-2 text-sm mt-4">
+                                <span className="text-zinc-400">Category</span>
+                                <span className="text-right text-zinc-400">Monthly Average</span>
+                                {categoriesSortedByMonthlyCost.map((category) => (
+                                    <React.Fragment key={category}>
+                                        <span>{category}</span>
+                                        <span className="text-right">
+                                                    {formatCurrency(averages.averageExpenseByCategoryPerEnvelope[category] ?? 0)}
+                                                </span>
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                    {/* Section: Income */}
+                    <section>
+                        <h3 className="text-lg font-semibold text-green-400 mb-3">Income</h3>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                            <span className="text-zinc-400">Monthly</span>
+                            <span
+                                className="text-right">{formatCurrency(averages.averageIncomePerEnvelope)}</span>
+                        </div>
+                    </section>
+                    {/* Section: Net */}
+                    <section>
+                        <h3 className="text-lg font-semibold text-blue-400 mb-3">Net</h3>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                            <span className="text-zinc-400">Monthly</span>
+                            <span className="text-right">{formatCurrency(averages.averageNetPerEnvelope)}</span>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            {envelopes.map(envelope => {
+                const envelopeTransactions = transactionsByEnvelope[envelope];
+                if (!envelopeTransactions) return <React.Fragment key={envelope}></React.Fragment>;
+                const envelopeStats = averages.envelopeStats[envelope] || {
+                    income: 0,
+                    expenses: 0,
+                    net: 0,
+                    expensesByCategory: {}
+                };
+                return <div key={envelope}>
+                    <p>{formatEnvelope(envelope)}</p>
+                    <EnvelopeInsight {...{month: envelope}}
+                                     transactions={envelopeTransactions}
+                                     income={envelopeStats.income}
+                                     expenses={envelopeStats.expenses}
+                                     categoryTotals={envelopeStats.expensesByCategory}
+                                     net={envelopeStats.net}/>
+                </div>
+            })}
+        </div>
+    </div>
+}
 
 
 interface MonthInsightProps {
