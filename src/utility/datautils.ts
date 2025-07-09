@@ -1,4 +1,4 @@
-import {AccountNumber, Envelope, MappedCSVRow, Transaction} from "@/model";
+import {AccountNumber, Envelope, MappedCSVRow, Transaction, TransactionType} from "@/model";
 import {getAdvancedFiltersData} from "@/data";
 import dayjs, {Dayjs} from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -118,6 +118,18 @@ export const predictEnvelope = (date: dayjs.Dayjs): Envelope => {
         date = date.add(1, 'month');
     }
     return date.format("MM-YYYY");
+}
+
+export function predictTypeFromRows(row: MappedCSVRow, rows: MappedCSVRow[]): TransactionType | undefined {
+    for (const candidate of rows) {
+        if (
+            candidate.mappedText === row.mappedText &&
+            Math.abs(candidate.mappedAmount - row.mappedAmount) <= Math.abs(row.mappedAmount) * 0.25
+        ) {
+            return candidate.mappedType as TransactionType;
+        }
+    }
+    return undefined;
 }
 
 export const predictIsCsvRowTransfer = (row: MappedCSVRow, isAccountOwned: (id: AccountNumber) => boolean): boolean => {

@@ -5,7 +5,7 @@ import {
     getDayJs,
     getEnvelopeFromDayjs, getSum,
     predictEnvelope,
-    predictIsCsvRowTransfer
+    predictIsCsvRowTransfer, predictTypeFromRows
 } from "@/utility/datautils";
 import useEnvelopeMapping from "@/hooks/Income";
 import {useGlobalContext} from "@/context/GlobalContext";
@@ -14,6 +14,7 @@ import useTransactionLinks from "@/hooks/useTransactionLinks";
 import useTransactionTypeMap from "@/hooks/useTransactionTypeMap";
 import useSelectedEnvelopes from "@/hooks/useSelectedEnvelopes";
 import {useMemo} from "react";
+
 
 const useTransactions = () => {
     const {isAccountOwned, accountValueMappings, getCategory, categoryMap} = useGlobalContext();
@@ -48,13 +49,6 @@ const useTransactions = () => {
         const guessedLinks = predictLinks(mappedRow, mappedCSVRows, dateFormat)
         const guessedCategory = categoryPredictionIndex[mappedRow.mappedText] ?? "Unassigned";
 
-        const getEnvelope = () => {
-            if (transactionType === "income") {
-                return getEnvelopeForTransaction(id) ?? "Unassigned";
-            } else {
-                return getEnvelopeFromDayjs(dateDayJs);
-            }
-        }
 
         const linkedTransactions = storedLinks[id] || [];
         const refunds = linkedTransactions.filter(link => link.linkType === "refund")
@@ -67,15 +61,31 @@ const useTransactions = () => {
             return acc + row.mappedAmount;
         }, 0);
 
-        const guessedType = isIncomeMapped(id) ? "income" : amount < 0 ? "expense" : "unknown";
+        const guessedType = predictTypeFromRows(mappedRow, mappedCSVRows) ?? "unknown";
 
-        let transactionType = getMappedType(id);
-        if (transactionType === "unknown") {
-            transactionType = (!isTransfer && guessedLinks.length === 0) ? guessedType : "unknown";
+        const getType = () => {
+            if (getMappedType(id) !== "unknown") {
+                return getMappedType(id);
+            }
+            if (isIncomeMapped(id)) {
+                return "income";
+            }
+            if (amount < 0 && guessedType === "unknown" && guessedLinks.length === 0) {
+                return "expense";
+            }
+            return "unknown";
         }
+        const type = getType();
 
+        const getEnvelope = () => {
+            if (type === "income") {
+                return getEnvelopeForTransaction(id) ?? "Unassigned";
+            } else {
+                return getEnvelopeFromDayjs(dateDayJs);
+            }
+        }
         // If the transaction is a transfer or expense, we don't guess the envelope
-        const guessedEnvelope = transactionType === "income" ?
+        const guessedEnvelope = type === "income" ?
             (getEnvelopeForTransaction(id) ?? predictEnvelope(dateDayJs))
             : getEnvelopeFromDayjs(dateDayJs);
 
@@ -95,7 +105,7 @@ const useTransactions = () => {
             notes: "",
             text: mappedRow.mappedText,
             guessedType: guessedType,
-            type: transactionType,
+            type,
             envelope: getEnvelope(),
             guessedEnvelope: guessedEnvelope,
             amountAfterRefund,
