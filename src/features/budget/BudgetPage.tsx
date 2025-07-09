@@ -7,6 +7,7 @@ import BudgetSummary from "@/features/budget/BudgetSummary";
 import BudgetEnvelopeSelector from "@/features/budget/BudgetEnvelopeSelector";
 
 const BudgetPage = () => {
+    // Not an actual context, but a hook.
     const ctx = useBudgetPage();
 
     return (
@@ -55,8 +56,9 @@ const BudgetPage = () => {
                         <BudgetOverview
                             budgetPosts={ctx.budgetPosts}
                             budgetEnvelopes={ctx.budgetEnvelopes}
-                            transactions={ctx.budgetSelectedTransactions}
+                            budgetSelectedTransactions={ctx.budgetSelectedTransactions}
                             groupByPost={ctx.groupByPost}
+                            getTransactionPost={(t => ctx.getBudgetPostForCategory(t.category))}
                         />
                     </div>
                 </section>
@@ -64,7 +66,7 @@ const BudgetPage = () => {
                 {/* Summary */}
                 <section className="w-full flex gap-2 flex-row">
                     <div className={"bg-gray-800 p-4 rounded-xl flex-1/4"}></div>
-                    <BudgetSummary averages={ctx.averages} budgetPosts={ctx.budgetPosts}/>
+                    <BudgetSummary budgetNet={ctx.budgetNet} averages={ctx.averages} budgetPosts={ctx.budgetPosts}/>
                     <div className={"flex-1/4"}></div>
                 </section>
             </div>

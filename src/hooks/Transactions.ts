@@ -61,7 +61,7 @@ const useTransactions = () => {
             return acc + row.mappedAmount;
         }, 0);
 
-        const guessedType = predictTypeFromRows(mappedRow, mappedCSVRows) ?? "unknown";
+        const guessedType = predictTypeFromRows(mappedRow, mappedCSVRows, getMappedType) ?? "unknown";
 
         const getType = () => {
             if (getMappedType(id) !== "unknown") {

@@ -1,8 +1,9 @@
 import React from "react";
-import { formatCurrency } from "@/utility/datautils";
-import { BudgetPost } from "@/model";
+import {formatCurrency} from "@/utility/datautils";
+import {BudgetPost} from "@/model";
 
 interface BudgetSummaryProps {
+    budgetNet: { title: string, net: number }[];
     averages: {
         averageIncomePerEnvelope: number;
         averageExpensePerEnvelope: number;
@@ -11,7 +12,10 @@ interface BudgetSummaryProps {
     budgetPosts: BudgetPost[];
 }
 
-const BudgetSummary = ({ averages, budgetPosts }: BudgetSummaryProps) => {
+const BudgetSummary = ({budgetNet, averages, budgetPosts}: BudgetSummaryProps) => {
+    const headroom = budgetPosts.reduce((sum, post) => sum + post.amount, 0) + averages.averageExpensePerEnvelope;
+    const totalNet = budgetNet.reduce((sum, item) => sum + item.net, 0);
+    console.log(budgetNet)
     return (
         <div className={"bg-gray-800 p-4 rounded-xl flex-1/3"}>
             <h2 className="text-xl font-semibold mb-2">Summary</h2>
@@ -21,22 +25,33 @@ const BudgetSummary = ({ averages, budgetPosts }: BudgetSummaryProps) => {
                     <span className="font-semibold">{formatCurrency(averages.averageIncomePerEnvelope)}</span>
                 </div>
                 <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
-                    <span>Total Budget:</span>
-                    <span className="font-semibold">{formatCurrency(budgetPosts.reduce((sum, post) => sum + post.amount, 0))}</span>
-                </div>
-                <div className="flex flex-row justify-between items-center text-gray-400 mb-4">
-                    <span>Difference:</span>
-                    <span className={`font-semibold ${averages.averageNetPerEnvelope < 0 ? "text-red-400" : "text-green-400"}`}>
-                        {formatCurrency(averages.averageNetPerEnvelope)}
-                    </span>
-                </div>
-                <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
                     <span>Average Expense:</span>
                     <span className="font-semibold">{formatCurrency(averages.averageExpensePerEnvelope)}</span>
                 </div>
-                <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
+                <div className="flex flex-row justify-between items-center text-gray-400 mb-4">
                     <span>Avg Income - Avg Expense:</span>
-                    <span className="font-semibold">{formatCurrency(averages.averageNetPerEnvelope)}</span>
+                    <span
+                        className={`font-semibold ${averages.averageNetPerEnvelope < 0 ? "text-red-400" : "text-green-400"}`}>
+                        {formatCurrency(averages.averageNetPerEnvelope)}
+                    </span>
+                </div>
+
+                <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
+                    <span>Total Budget:</span>
+                    <span
+                        className="font-semibold">{formatCurrency(budgetPosts.reduce((sum, post) => sum + post.amount, 0))}</span>
+                </div>
+                <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
+                    <span>Headroom</span>
+                    <span
+                        className={`font-semibold ${headroom < 0 ? "text-red-400" : "text-green-400"}`}>{formatCurrency(headroom)}</span>
+                </div>
+                <div className="flex flex-row justify-between items-center text-gray-400 mb-2">
+                    <span>Budget - Expenses:</span>
+                    <span
+                        className={`font-semibold ${totalNet < 0 ? "text-red-400" : "text-green-400"}`}>
+                        {formatCurrency(totalNet)}
+                    </span>
                 </div>
             </div>
         </div>

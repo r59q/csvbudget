@@ -4,6 +4,7 @@ import useCategories from "@/hooks/Categories";
 import useBudget from "@/hooks/Budget";
 import {useTransactionsContext} from "@/context/TransactionsContext";
 import useAverages from "@/hooks/Averages";
+import {getExpenses, getSum} from "@/utility/datautils";
 
 export const useBudgetPage = () => {
     const {envelopes, selectedEnvelopes, envelopeSelectedTransactions, transactions} = useTransactionsContext();
@@ -40,6 +41,10 @@ export const useBudgetPage = () => {
     const budgetSelectedTransactions = React.useMemo(() => {
         return transactions.filter(tran => budgetEnvelopes.includes(tran.envelope));
     }, [transactions, budgetEnvelopes]);
+
+    const budgetSelectedExpenses = React.useMemo(() => {
+        return budgetSelectedTransactions.filter(tran => tran.type === "expense");
+    }, [budgetSelectedTransactions]);
 
     const averages = useAverages(envelopeSelectedTransactions, {envelopesFilter: selectedEnvelopes});
     const budgetAverages = useAverages(budgetSelectedTransactions, {envelopesFilter: selectedEnvelopes});
@@ -140,6 +145,21 @@ export const useBudgetPage = () => {
             .filter(([_, value]) => value < 0)
     );
 
+    // Compute the net value for each budget post: (budgeted amount * number of selected envelopes) minus total expenses for that post in selected envelopes
+    const budgetNet = React.useMemo(() => {
+        const numEnvelopes = budgetEnvelopes.length;
+        const grouped = groupByPost(budgetSelectedTransactions);
+        return budgetPosts.map(post => {
+            const transactions = grouped[post.title] || [];
+            // Only sum negative amounts (expenses)
+            const totalExpenses = getSum(getExpenses(transactions));
+            return {
+                title: post.title,
+                net: post.amount * numEnvelopes + totalExpenses
+            };
+        });
+    }, [budgetPosts, budgetSelectedTransactions, groupByPost, budgetEnvelopes]);
+
     return {
         envelopes,
         selectedEnvelopes,
@@ -174,6 +194,7 @@ export const useBudgetPage = () => {
         handleRenameTitle,
         handleUpdateAmount,
         handleUseExpenseAsBudget,
-        averageExpenseByCategoryPerEnvelope
+        averageExpenseByCategoryPerEnvelope,
+        budgetNet
     };
 };

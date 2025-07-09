@@ -54,9 +54,9 @@ function getColumnStyle(col: TransactionTableColumn, compact: boolean = false) {
     }
     if (col === "type") {
         if (compact) {
-            return {maxWidth: '150px', width: '160px'};
+            return {maxWidth: '200px', width: '200px'};
         }
-        return {maxWidth: '210px', width: '170px'};
+        return {maxWidth: '210px', width: '200px'};
     }
     if (col === "id") {
         if (compact) {
