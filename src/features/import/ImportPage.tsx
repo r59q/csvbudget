@@ -1,5 +1,5 @@
 import React from 'react';
-import {CSVFile, RawCSV} from "@/model";
+import {CSVFile} from "@/model";
 import DataMapping from "@/features/mapping/DataMapping";
 import {useGlobalContext} from "@/context/GlobalContext";
 import CSVImport from "@/features/import/CSVImport";
@@ -7,51 +7,23 @@ import CSVFileList from "@/features/import/CSVFileList";
 import ImportSteps from "@/features/import/ImportSteps";
 import TransactionsSection from "@/features/import/TransactionsSection";
 import {LinkButton} from "@/components/LinkButton";
-import {mapRawCSVToCSVFile} from "@/utility/csvutils";
+import {fileImportEventHandler} from "@/utility/csvutils";
 
 const ImportPage = () => {
     const {csvFiles, setCSVFiles, unmappedSchemas, handleSaveMapping, handleRemoveMapping} = useGlobalContext();
 
-    const handleFileImport = (e: React.ChangeEvent<HTMLInputElement> | FileList) => {
-        let files: File[] = [];
-        if (e instanceof FileList) {
-            files = Array.from(e);
-        } else {
-            files = Array.from(e.target.files || []);
-        }
-        if (files.length === 0) return;
+    const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement> | FileList) => {
+        const imported = await fileImportEventHandler(e) ?? [];
+        const updated = [
+            ...csvFiles.filter(
+                (existing) => !imported.some((nf) => nf.name === existing.name)
+            ),
+            ...imported,
+        ];
 
-        const fileDataPromises = files.map((file) => {
-            return new Promise<CSVFile>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const arrayBuffer = event.target?.result as ArrayBuffer;
-                    const decoded = new TextDecoder('iso-8859-1').decode(new Uint8Array(arrayBuffer));
-                    const rawFile: RawCSV = {
-                        name: file.name,
-                        content: decoded
-                    }
-
-                    resolve(mapRawCSVToCSVFile(rawFile));
-                };
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(file);
-            });
-        });
-
-        Promise.all(fileDataPromises).then((newFiles) => {
-            const updated = [
-                ...csvFiles.filter(
-                    (existing) => !newFiles.some((nf) => nf.name === existing.name)
-                ),
-                ...newFiles,
-            ];
-
-            setCSVFiles(updated);
-        });
-    };
-
-    const handleDelete = (fileName: CSVFile['name']) => {
+        setCSVFiles(updated);
+    }
+    const handleDeleteFile = (fileName: CSVFile['name']) => {
         const updated = csvFiles.filter((file) => file.name !== fileName);
         setCSVFiles(updated);
     };
@@ -71,7 +43,7 @@ const ImportPage = () => {
 
             <div className={"w-2/3 mt-10 gap-4 flex flex-col"}>
                 <CSVImport onFileImport={handleFileImport}/>
-                <CSVFileList csvFiles={csvFiles} onReset={handleRemoveMapping} onRemove={handleDelete}/>
+                <CSVFileList csvFiles={csvFiles} onReset={handleRemoveMapping} onRemove={handleDeleteFile}/>
             </div>
 
             {/* Confirmation and next step */}

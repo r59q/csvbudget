@@ -3,6 +3,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import {CSVFile, CSVHeaders, CsvRow, RawCSV} from "@/model";
 import {getCSVMappingData} from "@/data";
 import Papa from "papaparse";
+import React from "react";
 
 dayjs.extend(customParseFormat)
 
@@ -74,3 +75,32 @@ export const isSchemaMapped = (row: CsvRow | SchemaKey) => {
     }
     return true;
 }
+
+export const fileImportEventHandler = async (e: React.ChangeEvent<HTMLInputElement> | FileList) => {
+    let files: File[] = [];
+    if (e instanceof FileList) {
+        files = Array.from(e);
+    } else {
+        files = Array.from(e.target.files || []);
+    }
+    if (files.length === 0) return;
+
+    const fileDataPromises = files.map((file) => {
+        return new Promise<CSVFile>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const arrayBuffer = event.target?.result as ArrayBuffer;
+                const decoded = new TextDecoder('iso-8859-1').decode(new Uint8Array(arrayBuffer));
+                const rawFile: RawCSV = {
+                    name: file.name,
+                    content: decoded
+                }
+
+                resolve(mapRawCSVToCSVFile(rawFile));
+            };
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+        });
+    });
+    return await Promise.all(fileDataPromises);
+};
