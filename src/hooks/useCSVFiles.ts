@@ -1,20 +1,28 @@
-import { useEffect, useState } from "react";
-import { CSVFile } from "@/model";
-import { getCSVFilesData } from "@/data";
+import {useEffect, useState} from "react";
+import {CSVFile, RawCSV} from "@/model";
+import {getCSVFilesData} from "@/data";
+import {getHeadersFromRawFile, mapRawCSVToCSVFile} from "@/utility/csvutils";
 
 const useCSVFiles = () => {
-  const [csvFiles, setCSVFiles] = useState<CSVFile[]>([]);
+    const [csvFiles, setCSVFiles] = useState<CSVFile[]>([]);
 
-  useEffect(() => {
-    const stored = getCSVFilesData().load();
-    setCSVFiles(stored);
-  }, []);
+    useEffect(() => {
+        const stored = getCSVFilesData().load();
+        setCSVFiles(stored.map(raw => mapRawCSVToCSVFile(raw)));
+    }, []);
 
-  const saveCSVFiles = (files: CSVFile[]) => {
-    setCSVFiles(getCSVFilesData().save(files));
-  };
+    const mapCSVFileToRaw = (file: CSVFile): RawCSV => {
+        return {
+            name: file.name,
+            content: file.getContent()
+        };
+    }
 
-  return { csvFiles, setCSVFiles: saveCSVFiles };
+    const saveCSVFiles = (files: CSVFile[]) => {
+        setCSVFiles(getCSVFilesData().save(files.map(file => mapCSVFileToRaw(file))).map(raw => mapRawCSVToCSVFile(raw)));
+    };
+
+    return {csvFiles, setCSVFiles: saveCSVFiles};
 };
 
 export default useCSVFiles;

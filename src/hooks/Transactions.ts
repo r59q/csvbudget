@@ -3,7 +3,7 @@ import {Envelope, MappedCSVRow, Transaction, TransactionID, TransactionLinkDescr
 import {
     compareEnvelopesByDate,
     getDayJs,
-    getEnvelopeFromDayjs,
+    getEnvelopeFromDayjs, getSum,
     predictEnvelope,
     predictIsCsvRowTransfer
 } from "@/utility/datautils";
@@ -17,7 +17,7 @@ import {useMemo} from "react";
 
 const useTransactions = () => {
     const {isAccountOwned, accountValueMappings, getCategory, categoryMap} = useGlobalContext();
-    const {mappedCSVRows, dateFormat} = useCSVRows();
+    const {mappedCSVRows, dateFormat, getById} = useCSVRows();
     const categoryPredictionIndex = useCategoryPredictionIndex(categoryMap, mappedCSVRows, getCategory);
     const {storedLinks, setTransactionLink, unsetTransactionLink, setTransactionLinkType, setTransactionLinkAndType} = useTransactionLinks();
     const {transactionTypeMap, setTransactionType, setTransactionTypes} = useTransactionTypeMap();
@@ -39,16 +39,35 @@ const useTransactions = () => {
 
     const transactions = mappedCSVRows.map(mappedRow => {
         const id = mappedRow.mappedId;
-        const amount = mappedRow.mappedAmount;
         const dateDayJs = getDayJs(mappedRow.mappedDate, dateFormat);
         const originalTo = mappedRow.mappedTo;
         const mappedTo = accountValueMappings[originalTo];
         const originalFrom = mappedRow.mappedFrom;
         const mappedFrom = accountValueMappings[originalFrom];
         const isTransfer = predictIsCsvRowTransfer(mappedRow, isAccountOwned);
-        const guessedType = isIncomeMapped(id) ? "income" : amount < 0 ? "expense" : "unknown";
         const guessedLinks = predictLinks(mappedRow, mappedCSVRows, dateFormat)
         const guessedCategory = categoryPredictionIndex[mappedRow.mappedText] ?? "Unassigned";
+
+        const getEnvelope = () => {
+            if (transactionType === "income") {
+                return getEnvelopeForTransaction(id) ?? "Unassigned";
+            } else {
+                return getEnvelopeFromDayjs(dateDayJs);
+            }
+        }
+
+        const linkedTransactions = storedLinks[id] || [];
+        const refunds = linkedTransactions.filter(link => link.linkType === "refund")
+            .map(link => {
+                return getById(link.linkedId);
+            }).filter(e => e !== undefined);
+
+        const amount = mappedRow.mappedAmount;
+        const amountAfterRefund = amount + refunds.reduce((acc, row) => {
+            return acc + row.mappedAmount;
+        }, 0);
+
+        const guessedType = isIncomeMapped(id) ? "income" : amount < 0 ? "expense" : "unknown";
 
         let transactionType = getMappedType(id);
         if (transactionType === "unknown") {
@@ -60,14 +79,6 @@ const useTransactions = () => {
             (getEnvelopeForTransaction(id) ?? predictEnvelope(dateDayJs))
             : getEnvelopeFromDayjs(dateDayJs);
 
-        const getEnvelope = () => {
-            if (transactionType === "income") {
-                return getEnvelopeForTransaction(id) ?? "Unassigned";
-            } else {
-                return getEnvelopeFromDayjs(dateDayJs);
-            }
-        }
-
         const transaction: Transaction = {
             id,
             amount,
@@ -77,7 +88,7 @@ const useTransactions = () => {
             mappedTo: mappedTo ? mappedTo : undefined,
             category: getCategory(id) ?? "Unassigned",
             guessedCategory: guessedCategory,
-            linkedTransactions: storedLinks[id] || [],
+            linkedTransactions: linkedTransactions,
             guessedLinkedTransactions: guessedLinks,
             date: dateDayJs,
             isTransfer,
@@ -86,7 +97,8 @@ const useTransactions = () => {
             guessedType: guessedType,
             type: transactionType,
             envelope: getEnvelope(),
-            guessedEnvelope: guessedEnvelope
+            guessedEnvelope: guessedEnvelope,
+            amountAfterRefund,
         };
         return transaction;
     })
@@ -146,7 +158,7 @@ const useTransactions = () => {
         });
         // Sort envelopes by date (format MM-YYYY) using utility function
         return Array.from(envelopeSet).sort(compareEnvelopesByDate);
-    }, [transactions]);
+    }, [transactions, incomeMap]);
 
     const envelopeSelectedTransactions = useMemo(() => {
         return transactions.filter(tran => isEnvelopeSelected(tran.envelope));

@@ -5,7 +5,7 @@ import {getCSVMappingData} from "@/data";
 import {
     SchemaKey,
     getSchemaKeyFromCsvFile,
-    getHeadersFromFile,
+    getHeadersFromRawFile,
     SchemaColumnMapping,
     ColumnMapping
 } from "@/utility/csvutils";
@@ -23,7 +23,7 @@ const useSchemaMapping = (files: CSVFile[]) => {
         if (!columnMappings[schemaKeyFromCsvFile]) {
             acc.push({
                 key: schemaKeyFromCsvFile,
-                headers: getHeadersFromFile(file)
+                headers: getHeadersFromRawFile(file)
             });
         }
         return acc;

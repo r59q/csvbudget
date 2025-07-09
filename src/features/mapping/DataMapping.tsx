@@ -21,7 +21,7 @@ const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
     const hasUnknownTransactions = unknownTransactions.length > 0
     const uncategorizedExpenses = (groupedByCategory['Unassigned'] ?? []).filter(tran => tran.type === "expense");
     const hasUncategorizedTransactions = uncategorizedExpenses.length > 0;
-    const hasExpenseWithPositiveAmount = uncategorizedExpenses.some(tran => tran.amount > 0);
+    const hasExpenseWithPositiveAmount = uncategorizedExpenses.some(tran => tran.amountAfterRefund > 0);
 
     if (unmappedSchemas.length > 0) {
         return <BackdropBlur>
@@ -38,7 +38,7 @@ const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
     }
 
     if (hasUncategorizedTransactions) {
-        const visibleColumns: TransactionTableColumn[] = ["id", "type", "date", "text", "amount", "category"];
+        const visibleColumns: TransactionTableColumn[] = ["id", "date", "text", "amount","type", "category"];
         const visibleColumnsWithoutType: TransactionTableColumn[] = ["id", "date", "text", "amount", "category"];
         return <BackdropBlur>
             <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">

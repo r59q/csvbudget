@@ -152,7 +152,7 @@ const FilterPage = () => {
                     icon={<HiOutlineAdjustmentsHorizontal size={32} />}
                     title="Advanced Filters (optional)"
                     description={<>Advanced filters use JavaScript to evaluate each transaction row. You can filter transactions using custom logic.</>}
-                    tip={<><span className="font-semibold">Example:</span> <span className="ml-2 text-blue-100">parseFloat(amount) &gt; -200 <span className="text-gray-400">// Shows only postings below -200</span></span></>}
+                    tip={<><span className="font-semibold">Example:</span> <span className="ml-2 text-blue-100">parseFloat(amount) &gt; -200 <span className="text-gray-400">Shows only postings below -200</span></span></>}
                     className="mb-2"
                 />
                 <div className="flex flex-col md:flex-row gap-6">
@@ -171,7 +171,7 @@ const FilterPage = () => {
                                 <td className="py-1 px-2 font-mono text-blue-200">row</td>
                                 <td className="py-1 px-2 text-gray-400">object</td>
                                 <td className="py-1 px-2 text-gray-300">Raw data, use syntax <span
-                                    className="font-mono">row["csvColumnHeader"]</span></td>
+                                    className="font-mono">row[&quot;csvColumnHeader&quot;]</span></td>
                             </tr>
                             <tr className="border-t border-gray-800">
                                 <td className="py-1 px-2 font-mono text-blue-200">amount</td>
@@ -181,12 +181,12 @@ const FilterPage = () => {
                             <tr className="border-t border-gray-800">
                                 <td className="py-1 px-2 font-mono text-blue-200">to</td>
                                 <td className="py-1 px-2 text-gray-400">string</td>
-                                <td className="py-1 px-2 text-gray-300">The 'to' account (account no.)</td>
+                                <td className="py-1 px-2 text-gray-300">The &apos;to&apos; account (account no.)</td>
                             </tr>
                             <tr className="border-t border-gray-800">
                                 <td className="py-1 px-2 font-mono text-blue-200">from</td>
                                 <td className="py-1 px-2 text-gray-400">string</td>
-                                <td className="py-1 px-2 text-gray-300">The 'from' account (account no.)</td>
+                                <td className="py-1 px-2 text-gray-300">The &apos;from&apos; account (account no.)</td>
                             </tr>
                             <tr className="border-t border-gray-800">
                                 <td className="py-1 px-2 font-mono text-blue-200">posting</td>

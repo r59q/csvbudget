@@ -1,5 +1,5 @@
 import React from 'react';
-import {BudgetPost, Transaction} from "@/model";
+import {BudgetPost, Envelope, Transaction} from "@/model";
 import useCategories from "@/hooks/Categories";
 import useBudget from "@/hooks/Budget";
 import {useTransactionsContext} from "@/context/TransactionsContext";
@@ -23,8 +23,8 @@ export const useBudgetPage = () => {
     const [budgetEnvelopeFrom, setBudgetEnvelopeFrom] = React.useState<number | undefined>(undefined);
     const [budgetEnvelopeTo, setBudgetEnvelopeTo] = React.useState<number | undefined>(undefined);
 
-    const isEnvelopedBudgetSelected = React.useCallback((month: any) => {
-        const idx = envelopes.indexOf(month);
+    const isEnvelopedBudgetSelected = React.useCallback((envelope: Envelope) => {
+        const idx = envelopes.indexOf(envelope);
         if (budgetEnvelopeFrom === undefined || budgetEnvelopeTo === undefined) {
             return false;
         }
@@ -57,8 +57,8 @@ export const useBudgetPage = () => {
         return grouped;
     };
 
-    const handleMonthSelect = (month: any) => {
-        const idx = envelopes.indexOf(month);
+    const handleMonthSelect = (envelope: Envelope) => {
+        const idx = envelopes.indexOf(envelope);
         if (idx === -1) return;
 
         // If no selection, start new selection

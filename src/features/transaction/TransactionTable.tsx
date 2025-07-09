@@ -48,9 +48,15 @@ function getColumnStyle(col: TransactionTableColumn, compact: boolean = false) {
     }
     if (col === "envelope") {
         if (compact) {
-            return {maxWidth: '230px', width: "200px"};
+            return {maxWidth: '230px', width: "240px"};
         }
-        return {maxWidth: '260px', width: '240px'};
+        return {maxWidth: '260px', width: '280px'};
+    }
+    if (col === "type") {
+        if (compact) {
+            return {maxWidth: '150px', width: '160px'};
+        }
+        return {maxWidth: '210px', width: '170px'};
     }
     if (col === "id") {
         if (compact) {

@@ -18,8 +18,8 @@ const useAverages = (transactions: Transaction[], options?: UseAveragesOptions) 
     const expenseTransactions = filteredTransactions.filter(t => t.type === "expense");
 
     // Totals
-    const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
-    const totalExpense = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amountAfterRefund, 0);
+    const totalExpense = expenseTransactions.reduce((sum, t) => sum + t.amountAfterRefund, 0);
     const net = totalIncome + totalExpense;
 
     // Averages
@@ -31,7 +31,7 @@ const useAverages = (transactions: Transaction[], options?: UseAveragesOptions) 
     // Average by category (expenses only)
     const averageByCategory: Record<string, number> = {};
     categories.forEach(category => {
-        const catTotal = expenseTransactions.filter(t => t.category === category).reduce((sum, t) => sum + t.amount, 0);
+        const catTotal = expenseTransactions.filter(t => t.category === category).reduce((sum, t) => sum + t.amountAfterRefund, 0);
         averageByCategory[category] = catTotal / envelopeCount;
     });
 
@@ -39,7 +39,7 @@ const useAverages = (transactions: Transaction[], options?: UseAveragesOptions) 
     const types = ["income", "expense", "transfer", "refund", "unknown"] as const;
     const averageByType: Record<string, number> = {};
     types.forEach(type => {
-        const typeTotal = filteredTransactions.filter(t => t.type === type).reduce((sum, t) => sum + t.amount, 0);
+        const typeTotal = filteredTransactions.filter(t => t.type === type).reduce((sum, t) => sum + t.amountAfterRefund, 0);
         averageByType[type] = typeTotal / envelopeCount;
     });
 
@@ -52,15 +52,15 @@ const useAverages = (transactions: Transaction[], options?: UseAveragesOptions) 
     }> = {};
     envelopes.forEach(envelope => {
         const envelopeTransactions = filteredTransactions.filter(t => t.envelope === envelope);
-        const income = envelopeTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+        const income = envelopeTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + t.amountAfterRefund, 0);
         const expenseTransactions = envelopeTransactions.filter(t => t.type === "expense");
-        const expenses = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);
+        const expenses = expenseTransactions.reduce((sum, t) => sum + t.amountAfterRefund, 0);
         const net = income + expenses;
         const expensesByCategory: Record<string, number> = {};
         expenseTransactions.forEach(t => {
             const category = t.category;
             if (!expensesByCategory[category]) expensesByCategory[category] = 0;
-            expensesByCategory[category] += t.amount;
+            expensesByCategory[category] += t.amountAfterRefund;
         });
         envelopeStats[envelope] = { income, expenses, net, expensesByCategory };
     });

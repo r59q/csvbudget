@@ -5,7 +5,7 @@ import {
     Category,
     CategoryBudgetPostMap,
     CSVFile, Envelope,
-    EnvelopeMap, TransactionCategoryMap, TransactionID, TransactionLinkDescriptor, TransactionType
+    EnvelopeMap, RawCSV, TransactionCategoryMap, TransactionID, TransactionLinkDescriptor, TransactionType
 } from "@/model";
 import {SchemaColumnMapping} from "@/utility/csvutils";
 
@@ -45,13 +45,13 @@ export const LOCALSTORAGE_KEYS = [
     SELECTED_ENVELOPES_KEY,
 ];
 
-export const getCSVFilesData = (): StoredDataWrapper<CSVFile[]> => {
+export const getCSVFilesData = (): StoredDataWrapper<RawCSV[]> => {
     return {
         load: () => {
             const raw = localStorage.getItem(CSV_FILES_KEY);
             if (!raw) return [];
 
-            let parsedFiles: CSVFile[];
+            let parsedFiles: RawCSV[];
             try {
                 parsedFiles = JSON.parse(raw);
                 if (!Array.isArray(parsedFiles)) return [];
@@ -60,7 +60,7 @@ export const getCSVFilesData = (): StoredDataWrapper<CSVFile[]> => {
             }
             return parsedFiles;
         },
-        save: (files: CSVFile[]) => {
+        save: (files: RawCSV[]) => {
             try {
                 localStorage.setItem(CSV_FILES_KEY, JSON.stringify(files));
             } catch {

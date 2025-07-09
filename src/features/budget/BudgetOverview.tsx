@@ -28,7 +28,7 @@ const BudgetOverview = ({
                         const numberOfEnvelopes = budgetEnvelopes.length;
                         const budgetedAmount = post.amount * numberOfEnvelopes;
                         const postExpenses = budgetPostGroups[post.title] || [];
-                        const totalPostExpenses = postExpenses.reduce((sum, tran) => sum + tran.amount, 0);
+                        const totalPostExpenses = postExpenses.reduce((sum, tran) => sum + tran.amountAfterRefund, 0);
                         const isOverBudget = totalPostExpenses > budgetedAmount;
                         const formattedAmount = formatCurrency(budgetedAmount);
                         const formattedTotal = formatCurrency(totalPostExpenses);

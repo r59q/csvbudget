@@ -25,7 +25,7 @@ const BudgetEnvelopeSelector = ({ envelopes, isEnvelopedBudgetSelected, handleEn
         const isRangeEnd = isRangeSelection && index === rangeEnd;
         const isInMiddle = isSelected && !isRangeStart && !isRangeEnd && isRangeSelection;
 
-        let baseClasses = "px-2 py-1 border-2 cursor-pointer select-none rounded transition-colors duration-150 text-center";
+        const baseClasses = "px-2 py-1 border-2 cursor-pointer select-none rounded transition-colors duration-150 text-center";
 
         if (isSelected) {
             if (isRangeStart && isRangeEnd) {

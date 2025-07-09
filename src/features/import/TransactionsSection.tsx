@@ -3,9 +3,7 @@ import TransactionTable from "@/features/transaction/TransactionTable";
 import {useTransactionsContext} from "@/context/TransactionsContext";
 import { FiChevronRight, FiChevronDown } from "react-icons/fi";
 
-interface TransactionsSectionProps {}
-
-const TransactionsSection = ({}: TransactionsSectionProps) => {
+const TransactionsSection = () => {
     const {transactions} = useTransactionsContext();
     const [collapsed, setCollapsed] = useState(true);
 

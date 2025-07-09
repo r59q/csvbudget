@@ -1,19 +1,16 @@
 import React from 'react';
-import {CSVFile} from "@/model";
+import {CSVFile, RawCSV} from "@/model";
 import DataMapping from "@/features/mapping/DataMapping";
 import {useGlobalContext} from "@/context/GlobalContext";
-import useCSVRows from "@/hooks/CSVRows";
-import {useTransactionsContext} from "@/context/TransactionsContext";
 import CSVImport from "@/features/import/CSVImport";
 import CSVFileList from "@/features/import/CSVFileList";
 import ImportSteps from "@/features/import/ImportSteps";
 import TransactionsSection from "@/features/import/TransactionsSection";
 import {LinkButton} from "@/components/LinkButton";
+import {mapRawCSVToCSVFile} from "@/utility/csvutils";
 
 const ImportPage = () => {
     const {csvFiles, setCSVFiles, unmappedSchemas, handleSaveMapping, handleRemoveMapping} = useGlobalContext();
-    const {transactions} = useTransactionsContext();
-    const {csvSchemas} = useCSVRows();
 
     const handleFileImport = (e: React.ChangeEvent<HTMLInputElement> | FileList) => {
         let files: File[] = [];
@@ -30,11 +27,12 @@ const ImportPage = () => {
                 reader.onload = (event) => {
                     const arrayBuffer = event.target?.result as ArrayBuffer;
                     const decoded = new TextDecoder('iso-8859-1').decode(new Uint8Array(arrayBuffer));
-
-                    resolve({
+                    const rawFile: RawCSV = {
                         name: file.name,
-                        content: decoded,
-                    });
+                        content: decoded
+                    }
+
+                    resolve(mapRawCSVToCSVFile(rawFile));
                 };
                 reader.onerror = reject;
                 reader.readAsArrayBuffer(file);
@@ -53,7 +51,7 @@ const ImportPage = () => {
         });
     };
 
-    const handleDelete = (fileName: string) => {
+    const handleDelete = (fileName: CSVFile['name']) => {
         const updated = csvFiles.filter((file) => file.name !== fileName);
         setCSVFiles(updated);
     };
@@ -73,7 +71,7 @@ const ImportPage = () => {
 
             <div className={"w-2/3 mt-10 gap-4 flex flex-col"}>
                 <CSVImport onFileImport={handleFileImport}/>
-                <CSVFileList csvSchemas={csvSchemas} onReset={handleRemoveMapping} onRemove={handleDelete}/>
+                <CSVFileList csvFiles={csvFiles} onReset={handleRemoveMapping} onRemove={handleDelete}/>
             </div>
 
             {/* Confirmation and next step */}

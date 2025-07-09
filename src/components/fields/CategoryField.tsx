@@ -159,7 +159,7 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
             {(inputValue.trim() && !categories.includes(inputValue.trim())) || (inputValue.trim() && transaction.category === 'Unassigned') ? (
                 <div className="mt-1 text-xs text-yellow-400">
                     {inputValue.trim() && !categories.includes(inputValue.trim()) && (
-                        <>Warning: "{inputValue.trim()}" is not an existing category.<br/></>
+                        <>Warning: &quot;{inputValue.trim()}&quot; is not an existing category.<br/></>
                     )}
                     {inputValue.trim() && transaction.category === 'Unassigned' && (
                         <>Warning: This transaction is currently <b>Unassigned</b>. Please select or add a category.</>

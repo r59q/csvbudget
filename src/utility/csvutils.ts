@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import {CSVFile, CSVHeaders, CsvRow} from "@/model";
+import {CSVFile, CSVHeaders, CsvRow, RawCSV} from "@/model";
 import {getCSVMappingData} from "@/data";
 import Papa from "papaparse";
 
@@ -21,7 +21,7 @@ export const getSchemaKeyFromHeaders = (headers: CSVHeaders) => {
 }
 
 export const getSchemaKeyFromCsvFile = (file: CSVFile): SchemaKey => {
-    const result = Papa.parse<CsvRow>(file.content, {
+    const result = Papa.parse<CsvRow>(file.getContent(), {
         header: true,
         skipEmptyLines: true,
     });
@@ -30,7 +30,7 @@ export const getSchemaKeyFromCsvFile = (file: CSVFile): SchemaKey => {
     return getSchemaKeyFromHeaders(fields);
 }
 
-export const getHeadersFromFile = (file: CSVFile) => {
+export const getHeadersFromRawFile = (file: RawCSV) => {
     const result = Papa.parse<CsvRow>(file.content, {
         header: true,
         skipEmptyLines: true,
@@ -38,6 +38,19 @@ export const getHeadersFromFile = (file: CSVFile) => {
 
     const fields: CSVHeaders = result.meta.fields ?? []
     return fields;
+}
+
+export const mapRawCSVToCSVFile = (raw: RawCSV): CSVFile => {
+    const schema = {
+        headers: getHeadersFromRawFile(raw),
+        filename: raw.name
+    };
+    return {
+        name: raw.name,
+        getContent: () => raw.content,
+        schema: schema,
+        schemaKey: getSchemaKeyFromHeaders(schema.headers)
+    };
 }
 
 export const isSchemaMapped = (row: CsvRow | SchemaKey) => {

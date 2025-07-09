@@ -5,9 +5,20 @@ import {SchemaKey} from "@/utility/csvutils";
 export type CSVHeaders = string[];
 
 // Schema maps a CSVHeaders type to a key by using string.join("-") on the headers
-export type CSVSchemas = { [key: string]: {headers: CSVHeaders, filename: CSVFile['name']} }
+export type CSVSchema = { headers: CSVHeaders, filename: CSVFile['name'] }
+export type CSVSchemas = { [key: string]:  CSVSchema}
 
-export type CSVFile = { name: string; content: string };
+export interface RawCSV {
+    name: string;
+    content: string;
+}
+
+export interface CSVFile {
+    name: string;
+    getContent: () => string;
+    schema: CSVSchema;
+    schemaKey: SchemaKey;
+}
 
 export interface UnmappedSchema {
     key: SchemaKey;
@@ -15,7 +26,7 @@ export interface UnmappedSchema {
 }
 
 // one row of CSV as an object
-export type CsvRow = Record<string, string> & {filename: CSVFile['name'];};
+export type CsvRow = Record<string, string> & { filename: CSVFile['name']; };
 
 export type CSVRowId = number;
 
@@ -66,6 +77,7 @@ export interface Transaction {
     isTransfer: boolean;
     notes: string;
     amount: number;
+    amountAfterRefund: number;
     linkedTransactions: TransactionLinkDescriptor[];
     guessedLinkedTransactions: TransactionLinkDescriptor[];
     envelope: Envelope;

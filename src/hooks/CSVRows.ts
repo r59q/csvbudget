@@ -44,7 +44,7 @@ const loadDeduplicatedCsvRows = (files: CSVFile[]): CsvRow[] => {
     const allRows: CsvRow[] = [];
 
     for (const file of files) {
-        const result = Papa.parse<CsvRow>(file.content, {
+        const result = Papa.parse<CsvRow>(file.getContent(), {
             header: true,
             skipEmptyLines: true,
         });
