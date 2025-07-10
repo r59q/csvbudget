@@ -10,9 +10,11 @@ import {UnmappedSchema} from "@/model";
 interface DataMappingProps {
     unmappedSchemas: UnmappedSchema[];
     onSaveMapping: (mapping: ColumnMapping, schemaKey: SchemaKey) => void
+    onCloseInitialImport: () => void;
+    isInitialImport: boolean;
 }
 
-const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
+const DataMapping = ({unmappedSchemas, onSaveMapping, onCloseInitialImport, isInitialImport}: DataMappingProps) => {
     const {transactions} = useTransactionsContext();
     const groupedByType = Object.groupBy(transactions, e => e.type);
     const groupedByCategory = Object.groupBy(transactions, e => e.category);
@@ -29,6 +31,16 @@ const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
         </BackdropBlur>
     }
 
+    if (isInitialImport) {
+        return <BackdropBlur onClose={onCloseInitialImport}>
+            <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">
+                <h1 className="font-bold text-xl">Initial Import</h1>
+                <p className="text-sm text-gray-400">Review your imported transactions below. You can close this dialog to continue.</p>
+                <TransactionTable pageSize={10} transactions={transactions} visibleColumns={["id", "date", "text", "amount", "type", "category"]} />
+            </div>
+        </BackdropBlur>
+    }
+
     if (hasUnknownTransactions) {
         return <BackdropBlur>
             <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">
@@ -37,7 +49,7 @@ const DataMapping = ({unmappedSchemas, onSaveMapping}: DataMappingProps) => {
         </BackdropBlur>
     }
 
-    if (hasUncategorizedTransactions) {
+    if (hasUncategorizedTransactions ) {
         const visibleColumns: TransactionTableColumn[] = ["id", "date", "text", "amount","type", "category"];
         const visibleColumnsWithoutType: TransactionTableColumn[] = ["id", "date", "text", "amount", "category"];
         return <BackdropBlur>

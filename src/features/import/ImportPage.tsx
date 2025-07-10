@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {CSVFile} from "@/model";
 import DataMapping from "@/features/mapping/DataMapping";
 import {useGlobalContext} from "@/context/GlobalContext";
@@ -11,6 +11,7 @@ import {fileImportEventHandler} from "@/utility/csvutils";
 
 const ImportPage = () => {
     const {csvFiles, setCSVFiles, unmappedSchemas, handleSaveMapping, handleRemoveMapping} = useGlobalContext();
+    const [initialImport, setInitialImport] = useState(true); // TODO: Will be defaulted to false
 
     const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement> | FileList) => {
         const imported = await fileImportEventHandler(e) ?? [];
@@ -31,7 +32,7 @@ const ImportPage = () => {
     return (
         <div className="min-h-screen flex flex-col items-center gap-4 bg-gradient-to-b from-gray-950 to-[#0a0a0a]">
             {/* Data mapping is a popup that will be used to map data */}
-            <DataMapping unmappedSchemas={unmappedSchemas} onSaveMapping={handleSaveMapping}/>
+            <DataMapping unmappedSchemas={unmappedSchemas} isInitialImport={initialImport} onSaveMapping={handleSaveMapping} onCloseInitialImport={() => setInitialImport(false)}/>
 
             <div className="w-2/3 mt-10 mb-6">
                 <h1 className="text-2xl font-bold mb-2">Import Your Transactions</h1>
