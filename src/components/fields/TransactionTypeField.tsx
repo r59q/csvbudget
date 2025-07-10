@@ -98,17 +98,6 @@ const TransactionTypeField: React.FC<MappingFieldProps> = ({transaction}) => {
                         </button>
                     );
                 })}
-                {/* Button for guessedType, always visible, disabled if 'unknown' */}
-{/*                <button
-                    className={`w-10 h-10 flex items-center justify-center disabled:bg-gray-900 rounded-md border transition-colors text-xl bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-400 dark:border-gray-600 hover:bg-blue-100 dark:hover:bg-blue-800`}
-                    onClick={() => handleTypeChange(transaction.guessedType)}
-                    type="button"
-                    title={`Use guessed type: ${firstLetterUpper(transaction.guessedType)}`}
-                    disabled={transaction.guessedType === 'unknown'}
-                >
-                    {transaction.guessedType !== "unknown" && <MdArrowRightAlt/>}
-                    {transaction.guessedType === "unknown" && <MdArrowRightAlt className={"text-gray-600"}/>}
-                </button>*/}
             </div>
             {showDialog && (
                 <TransactionTypeConfirmDialog

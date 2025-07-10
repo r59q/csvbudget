@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionID } from '@/model';
 
 export interface TransactionSelectTableAdditionalColumn {
@@ -23,6 +23,11 @@ const TransactionSelectTable: React.FC<TransactionSelectTableProps> = ({
 }) => {
     const [selectedIds, setSelectedIds] = useState<TransactionID[]>(initialSelectedIds);
 
+    // Keep selectedIds in sync with initialSelectedIds if the prop changes
+    useEffect(() => {
+        setSelectedIds(initialSelectedIds);
+    }, [initialSelectedIds]);
+
     const toggleSelect = (id: TransactionID) => {
         setSelectedIds(prev =>
             prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
@@ -33,7 +38,6 @@ const TransactionSelectTable: React.FC<TransactionSelectTableProps> = ({
         const selectedTxs = transactions.filter(t => selectedIds.includes(t.id));
         onConfirm(selectedTxs.map(e => e.id));
     };
-
     return (
         <div className="w-full">
             <div className="max-h-90 overflow-y-auto w-full">

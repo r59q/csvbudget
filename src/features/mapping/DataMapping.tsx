@@ -6,7 +6,7 @@ import {useTransactionsContext} from "@/context/TransactionsContext";
 import TransactionSelectTable from "@/components/fields/TransactionSelectTable";
 import TransactionTable, {TransactionTableColumn} from "@/features/transaction/TransactionTable";
 import {ColumnMapping, SchemaKey} from "@/utility/csvutils";
-import {UnmappedSchema} from "@/model";
+import {Transaction, TransactionID, TransactionType, UnmappedSchema} from "@/model";
 
 interface DataMappingProps {
     unmappedSchemas: UnmappedSchema[];
@@ -16,7 +16,7 @@ interface DataMappingProps {
 }
 
 const DataMapping = ({unmappedSchemas, onSaveMapping, onCloseInitialImport, isInitialImport}: DataMappingProps) => {
-    const {transactions} = useTransactionsContext();
+    const {transactions, setTransactionTypes} = useTransactionsContext();
     const groupedByType = Object.groupBy(transactions, e => e.type);
     const groupedByCategory = Object.groupBy(transactions, e => e.category);
 
@@ -32,6 +32,16 @@ const DataMapping = ({unmappedSchemas, onSaveMapping, onCloseInitialImport, isIn
         </BackdropBlur>
     }
 
+    const setConfirmedTypes = (txIds: TransactionID[]) => {
+        const confirmedTransactions = transactions.filter(e => txIds.includes(e.id))
+        const confirmedTxByGuess = Object.groupBy(confirmedTransactions, e => e.guessedType);
+        Object.keys(confirmedTxByGuess).forEach(guess => {
+            const guessedType = guess as TransactionType;
+            setTransactionTypes(confirmedTxByGuess[guessedType]?.map(e => e.id) ?? [], guessedType);
+        })
+        onCloseInitialImport(); // Finish off by closing the dialog
+    }
+
     if (isInitialImport) {
         const unknownTypeTransactionsWithGuessedType = unknownTypeTransactions.filter(tran => tran.guessedType !== "unknown")
         return <BackdropBlur onClose={onCloseInitialImport}>
@@ -41,7 +51,7 @@ const DataMapping = ({unmappedSchemas, onSaveMapping, onCloseInitialImport, isIn
                 <TransactionSelectTable
                     transactions={unknownTypeTransactionsWithGuessedType}
                     initialSelectedIds={unknownTypeTransactionsWithGuessedType.map(t => t.id)}
-                    onConfirm={() => {}}
+                    onConfirm={setConfirmedTypes}
                     onCancel={onCloseInitialImport}
                     additionalColumns={[{title: "Hello", cell: (t => <span className={"font-bold"}>{t.guessedType}</span>)}]}
                 />
