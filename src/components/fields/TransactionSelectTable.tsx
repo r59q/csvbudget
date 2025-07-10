@@ -4,7 +4,7 @@ import { Transaction, TransactionID } from '@/model';
 interface TransactionSelectTableProps {
     transactions: Transaction[];
     initialSelectedIds?: TransactionID[];
-    onConfirm: (selected: Transaction[]) => void;
+    onConfirm: (selected: TransactionID[]) => void;
     onCancel: () => void;
 }
 
@@ -24,7 +24,7 @@ const TransactionSelectTable: React.FC<TransactionSelectTableProps> = ({
 
     const handleConfirm = () => {
         const selectedTxs = transactions.filter(t => selectedIds.includes(t.id));
-        onConfirm(selectedTxs);
+        onConfirm(selectedTxs.map(e => e.id));
     };
 
     return (
