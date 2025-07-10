@@ -16,7 +16,6 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
     const [showDialog, setShowDialog] = useState(false);
     const [pendingCategory, setPendingCategory] = useState<Category | null>(null);
     const [likeTransactions, setLikeTransactions] = useState<Transaction[]>([]);
-    const [selectedIds, setSelectedIds] = useState<TransactionID[]>([]);
 
     // Helper to open confirmation dialog
     const openCategoryDialog = (category: Category) => {
@@ -31,7 +30,6 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
         }
         setPendingCategory(category);
         setLikeTransactions(similarUncategorized);
-        setSelectedIds(allIds); // default: all selected
         setShowDialog(true);
     };
 
@@ -62,13 +60,7 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
         setTimeout(() => setShowDropdown(false), 150); // allow click events to register
     };
 
-    const toggleSelect = (id: TransactionID) => {
-        setSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-        );
-    };
-
-    const confirmChange = () => {
+    const confirmChange = (selectedIds: TransactionID[]) => {
         if (pendingCategory) {
             // Find selected transactions
             const allTxs = [transaction, ...likeTransactions];
@@ -78,7 +70,6 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
         setShowDialog(false);
         setPendingCategory(null);
         setLikeTransactions([]);
-        setSelectedIds([]);
         setInputValue('');
         setShowDropdown(false);
     };
@@ -87,7 +78,6 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
         setShowDialog(false);
         setPendingCategory(null);
         setLikeTransactions([]);
-        setSelectedIds([]);
         setInputValue('');
         setShowDropdown(false);
     };
@@ -171,8 +161,6 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
                     pendingCategory={pendingCategory}
                     transaction={transaction}
                     likeTransactions={likeTransactions}
-                    selectedIds={selectedIds}
-                    toggleSelect={toggleSelect}
                     confirmChange={confirmChange}
                     cancelChange={cancelChange}
                 />
@@ -188,75 +176,82 @@ interface CategoryAssignConfirmDialogProps {
     pendingCategory: Category | null;
     transaction: Transaction;
     likeTransactions: Transaction[];
-    selectedIds: TransactionID[];
-    toggleSelect: (id: TransactionID) => void;
-    confirmChange: () => void;
+    confirmChange: (selectedIds: TransactionID[]) => void;
     cancelChange: () => void;
 }
 
 const CategoryAssignConfirmDialog: React.FC<CategoryAssignConfirmDialogProps> = ({
-                                                                                     pendingCategory,
-                                                                                     transaction,
-                                                                                     likeTransactions,
-                                                                                     selectedIds,
-                                                                                     toggleSelect,
-                                                                                     confirmChange,
-                                                                                     cancelChange
-                                                                                 }) => (
-    <BackdropBlur>
-        <div
-            className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg flex flex-col items-center gap-4 max-w-lg w-full">
-            <div>Are you sure you want to assign the category <b>{pendingCategory}</b> to the selected transactions?
-            </div>
-            <div className="max-h-90 overflow-y-auto w-full">
-                <table className="w-full text-xs border select-none border-gray-800 bg-gray-900 rounded">
-                    <thead>
-                    <tr className="bg-gray-800">
-                        <th className="p-1 border">Select</th>
-                        <th className="p-1 border">ID</th>
-                        <th className="p-1 border">Date</th>
-                        <th className="p-1 border">Text</th>
-                        <th className="p-1 border">Amount</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr
-                        onClick={() => toggleSelect(transaction.id)}
-                        className="cursor-pointer hover:bg-gray-700"
-                    >
-                        <td className="p-1 border text-center" onClick={e => e.stopPropagation()}>
-                            <input type="checkbox" checked={selectedIds.includes(transaction.id)}
-                                   onChange={() => toggleSelect(transaction.id)}/>
-                        </td>
-                        <td className="p-1 border">{transaction.id}</td>
-                        <td className="p-1 border">{transaction.date.format("YYYY-MM-DD")}</td>
-                        <td className="p-1 border">{transaction.text}</td>
-                        <td className="p-1 border">{transaction.amount}</td>
-                    </tr>
-                    {likeTransactions.map(t => (
-                        <tr key={t.id}
-                            onClick={() => toggleSelect(t.id)}
-                            className="even:bg-gray-800 cursor-pointer hover:bg-gray-700"
+    pendingCategory,
+    transaction,
+    likeTransactions,
+    confirmChange,
+    cancelChange
+}) => {
+    const [selectedIds, setSelectedIds] = useState<TransactionID[]>([
+        transaction.id,
+        ...likeTransactions.map(t => t.id)
+    ]);
+
+    const toggleSelect = (id: TransactionID) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    };
+
+    return (
+        <BackdropBlur>
+            <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg flex flex-col items-center gap-4 max-w-lg w-full">
+                <div>Are you sure you want to assign the category <b>{pendingCategory}</b> to the selected transactions?</div>
+                <div className="max-h-90 overflow-y-auto w-full">
+                    <table className="w-full text-xs border select-none border-gray-800 bg-gray-900 rounded">
+                        <thead>
+                        <tr className="bg-gray-800">
+                            <th className="p-1 border">Select</th>
+                            <th className="p-1 border">ID</th>
+                            <th className="p-1 border">Date</th>
+                            <th className="p-1 border">Text</th>
+                            <th className="p-1 border">Amount</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr
+                            onClick={() => toggleSelect(transaction.id)}
+                            className="cursor-pointer hover:bg-gray-700"
                         >
                             <td className="p-1 border text-center" onClick={e => e.stopPropagation()}>
-                                <input type="checkbox" checked={selectedIds.includes(t.id)}
-                                       onChange={() => toggleSelect(t.id)}/>
+                                <input type="checkbox" checked={selectedIds.includes(transaction.id)}
+                                       onChange={() => toggleSelect(transaction.id)}/>
                             </td>
-                            <td className="p-1 border">{t.id}</td>
-                            <td className="p-1 border">{t.date.format("YYYY-MM-DD")}</td>
-                            <td className="p-1 border">{t.text}</td>
-                            <td className="p-1 border">{t.amount}</td>
+                            <td className="p-1 border">{transaction.id}</td>
+                            <td className="p-1 border">{transaction.date.format("YYYY-MM-DD")}</td>
+                            <td className="p-1 border">{transaction.text}</td>
+                            <td className="p-1 border">{transaction.amount}</td>
                         </tr>
-                    ))}
-                    </tbody>
-                </table>
+                        {likeTransactions.map(t => (
+                            <tr key={t.id}
+                                onClick={() => toggleSelect(t.id)}
+                                className="even:bg-gray-800 cursor-pointer hover:bg-gray-700"
+                            >
+                                <td className="p-1 border text-center" onClick={e => e.stopPropagation()}>
+                                    <input type="checkbox" checked={selectedIds.includes(t.id)}
+                                           onChange={() => toggleSelect(t.id)}/>
+                                </td>
+                                <td className="p-1 border">{t.id}</td>
+                                <td className="p-1 border">{t.date.format("YYYY-MM-DD")}</td>
+                                <td className="p-1 border">{t.text}</td>
+                                <td className="p-1 border">{t.amount}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="flex gap-2 mt-4">
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={() => confirmChange(selectedIds)}
+                            disabled={selectedIds.length === 0}>Confirm
+                    </button>
+                    <button className="px-4 py-2 bg-gray-400 text-black rounded" onClick={cancelChange}>Cancel</button>
+                </div>
             </div>
-            <div className="flex gap-2 mt-4">
-                <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={confirmChange}
-                        disabled={selectedIds.length === 0}>Confirm
-                </button>
-                <button className="px-4 py-2 bg-gray-400 text-black rounded" onClick={cancelChange}>Cancel</button>
-            </div>
-        </div>
-    </BackdropBlur>
-);
+        </BackdropBlur>
+    );
+};
