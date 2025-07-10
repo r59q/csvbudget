@@ -1,3 +1,7 @@
+You are making a budgeting app that allows users to track their expenses and income. Terminologies used in the application are as follows:
+- **Envelope**: An envelope is a bucket that covers a month. Income and expenses are assigned envelopes to compute monthly calculations. An income that occur in one month may be chosen by the user to put into the next month's envelope. For example if salary is paid on the last bank-day of the month
+- **Budget Post**: A named budget post, which is a representation for how much money is allocated to a group of expenses
+
 When writing react, always use functional components, with the syntax
 ```typescript jsx
 interface ComponentProps {

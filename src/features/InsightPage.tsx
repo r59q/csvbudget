@@ -3,7 +3,7 @@ import useCategories from "@/hooks/Categories";
 import useAverages from "@/hooks/Averages";
 import {Category, Envelope, Transaction, TransactionID} from "@/model";
 import {formatCurrency, formatEnvelope, groupByEnvelope} from "@/utility/datautils";
-import React, {createContext, use, useState} from "react";
+import React, {createContext, PropsWithChildren, use, useState} from "react";
 import SingleLineChart from "@/components/SingleLineChart";
 import TransactionTable from "@/features/transaction/TransactionTable";
 
@@ -33,7 +33,8 @@ const InsightPage = () => {
     }
 
     return (
-        <InsightsContext.Provider value={{getCategory, transactionsByEnvelope, categoriesSortedByMonthlyCost, averages, envelopes}}>
+        <InsightsContext.Provider
+            value={{getCategory, transactionsByEnvelope, categoriesSortedByMonthlyCost, averages, envelopes}}>
             <PageView/>
         </InsightsContext.Provider>
     );
@@ -45,8 +46,8 @@ const PageView = () => {
 
     return <div className={"p-2 bg-gradient-to-b from-gray-950 to-[#0a0a0a] flex flex-col gap-8 pt-4"}>
         <div className="gap-4">
-            <div className={"flex flex-row"}>
-                <div className="bg-zinc-900 text-zinc-100 p-6 rounded-2xl shadow-xl space-y-6">
+            <div className={"flex flex-row gap-4"}>
+                <InsightCard>
                     {/* Section: Expenses */}
                     <section>
                         <h3 className="text-lg font-semibold text-red-400 mb-3">Expenses</h3>
@@ -88,7 +89,12 @@ const PageView = () => {
                             <span className="text-right">{formatCurrency(averages.averageNetPerEnvelope)}</span>
                         </div>
                     </section>
-                </div>
+                </InsightCard>
+
+                <InsightCard className={"flex-grow"}>
+                    <CategoryInsights/>
+                </InsightCard>
+
             </div>
         </div>
 
@@ -149,7 +155,6 @@ const MonthInsightsTable = ({
             date: tran.date.valueOf()
         };
     });
-
 
     return (
         <div className="rounded-xl shadow p-4 mb-6 bg-gray-800">
@@ -226,5 +231,17 @@ const getHeatColor = (value: number, maxAbs: number) => {
     const white = 255 - red;
     return `rgb(255, ${white}, ${white})`; // white to red gradient
 };
+
+const InsightCard = ({children, className}: PropsWithChildren<{
+    className?: React.HTMLAttributes<HTMLDivElement>['className']
+}>) => {
+    return <div className={`bg-zinc-900 text-zinc-100 p-6 rounded-2xl shadow-xl space-y-6 ${className}`}>
+        {children}
+    </div>
+}
+
+const CategoryInsights = () => {
+    return <></>;
+}
 
 export default InsightPage;
