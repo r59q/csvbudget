@@ -3,6 +3,7 @@ import BackdropBlur from "@/components/BackdropBlur";
 import SchemaMapper from "@/features/mapping/SchemaMapper";
 import TransactionMapper from "@/features/mapping/TransactionMapper";
 import {useTransactionsContext} from "@/context/TransactionsContext";
+import TransactionSelectTable from "@/components/fields/TransactionSelectTable";
 import TransactionTable, {TransactionTableColumn} from "@/features/transaction/TransactionTable";
 import {ColumnMapping, SchemaKey} from "@/utility/csvutils";
 import {UnmappedSchema} from "@/model";
@@ -19,8 +20,8 @@ const DataMapping = ({unmappedSchemas, onSaveMapping, onCloseInitialImport, isIn
     const groupedByType = Object.groupBy(transactions, e => e.type);
     const groupedByCategory = Object.groupBy(transactions, e => e.category);
 
-    const unknownTransactions = (groupedByType.unknown ?? []).filter(tra => !tra.isTransfer);
-    const hasUnknownTransactions = unknownTransactions.length > 0
+    const unknownTypeTransactions = (groupedByType.unknown ?? []).filter(tra => !tra.isTransfer);
+    const hasUnknownTypeTransactions = unknownTypeTransactions.length > 0
     const uncategorizedExpenses = (groupedByCategory['Unassigned'] ?? []).filter(tran => tran.type === "expense");
     const hasUncategorizedTransactions = uncategorizedExpenses.length > 0;
     const hasExpenseWithPositiveAmount = uncategorizedExpenses.some(tran => tran.amountAfterRefund > 0);
@@ -32,19 +33,26 @@ const DataMapping = ({unmappedSchemas, onSaveMapping, onCloseInitialImport, isIn
     }
 
     if (isInitialImport) {
+        const unknownTypeTransactionsWithGuessedType = unknownTypeTransactions.filter(tran => tran.guessedType !== "unknown")
         return <BackdropBlur onClose={onCloseInitialImport}>
             <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">
                 <h1 className="font-bold text-xl">Initial Import</h1>
                 <p className="text-sm text-gray-400">Review your imported transactions below. You can close this dialog to continue.</p>
-                <TransactionTable pageSize={10} transactions={transactions} visibleColumns={["id", "date", "text", "amount", "type", "category"]} />
+                <TransactionSelectTable
+                    transactions={unknownTypeTransactionsWithGuessedType}
+                    initialSelectedIds={unknownTypeTransactionsWithGuessedType.map(t => t.id)}
+                    onConfirm={() => {}}
+                    onCancel={onCloseInitialImport}
+                    additionalColumns={[{title: "Hello", cell: (t => <span className={"font-bold"}>{t.guessedType}</span>)}]}
+                />
             </div>
         </BackdropBlur>
     }
 
-    if (hasUnknownTransactions) {
+    if (hasUnknownTypeTransactions) {
         return <BackdropBlur>
             <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">
-                <TransactionMapper transactions={unknownTransactions}/>
+                <TransactionMapper transactions={unknownTypeTransactions}/>
             </div>
         </BackdropBlur>
     }
