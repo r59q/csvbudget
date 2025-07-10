@@ -8,6 +8,8 @@ interface IncomeChartProps {
 }
 
 const IncomeChart: React.FC<IncomeChartProps> = ({ averageIncome, chartData }) => {
+    // Sort chartData by date to ensure correct order regardless of input
+    const sortedChartData = [...chartData].sort((a, b) => a.date - b.date);
     return (
         <div>
             <p>Average Income: {formatCurrency(averageIncome)}</p>
@@ -15,7 +17,7 @@ const IncomeChart: React.FC<IncomeChartProps> = ({ averageIncome, chartData }) =
                 <SingleLineChart
                     lineName={"Income"}
                     zeroLineName={"Average"}
-                    data={chartData}
+                    data={sortedChartData}
                     zero={parseFloat(averageIncome.toFixed(0))}
                     autoScaleY
                 />
@@ -25,4 +27,3 @@ const IncomeChart: React.FC<IncomeChartProps> = ({ averageIncome, chartData }) =
 };
 
 export default IncomeChart;
-
