@@ -5,7 +5,7 @@ import {useTransactionsContext} from "@/context/TransactionsContext";
 import BackdropBlur from '@/components/BackdropBlur';
 import {getTransactionTypeIcon} from './TransactionTypeIcons';
 import RefundLinkDialog from './RefundLinkDialog';
-import {MdArrowRight, MdArrowRightAlt, MdForkRight, MdSwipeRight} from "react-icons/md";
+import TransactionSelectTable from './TransactionSelectTable';
 
 interface MappingFieldProps {
     transaction: Transaction;
@@ -23,7 +23,6 @@ const TransactionTypeField: React.FC<MappingFieldProps> = ({transaction}) => {
     const [showDialog, setShowDialog] = React.useState(false);
     const [pendingType, setPendingType] = React.useState<TransactionType | null>(null);
     const [likeTransactions, setLikeTransactions] = React.useState<Transaction[]>([]);
-    const [selectedIds, setSelectedIds] = React.useState<TransactionID[]>([]);
     const [showRefundDialog, setShowRefundDialog] = React.useState(false);
     const [refundSearch, setRefundSearch] = React.useState('');
     const [refundSelectedId, setRefundSelectedId] = React.useState<TransactionID | null>(null);
@@ -42,31 +41,22 @@ const TransactionTypeField: React.FC<MappingFieldProps> = ({transaction}) => {
         }
         setPendingType(type);
         setLikeTransactions(likeTxs);
-        setSelectedIds(allIds); // default: all selected
         setShowDialog(true);
     };
 
-    const toggleSelect = (id: TransactionID) => {
-        setSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-        );
-    };
-
-    const confirmChange = () => {
+    const handleConfirmDialog = (selectedIds: TransactionID[]) => {
         if (pendingType) {
             setTransactionTypes(selectedIds, pendingType);
         }
         setShowDialog(false);
         setPendingType(null);
         setLikeTransactions([]);
-        setSelectedIds([]);
     };
 
-    const cancelChange = () => {
+    const handleCancelDialog = () => {
         setShowDialog(false);
         setPendingType(null);
         setLikeTransactions([]);
-        setSelectedIds([]);
     };
 
     const handleConfirmRefundLink = () => {
@@ -100,15 +90,20 @@ const TransactionTypeField: React.FC<MappingFieldProps> = ({transaction}) => {
                 })}
             </div>
             {showDialog && (
-                <TransactionTypeConfirmDialog
-                    pendingType={pendingType}
-                    transaction={transaction}
-                    likeTransactions={likeTransactions}
-                    selectedIds={selectedIds}
-                    toggleSelect={toggleSelect}
-                    confirmChange={confirmChange}
-                    cancelChange={cancelChange}
-                />
+                <BackdropBlur>
+                    <div
+                        className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg flex flex-col items-center gap-4 max-w-lg w-full">
+                        <div>Are you sure you want to change the transaction type to <b>{pendingType}</b> for the
+                            selected transactions?
+                        </div>
+                        <TransactionSelectTable
+                            transactions={[transaction, ...likeTransactions]}
+                            initialSelectedIds={[transaction.id, ...likeTransactions.map(t => t.id)]}
+                            onConfirm={handleConfirmDialog}
+                            onCancel={handleCancelDialog}
+                        />
+                    </div>
+                </BackdropBlur>
             )}
             {showRefundDialog && (
                 <RefundLinkDialog
@@ -125,76 +120,5 @@ const TransactionTypeField: React.FC<MappingFieldProps> = ({transaction}) => {
     );
 };
 
-interface TransactionTypeConfirmDialogProps {
-    pendingType: TransactionType | null;
-    transaction: Transaction;
-    likeTransactions: Transaction[];
-    selectedIds: TransactionID[];
-    toggleSelect: (id: TransactionID) => void;
-    confirmChange: () => void;
-    cancelChange: () => void;
-}
-
-const TransactionTypeConfirmDialog: React.FC<TransactionTypeConfirmDialogProps> = ({
-                                                                                       pendingType,
-                                                                                       transaction,
-                                                                                       likeTransactions,
-                                                                                       selectedIds,
-                                                                                       toggleSelect,
-                                                                                       confirmChange,
-                                                                                       cancelChange
-                                                                                   }) => (
-    <BackdropBlur>
-        <div
-            className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg flex flex-col items-center gap-4 max-w-lg w-full">
-            <div>Are you sure you want to change the transaction type to <b>{pendingType}</b> for the selected
-                transactions?
-            </div>
-            <div className="max-h-90 overflow-y-auto w-full">
-                <table className="w-full text-xs border border-gray-800 bg-gray-900 rounded">
-                    <thead>
-                    <tr className="bg-gray-800">
-                        <th className="p-1 border">Select</th>
-                        <th className="p-1 border">ID</th>
-                        <th className="p-1 border">Date</th>
-                        <th className="p-1 border">Text</th>
-                        <th className="p-1 border">Amount</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td className="p-1 border text-center">
-                            <input type="checkbox" checked={selectedIds.includes(transaction.id)}
-                                   onChange={() => toggleSelect(transaction.id)}/>
-                        </td>
-                        <td className="p-1 border">{transaction.id}</td>
-                        <td className="p-1 border">{transaction.date.format("YYYY-MM-DD")}</td>
-                        <td className="p-1 border">{transaction.text}</td>
-                        <td className="p-1 border">{transaction.amount}</td>
-                    </tr>
-                    {likeTransactions.map(t => (
-                        <tr key={t.id} className="even:bg-gray-800">
-                            <td className="p-1 border text-center">
-                                <input type="checkbox" checked={selectedIds.includes(t.id)}
-                                       onChange={() => toggleSelect(t.id)}/>
-                            </td>
-                            <td className="p-1 border">{t.id}</td>
-                            <td className="p-1 border">{t.date.format("YYYY-MM-DD")}</td>
-                            <td className="p-1 border">{t.text}</td>
-                            <td className="p-1 border">{t.amount}</td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
-            <div className="flex gap-2 mt-4">
-                <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={confirmChange}
-                        disabled={selectedIds.length === 0}>Confirm
-                </button>
-                <button className="px-4 py-2 bg-gray-400 text-black rounded" onClick={cancelChange}>Cancel</button>
-            </div>
-        </div>
-    </BackdropBlur>
-);
 
 export default TransactionTypeField;
