@@ -11,7 +11,7 @@ interface InfoBoxProps {
 
 const InfoBox = ({icon, title, description, secondary, tip, className = ""}: InfoBoxProps) => {
     return (
-        <div className={`mb-6 p-4 rounded-lg bg-gradient-to-r from-blue-950/20 to-blue-900/40 border border-blue-900 text-blue-100 flex items-start gap-7 ${className}`}>
+        <div className={`p-4 rounded-lg bg-gradient-to-r from-blue-950/20 to-blue-900/40 border border-blue-900 text-blue-100 flex items-start gap-7 ${className}`}>
             <span className="self-center text-blue-300">{icon}</span>
             <div className="flex flex-col">
                 <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">{title}</h2>

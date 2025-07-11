@@ -49,7 +49,7 @@ const FilterPage = () => {
         <div className="flex pt-10 pb-10 flex-col gap-8 bg-gradient-to-b from-gray-950 to-[#0a0a0a]">
             <div className={"w-2/3 self-center flex flex-col gap-6"}>
                 {/* Envelopes list at the top */}
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-4">
                     <InfoBox
                         icon={<FaRegEnvelopeOpen size={40} />}
                         title="About Envelope Selection"
@@ -59,11 +59,19 @@ const FilterPage = () => {
                     />
 
                     {/* envelope selection */}
+
+                    <div className={"flex flex-col gap-2"}>
+                    <div>
+                        <p className={"text-lg"}>Select the envelopes you wish to visualize</p>
+                        <p className={"text-gray-400"}>Your selection will impact calculations on average income and expenses on the insight and budget pages.</p>
+                    </div>
+
                     <EnvelopeChipSelector
                         envelopes={envelopes}
                         isEnvelopeSelected={isEnvelopeSelected}
                         toggleSelectedEnvelope={toggleSelectedEnvelope}
                     />
+                    </div>
 
                 </div>
 
