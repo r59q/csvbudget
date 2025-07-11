@@ -33,9 +33,9 @@ const CATEGORY_COLORS = [
 const getCategoryColor = (idx: number) => CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
 
 const EnvelopeExpensesByCategory = () => {
-    const {transactionsByEnvelope, categoriesSortedByMonthlyCost} = use(InsightsContext);
+    const {transactionsByEnvelope, categoriesSortedByMonthlyCost, selectedCategories} = use(InsightsContext);
 
-    // Collect all categories
+    // Collect all categories (filtered by selectedCategories)
     const allCategories = useMemo(() => {
         const set = new Set<Category>();
         Object.values(transactionsByEnvelope || {}).forEach(txs => {
@@ -43,8 +43,8 @@ const EnvelopeExpensesByCategory = () => {
                 if (t.type === 'expense') set.add(t.category);
             });
         });
-        return Array.from(set).sort();
-    }, [transactionsByEnvelope]);
+        return Array.from(set).filter(cat => selectedCategories.includes(cat)).sort();
+    }, [transactionsByEnvelope, selectedCategories]);
 
     // Prepare data for recharts: [{ envelope: '2024-01', Category1: 123, Category2: 456, ... }, ...]
     const data = useMemo(() => {

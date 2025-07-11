@@ -25,13 +25,15 @@ const CustomTooltip = ({active, payload, label}: any) => {
 };
 
 const ExpensesByCategory = () => {
-    const {categoriesSortedByMonthlyCost, averages} = use(InsightsContext);
+    const {categoriesSortedByMonthlyCost, averages, selectedCategories} = use(InsightsContext);
     // Prepare data for recharts: [{ category: string, average: number }]
     const data = useMemo(() =>
-        categoriesSortedByMonthlyCost.map((cat) => ({
-            category: cat,
-            average: averages.averageExpenseByCategoryPerEnvelope[cat] || 0,
-        })), [categoriesSortedByMonthlyCost, averages]);
+        categoriesSortedByMonthlyCost
+            .filter(cat => selectedCategories.includes(cat))
+            .map((cat) => ({
+                category: cat,
+                average: averages.averageExpenseByCategoryPerEnvelope[cat] || 0,
+            })), [categoriesSortedByMonthlyCost, averages, selectedCategories]);
 
     return (
         <div className="w-full h-full">
