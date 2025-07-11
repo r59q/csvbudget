@@ -22,7 +22,6 @@ const useEnvelopeMapping = () => {
     };
 
     const setEnvelopeForTransaction = (row: Transaction, envelope: Envelope | "" | undefined) => {
-        console.log(envelope)
         const newState = {...envelopeMap};
         if (envelope === "" || envelope == undefined || envelope === "Unassigned") {
             delete newState[row.id];

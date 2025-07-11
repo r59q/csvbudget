@@ -4,7 +4,16 @@ import {Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis,
 import {formatCurrency} from '@/utility/datautils';
 import {getCategoryColorForName} from '@/utility/categoryColors';
 
-const CustomTooltip = ({active, payload, label}: any) => {
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+        color: string;
+        value: number;
+    }>;
+    label?: string;
+}
+
+const CustomTooltip = ({active, payload, label}: CustomTooltipProps) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-gray-800 text-gray-100 rounded-lg shadow-lg px-4 py-2 border border-gray-700">

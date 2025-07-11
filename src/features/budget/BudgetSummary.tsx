@@ -15,7 +15,6 @@ interface BudgetSummaryProps {
 const BudgetSummary = ({budgetNet, averages, budgetPosts}: BudgetSummaryProps) => {
     const headroom = budgetPosts.reduce((sum, post) => sum + post.amount, 0) + averages.averageExpensePerEnvelope;
     const totalNet = budgetNet.reduce((sum, item) => sum + item.net, 0);
-    console.log(budgetNet)
     return (
         <div className={"bg-gray-800 p-4 rounded-xl flex-1/3"}>
             <h2 className="text-xl font-semibold mb-2">Summary</h2>

@@ -37,7 +37,6 @@ const useSchemaMapping = (files: CSVFile[]) => {
 
     const handleRemoveMapping = (schemaKey: SchemaKey) => {
         const newData = { ...columnMappings };
-        console.log(schemaKey)
         delete newData[schemaKey];
         setColumnMappings(getCSVMappingData().save(newData));
     };

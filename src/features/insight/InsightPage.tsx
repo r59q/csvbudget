@@ -40,17 +40,14 @@ const InsightPage = () => {
     );
 };
 
-interface ContextProviderProps extends Omit<InsightsContextType, "setSelectedCategories" | "selectedCategories"> {
-}
-
 const ContextProvider = ({
-                             children,
-                             categoriesSortedByMonthlyCost,
-                             getCategory,
-                             transactionsByEnvelope,
-                             envelopes,
-                             averages
-                         }: PropsWithChildren<ContextProviderProps>) => {
+    children,
+    categoriesSortedByMonthlyCost,
+    getCategory,
+    transactionsByEnvelope,
+    envelopes,
+    averages
+}: React.PropsWithChildren<Omit<InsightsContextType, "setSelectedCategories" | "selectedCategories">>) => {
     const [selectedCategories, setSelectedCategories] = useState<Category[]>(categoriesSortedByMonthlyCost);
 
     return <InsightsContext.Provider

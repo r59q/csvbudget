@@ -18,7 +18,7 @@ const EnvelopeExpensesByCategory = () => {
     const data = useMemo(() => {
         return Object.entries(transactionsByEnvelope || {})
             .map(([envelope, txs]) => {
-                const row: Record<string, any> = {
+                const row: EnvelopeExpensesRow = {
                     envelope: formatEnvelope ? formatEnvelope(envelope) : envelope
                 };
                 filteredCategories.forEach(cat => {
@@ -28,7 +28,7 @@ const EnvelopeExpensesByCategory = () => {
                 });
                 return row;
             })
-            .sort((a, b) => a.envelope.localeCompare(b.envelope));
+            .sort((a, b) => (a.envelope as string).localeCompare(b.envelope as string));
     }, [transactionsByEnvelope, filteredCategories]);
 
     return (
@@ -85,12 +85,26 @@ const CustomTooltip = (props: CustomTooltipProps) => {
     return null;
 };
 
-const CustomBar = (props: any) => {
-    // Only pass valid rect props to the DOM
-    const {x, y, width, height, fill, radius, className, style, ...rest} = props;
+interface EnvelopeExpensesRow {
+    envelope: string;
+    [category: string]: number | string;
+}
+
+interface CustomBarProps {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    fill?: string;
+    radius?: number | [number, number, number, number];
+    className?: string;
+    style?: React.CSSProperties;
+}
+
+const CustomBar = (props: CustomBarProps) => {
+    const {x, y, width, height, fill, radius, className, style} = props;
     return createElement('rect', {
         x, y, width, height, fill, rx: Array.isArray(radius) ? radius[0] : radius, className, style
-        // Do not spread ...rest to avoid passing category names or other invalid props
     });
 };
 
