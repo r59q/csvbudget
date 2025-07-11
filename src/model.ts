@@ -61,15 +61,16 @@ export interface TransactionLinkDescriptor {
     linkedId: TransactionID;
     linkType: LinkType
 }
+export type AccountName = string;
 
 export interface Transaction {
     id: TransactionID;
     date: Dayjs;
     text: string;
     from: AccountNumber;
-    mappedFrom: AccountNumber | undefined;
+    mappedFrom: AccountName | undefined;
     to: AccountNumber;
-    mappedTo: AccountNumber | undefined;
+    mappedTo: AccountName | undefined;
     category: Category;
     guessedCategory: Category;
     type: TransactionType;
@@ -83,3 +84,51 @@ export interface Transaction {
     envelope: Envelope;
     guessedEnvelope: Envelope;
 }
+
+/*
+
+interface BaseTransaction {
+    id: TransactionID;
+    date: Dayjs;
+    text: string;
+    from: AccountNumber;
+    to: AccountNumber;
+    mappedFrom: AccountNumber | undefined;
+    mappedTo: AccountNumber | undefined;
+    notes: string;
+    amount: number;
+    linkedTransactions: TransactionLinkDescriptor[];
+    envelope: Envelope;
+}
+
+export interface ExpenseTransaction extends BaseTransaction {
+    type: "expense";
+    category: Category;
+    guessedCategory: Category;
+    isTransfer: false;
+}
+
+export interface IncomeTransaction extends BaseTransaction {
+    type: "income";
+    source: string; // e.g. employer, government, etc.
+    isTransfer: false;
+}
+
+export interface TransferTransaction extends BaseTransaction {
+    type: "transfer";
+    isTransfer: true;
+    // Optionally, add fields specific to transfers
+}
+
+export interface RefundTransaction extends BaseTransaction {
+    type: "refund";
+    originalTransactionId: TransactionID;
+    isTransfer: false;
+}
+
+export type Transaction =
+    | ExpenseTransaction
+    | IncomeTransaction
+    | TransferTransaction
+    | RefundTransaction;
+*/

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 import {BudgetPost, Envelope, Transaction} from "@/model";
 import useCategories from "@/hooks/Categories";
 import useBudget from "@/hooks/Budget";
@@ -49,7 +49,7 @@ export const useBudgetPage = () => {
     const averages = useAverages(envelopeSelectedTransactions, {envelopesFilter: selectedEnvelopes});
     const budgetAverages = useAverages(budgetSelectedTransactions, {envelopesFilter: selectedEnvelopes});
 
-    const groupByPost = (transactions: Transaction[]) => {
+    const groupByPost = useCallback((transactions: Transaction[]) => {
         const grouped: Partial<Record<BudgetPost['title'], Transaction[]>> = {};
         transactions.forEach(tran => {
             const post = getBudgetPostForCategory(getCategory(tran.id))?.title ?? "Unassigned";
@@ -60,7 +60,7 @@ export const useBudgetPage = () => {
             grouped[post]!.push(tran);
         });
         return grouped;
-    };
+    }, [getBudgetPostForCategory, getCategory]);
 
     const handleMonthSelect = (envelope: Envelope) => {
         const idx = envelopes.indexOf(envelope);
