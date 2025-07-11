@@ -1,0 +1,128 @@
+import React, {createElement, use, useMemo} from 'react';
+import {InsightsContext} from "@/features/insight/InsightPage";
+import {Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from 'recharts';
+import {formatCurrency, formatEnvelope} from '@/utility/datautils';
+import {Category} from '@/model';
+import {NameType, ValueType} from 'recharts/types/component/DefaultTooltipContent';
+
+
+// Use a set of distinct, soft but visually separated colors for categories
+const CATEGORY_COLORS = [
+    '#7dd3fc', // sky-300
+    '#f9a8d4', // pink-300
+    '#a7f3d0', // green-200
+    '#fcd34d', // yellow-300
+    '#c4b5fd', // purple-300
+    '#fdba74', // orange-300
+    '#fca5a5', // red-300
+    '#6ee7b7', // emerald-300
+    '#fef08a', // yellow-200
+    '#a5b4fc', // indigo-300
+    '#fbbf24', // yellow-400
+    '#f472b6', // pink-400
+    '#34d399', // green-400
+    '#818cf8', // indigo-400
+    '#f87171', // red-400
+    '#38bdf8', // sky-400
+    '#facc15', // yellow-400
+    '#a3e635', // lime-400
+    '#fb7185', // rose-400
+    '#fca5a5', // red-300
+];
+
+const getCategoryColor = (idx: number) => CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+
+const EnvelopeExpensesByCategory = () => {
+    const {transactionsByEnvelope, categoriesSortedByMonthlyCost} = use(InsightsContext);
+
+    // Collect all categories
+    const allCategories = useMemo(() => {
+        const set = new Set<Category>();
+        Object.values(transactionsByEnvelope || {}).forEach(txs => {
+            (txs || []).forEach(t => {
+                if (t.type === 'expense') set.add(t.category);
+            });
+        });
+        return Array.from(set).sort();
+    }, [transactionsByEnvelope]);
+
+    // Prepare data for recharts: [{ envelope: '2024-01', Category1: 123, Category2: 456, ... }, ...]
+    const data = useMemo(() => {
+        return Object.entries(transactionsByEnvelope || {})
+            .map(([envelope, txs]) => {
+                const row: Record<string, any> = {
+                    envelope: formatEnvelope ? formatEnvelope(envelope) : envelope
+                };
+                allCategories.forEach(cat => {
+                    row[cat] = (txs || [])
+                        .filter(t => t.type === 'expense' && t.category === cat)
+                        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+                });
+                return row;
+            })
+            .sort((a, b) => a.envelope.localeCompare(b.envelope));
+    }, [transactionsByEnvelope, allCategories]);
+
+    return (
+        <div className="flex flex-col flex-grow h-full"> {/* Use flex layout and h-full for responsive height */}
+            <h2 className="text-md font-semibold text-white">Monthly Expenses by Category</h2>
+            <div className="flex-1"> {/* Chart fills remaining space */}
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data} barCategoryGap={8} barGap={2}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#444"/>
+                        <XAxis dataKey="envelope" stroke="#ccc"/>
+                        <YAxis stroke="#ccc"/>
+                        <Tooltip
+                            content={<CustomTooltip categoriesSortedByMonthlyCost={categoriesSortedByMonthlyCost}/>}/>
+                        <Legend wrapperStyle={{color: '#e5e7eb'}}/>
+                        {allCategories.map((cat, idx) => (
+                            <Bar key={cat} dataKey={cat} fill={getCategoryColor(idx)} radius={[6, 6, 0, 0]}
+                                 shape={<CustomBar/>}/>
+                        ))}
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+    );
+}
+
+// Custom dark tooltip for recharts
+interface CustomTooltipProps extends TooltipProps<ValueType, NameType> {
+    categoriesSortedByMonthlyCost: string[];
+}
+
+const CustomTooltip = (props: CustomTooltipProps) => {
+    const {active, payload, label} = props;
+    if (active && payload && payload.length) {
+        // Sort payload descending by value for the current envelope
+        const sortedPayload = [...payload]
+            .filter(entry => typeof entry.value === 'number')
+            .sort((a, b) => (b.value as number) - (a.value as number));
+        return (
+            <div className="bg-gray-800 text-gray-100 rounded-lg shadow-lg px-4 py-2 border border-gray-700">
+                <div className="font-semibold mb-1">{label}</div>
+                {sortedPayload.map((entry, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                        <span className="inline-block w-3 h-3 rounded-full"
+                              style={{backgroundColor: entry.color}}></span>
+                        <span className="text-sm">{entry.name}: <span
+                            className="font-mono">{formatCurrency(entry.value as number)}</span></span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
+
+const CustomBar = (props: any) => {
+    // Only pass valid rect props to the DOM
+    const {x, y, width, height, fill, radius, className, style, ...rest} = props;
+    return createElement('rect', {
+        x, y, width, height, fill, rx: Array.isArray(radius) ? radius[0] : radius, className, style
+        // Do not spread ...rest to avoid passing category names or other invalid props
+    });
+};
+
+
+export default EnvelopeExpensesByCategory;

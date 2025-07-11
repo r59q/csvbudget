@@ -58,6 +58,8 @@ const IncomePage = () => {
                         className="font-semibold">next month&apos;s envelope</span> (February). This ensures your income
                     is matched to the month it is used for budgeting.</>}
             />
+
+            {/* Envelope selection chips */}
             <div className="flex flex-wrap gap-2 mb-4">
                 {envelopes && envelopes.length > 0 ? (
                     envelopes.map((env) => (
@@ -83,6 +85,7 @@ const IncomePage = () => {
                     <span className="text-gray-400 text-xs">No envelopes found</span>
                 )}
             </div>
+
             <IncomeChart averageIncome={averageIncome} chartData={chartData}/>
             <TransactionTable pageSize={20} transactions={incomeTransactionsSorted}
                               visibleColumns={["date", "text", "amount", "type", "envelope"]}/>

@@ -1,48 +1,13 @@
-import {useTransactionsContext} from "@/context/TransactionsContext";
-import useCategories from "@/hooks/Categories";
-import useAverages from "@/hooks/Averages";
-import {Category, Envelope, Transaction, TransactionID} from "@/model";
-import {formatCurrency, formatEnvelope, groupByEnvelope} from "@/utility/datautils";
-import React, {createContext, PropsWithChildren, use, useState} from "react";
+import React, {PropsWithChildren, use, useState} from "react";
+import {formatCurrency, formatEnvelope} from "@/utility/datautils";
+import CategoryInsights from "@/features/insight/CategoryInsights";
+import {InsightsContext} from "@/features/insight/InsightPage";
+import {Transaction} from "@/model";
 import SingleLineChart from "@/components/SingleLineChart";
 import TransactionTable from "@/features/transaction/TransactionTable";
 
-interface InsightsContextType {
-    getCategory: (transactionId: TransactionID) => Category;
-    transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>>;
-    categoriesSortedByMonthlyCost: Category[];
-    averages: ReturnType<typeof useAverages>;
-    envelopes: Envelope[];
-}
-
-const InsightsContext = createContext<InsightsContextType>(null!)
-
-const InsightPage = () => {
-    const {envelopeSelectedTransactions, envelopes} = useTransactionsContext();
-    const {getCategory} = useCategories();
-    const averages = useAverages(envelopeSelectedTransactions);
-
-    const transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>> = groupByEnvelope(envelopeSelectedTransactions);
-
-    // For sorting categories by average expense
-    const categoriesSortedByMonthlyCost = [...averages.categories].filter(e => e !== "Unassigned" || (e === "Unassigned" && averages.averageExpenseByCategoryPerEnvelope[e] !== 0))
-        .toSorted((a, b) => (averages.averageExpenseByCategoryPerEnvelope[a] ?? 0) - (averages.averageExpenseByCategoryPerEnvelope[b] ?? 0));
-
-    if (envelopeSelectedTransactions.length === 0) {
-        return <>NO ENVELOPES SELECTED!!</> // Todo: Show a proper message
-    }
-
-    return (
-        <InsightsContext.Provider
-            value={{getCategory, transactionsByEnvelope, categoriesSortedByMonthlyCost, averages, envelopes}}>
-            <PageView/>
-        </InsightsContext.Provider>
-    );
-};
-
-
-const PageView = () => {
-    const {transactionsByEnvelope, categoriesSortedByMonthlyCost, averages, envelopes} = use(InsightsContext);
+const InsightPageView = () => {
+    const {transactionsByEnvelope, categoriesSortedByMonthlyCost, averages, envelopes, setSelectedCategories, selectedCategories} = use(InsightsContext);
 
     return <div className={"p-2 bg-gradient-to-b from-gray-950 to-[#0a0a0a] flex flex-col gap-8 pt-4"}>
         <div className="gap-4">
@@ -123,6 +88,10 @@ const PageView = () => {
 }
 
 
+const EnvelopeInsight = ({month, transactions, categoryTotals, net, income, expenses}: MonthInsightProps) => {
+    return <MonthInsightsTable {...{month, transactions: transactions, categoryTotals, net: net, income, expenses}}/>
+};
+
 interface MonthInsightProps {
     month: string,
     transactions: Transaction[],
@@ -132,9 +101,6 @@ interface MonthInsightProps {
     expenses: number;
 }
 
-const EnvelopeInsight = ({month, transactions, categoryTotals, net, income, expenses}: MonthInsightProps) => {
-    return <MonthInsightsTable {...{month, transactions: transactions, categoryTotals, net: net, income, expenses}}/>
-};
 
 const MonthInsightsTable = ({
                                 transactions,
@@ -240,8 +206,5 @@ const InsightCard = ({children, className}: PropsWithChildren<{
     </div>
 }
 
-const CategoryInsights = () => {
-    return <></>;
-}
 
-export default InsightPage;
+export default InsightPageView;

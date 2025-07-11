@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import {TransactionsProvider} from "@/context/TransactionsContext";
-import InsightPage from "@/features/InsightPage";
+import InsightPage from "@/features/insight/InsightPage";
 
 
 const Page = () => {
