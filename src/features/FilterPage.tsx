@@ -9,6 +9,7 @@ import { FaRegEnvelopeOpen } from "react-icons/fa6";
 import { FaRegUserCircle } from "react-icons/fa";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import Chip from "@/components/Chip";
+import EnvelopeChipSelector from "@/components/EnvelopeChipSelector";
 
 const FilterPage = () => {
     const {transactions, envelopes, toggleSelectedEnvelope, isEnvelopeSelected} = useTransactionsContext();
@@ -58,25 +59,11 @@ const FilterPage = () => {
                     />
 
                     {/* envelope selection */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        {envelopes && envelopes.length > 0 ? (
-                            envelopes.map((env) => (
-                                <Chip
-                                    key={env}
-                                    label={formatEnvelope(env)}
-                                    selected={isEnvelopeSelected(env)}
-                                    onClick={() => toggleSelectedEnvelope(env)}
-                                    icon={isEnvelopeSelected(env) ? (
-                                        <span className="inline-block w-2.5 h-2.5 bg-blue-300 rounded-full mr-1" />
-                                    ) : (
-                                        <span className="inline-block w-2.5 h-2.5 bg-gray-400 rounded-full mr-1" />
-                                    )}
-                                />
-                            ))
-                        ) : (
-                            <span className="text-gray-400 text-xs">No envelopes found</span>
-                        )}
-                    </div>
+                    <EnvelopeChipSelector
+                        envelopes={envelopes}
+                        isEnvelopeSelected={isEnvelopeSelected}
+                        toggleSelectedEnvelope={toggleSelectedEnvelope}
+                    />
 
                 </div>
 
