@@ -160,6 +160,26 @@ export const useBudgetPage = () => {
         });
     }, [budgetPosts, budgetSelectedTransactions, groupByPost, budgetEnvelopes]);
 
+    const selectedEnvelopeIncomeTotal = React.useMemo(() => {
+        return selectedEnvelopes.reduce((total, envelope) => {
+            const transactions = envelopeSelectedTransactions.filter(tran => tran.envelope === envelope);
+            const income = transactions.filter(tran => tran.type === "income");
+            return total + getSum(income);
+        }, 0);
+    }, [selectedEnvelopes, envelopeSelectedTransactions]);
+
+    const selectedEnvelopeExpensesTotal = React.useMemo(() => {
+        return selectedEnvelopes.reduce((total, envelope) => {
+            const transactions = envelopeSelectedTransactions.filter(tran => tran.envelope === envelope);
+            const expenses = transactions.filter(tran => tran.type === "expense");
+            return total + getSum(expenses);
+        }, 0);
+    }, [selectedEnvelopes, envelopeSelectedTransactions]);
+
+    const selectedEnvelopeAverageIncome = React.useMemo(() => {
+        return selectedEnvelopeIncomeTotal / selectedEnvelopes.length;
+    }, [selectedEnvelopeIncomeTotal, selectedEnvelopes.length]);
+
     return {
         envelopes,
         selectedEnvelopes,
@@ -195,6 +215,9 @@ export const useBudgetPage = () => {
         handleUpdateAmount,
         handleUseExpenseAsBudget,
         averageExpenseByCategoryPerEnvelope,
-        budgetNet
+        selectedEnvelopeIncomeTotal,
+        budgetNet,
+        selectedEnvelopeExpensesTotal,
+        selectedEnvelopeAverageIncome
     };
 };

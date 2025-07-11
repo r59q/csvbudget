@@ -58,6 +58,7 @@ const BudgetPage = () => {
                             budgetEnvelopes={ctx.budgetEnvelopes}
                             budgetSelectedTransactions={ctx.budgetSelectedTransactions}
                             groupByPost={ctx.groupByPost}
+                            budgetNet={ctx.budgetNet}
                             getTransactionPost={(t => ctx.getBudgetPostForCategory(t.category))}
                         />
                     </div>
@@ -66,7 +67,7 @@ const BudgetPage = () => {
                 {/* Summary */}
                 <section className="w-full flex gap-2 flex-row">
                     <div className={"flex-1/4"}></div>
-                    <BudgetSummary budgetNet={ctx.budgetNet} averages={ctx.averages} budgetPosts={ctx.budgetPosts}/>
+                    <BudgetSummary budgetNet={ctx.budgetNet} averageIncome={ctx.selectedEnvelopeAverageIncome} averages={ctx.averages} budgetPosts={ctx.budgetPosts}/>
                     <div className={"flex-1/4"}></div>
                 </section>
             </div>

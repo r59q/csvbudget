@@ -9,6 +9,7 @@ interface Props {
     budgetSelectedTransactions: Transaction[];
     groupByPost: (transactions: Transaction[]) => Partial<Record<BudgetPost['title'], Transaction[]>>;
     getTransactionPost: (transaction: Transaction) => BudgetPost | undefined;
+    budgetNet: { title: string, net: number }[];
 }
 
 const BudgetOverview = ({
@@ -16,7 +17,8 @@ const BudgetOverview = ({
                             budgetEnvelopes,
                             budgetSelectedTransactions,
                             groupByPost,
-                            getTransactionPost
+                            getTransactionPost,
+                            budgetNet
                         }: Props) => {
     const budgetPostGroups = useMemo(() => {
         return groupByPost(budgetSelectedTransactions);
@@ -74,6 +76,14 @@ const BudgetOverview = ({
         return netMap;
     }, [budgetEnvelopes, netByEnvelopeByPost]);
 
+    // Compute totalNet from budgetNet (now an array of { title, net })
+    const totalNet = useMemo(() => {
+        return budgetNet.reduce((sum, post) => sum + post.net, 0);
+    }, [budgetNet]);
+
+    console.log(budgetNet)
+
+    throw new Error("TOTAL NET IS WRONG") // TODO: Fix this
     return (
         <>
             {budgetPosts.length === 0 ? (
@@ -81,18 +91,22 @@ const BudgetOverview = ({
             ) : (
                 <>
                     {/* Net for all posts, envelope dots summary */}
-                    <div className="flex gap-2 mb-4">
-                        {budgetEnvelopes.map((env, idx) => {
-                            const net = netByEnvelope[env] ?? 0;
-                            const color = net >= 0 ? 'bg-green-500' : 'bg-red-500';
-                            return (
-                                <span
-                                    key={env}
-                                    className={`inline-block w-3 h-3 rounded-full ${color}`}
-                                    title={`Envelope: ${formatEnvelope(env)}, Net: ${formatCurrency(net)}`}
-                                />
-                            );
-                        })}
+                    <div className="flex flex-col gap-2 mb-4">
+                        <div className={"flex gap-1"}>
+                            {budgetEnvelopes.map((env, idx) => {
+                                const net = netByEnvelope[env] ?? 0;
+                                const color = net >= 0 ? 'bg-green-500' : 'bg-red-500';
+                                return (
+                                    <span
+                                        key={env}
+                                        className={`inline-block w-3 h-3 rounded-full ${color}`}
+                                        title={`Envelope: ${formatEnvelope(env)}, Net: ${formatCurrency(net)}`}
+                                    />
+                                );
+                            })}
+                        </div>
+                        <span
+                            className={`text-gray-200 ${totalNet < 0 ? 'text-red-400' : 'text-green-400'}`}>Total Net: {formatCurrency(totalNet)}</span>
                     </div>
                     <ul className="divide-y divide-gray-700">
                         {budgetPosts.map((post, index) => {
