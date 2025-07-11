@@ -13,17 +13,17 @@ const BudgetPage = () => {
     return (
         <div className="min-h-screen text-gray-100 w-full bg-gradient-to-b from-gray-950 to-[#0a0a0a]">
             <div className="p-4 space-y-6 flex flex-col justify-center items-center flex-grow">
-                <h1 className="text-3xl font-bold">Budgeting</h1>
 
                 {/* Income Summary */}
                 <section className="w-full gap-2 flex flex-row">
                     <div className={"flex flex-1/4"}></div>
-                    <div className={"flex flex-col flex-1/3 bg-gray-800 p-4 rounded-xl"}>{/*
-                        <h2 className="text-xl font-semibold mb-2">Income Summary</h2>
-                        <p className="text-green-400 font-medium">
-                            Monthly income: AVERAGE INCOME WAS HERE formatCurrency(averageIncomePerMonth)
-                        </p>
-                    */}</div>
+                    <div className={"flex flex-col justify-evenly flex-1/3 bg-gray-800 p-4 rounded-xl"}>
+                        <h1 className="text-3xl font-bold text-center">Budgeting</h1>
+                        <div>
+                            <p>Set and track how well you follow your budget.</p>
+                            <p>Create budget posts and map expense categories to budget posts.</p>
+                        </div>
+                    </div>
 
                     {/* Budget Envelope selection */}
                     <BudgetEnvelopeSelector
@@ -65,7 +65,7 @@ const BudgetPage = () => {
 
                 {/* Summary */}
                 <section className="w-full flex gap-2 flex-row">
-                    <div className={"bg-gray-800 p-4 rounded-xl flex-1/4"}></div>
+                    <div className={"flex-1/4"}></div>
                     <BudgetSummary budgetNet={ctx.budgetNet} averages={ctx.averages} budgetPosts={ctx.budgetPosts}/>
                     <div className={"flex-1/4"}></div>
                 </section>
