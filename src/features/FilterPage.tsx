@@ -8,6 +8,7 @@ import InfoBox from "@/components/InfoBox";
 import { FaRegEnvelopeOpen } from "react-icons/fa6";
 import { FaRegUserCircle } from "react-icons/fa";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
+import Chip from "@/components/Chip";
 
 const FilterPage = () => {
     const {transactions, envelopes, toggleSelectedEnvelope, isEnvelopeSelected} = useTransactionsContext();
@@ -55,31 +56,28 @@ const FilterPage = () => {
                         secondary={<>For example, if your data covers 1.5 months, select just the full month to avoid skewed averages. This ensures only complete months are used for your envelope (monthly) statistics.</>}
                         tip={<><span className="font-semibold">Tip:</span> Selecting all but the last and earliest envelope is a good rule of thumb to ensure your averages are accurate. These envelopes are often incomplete and can distort your monthly average.</>}
                     />
+
+                    {/* envelope selection */}
                     <div className="flex flex-wrap gap-2 mb-4">
                         {envelopes && envelopes.length > 0 ? (
                             envelopes.map((env) => (
-                                <button
+                                <Chip
                                     key={env}
-                                    type="button"
+                                    label={formatEnvelope(env)}
+                                    selected={isEnvelopeSelected(env)}
                                     onClick={() => toggleSelectedEnvelope(env)}
-                                    className={`transition-colors duration-150 flex items-center gap-2 px-4 py-1 rounded-full border text-xs font-semibold shadow-sm select-none focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
-                                ${isEnvelopeSelected(env)
-                                        ? 'bg-blue-600 text-white border-blue-500 shadow-lg scale-105'
-                                        : 'bg-gray-800 text-gray-200 border-gray-600 hover:bg-blue-900 hover:text-white'}`}
-                                    aria-pressed={isEnvelopeSelected(env)}
-                                >
-                                    {isEnvelopeSelected(env) ? (
-                                        <span className="inline-block w-2.5 h-2.5 bg-blue-300 rounded-full mr-1"/>
+                                    icon={isEnvelopeSelected(env) ? (
+                                        <span className="inline-block w-2.5 h-2.5 bg-blue-300 rounded-full mr-1" />
                                     ) : (
-                                        <span className="inline-block w-2.5 h-2.5 bg-gray-400 rounded-full mr-1"/>
+                                        <span className="inline-block w-2.5 h-2.5 bg-gray-400 rounded-full mr-1" />
                                     )}
-                                    {formatEnvelope(env)}
-                                </button>
+                                />
                             ))
                         ) : (
                             <span className="text-gray-400 text-xs">No envelopes found</span>
                         )}
                     </div>
+
                 </div>
 
                 <div>
@@ -237,4 +235,3 @@ const FilterPage = () => {
 };
 
 export default FilterPage;
-

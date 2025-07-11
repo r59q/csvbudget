@@ -6,6 +6,7 @@ import TransactionTable from "@/features/transaction/TransactionTable";
 import InfoBox from "@/components/InfoBox";
 import {FaRegEnvelopeOpen} from "react-icons/fa6";
 import useSelectedEnvelopes from "@/hooks/useSelectedEnvelopes";
+import Chip from "@/components/Chip";
 
 const IncomePage = () => {
     const {transactions, envelopes, incomeTransactionsGroupedByEnvelope} = useTransactionsContext();
@@ -63,23 +64,17 @@ const IncomePage = () => {
             <div className="flex flex-wrap gap-2 mb-4">
                 {envelopes && envelopes.length > 0 ? (
                     envelopes.map((env) => (
-                        <button
+                        <Chip
                             key={env}
-                            type="button"
+                            label={formatEnvelope(env)}
+                            selected={isEnvelopeSelected(env)}
                             onClick={() => toggleSelectedEnvelope(env)}
-                            className={`transition-colors duration-150 flex items-center gap-2 px-4 py-1 rounded-full border text-xs font-semibold shadow-sm select-none focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
-                                ${isEnvelopeSelected(env)
-                                ? 'bg-blue-600 text-white border-blue-500 shadow-lg scale-105'
-                                : 'bg-gray-800 text-gray-200 border-gray-600 hover:bg-blue-900 hover:text-white'}`}
-                            aria-pressed={isEnvelopeSelected(env)}
-                        >
-                            {isEnvelopeSelected(env) ? (
-                                <span className="inline-block w-2.5 h-2.5 bg-blue-300 rounded-full mr-1"/>
+                            icon={isEnvelopeSelected(env) ? (
+                                <span className="inline-block w-2.5 h-2.5 bg-blue-300 rounded-full mr-1" />
                             ) : (
-                                <span className="inline-block w-2.5 h-2.5 bg-gray-400 rounded-full mr-1"/>
+                                <span className="inline-block w-2.5 h-2.5 bg-gray-400 rounded-full mr-1" />
                             )}
-                            {formatEnvelope(env)}
-                        </button>
+                        />
                     ))
                 ) : (
                     <span className="text-gray-400 text-xs">No envelopes found</span>

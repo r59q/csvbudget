@@ -21,7 +21,6 @@ export const InsightsContext = createContext<InsightsContextType>(null!)
 const InsightPage = () => {
     const {envelopeSelectedTransactions, envelopes} = useTransactionsContext();
     const {getCategory} = useCategories();
-    const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
     const averages = useAverages(envelopeSelectedTransactions);
 
     const transactionsByEnvelope: Partial<Record<Envelope, Transaction[]>> = groupByEnvelope(envelopeSelectedTransactions);
@@ -29,6 +28,8 @@ const InsightPage = () => {
     // For sorting categories by average expense
     const categoriesSortedByMonthlyCost = [...averages.categories].filter(e => e !== "Unassigned" || (e === "Unassigned" && averages.averageExpenseByCategoryPerEnvelope[e] !== 0))
         .toSorted((a, b) => (averages.averageExpenseByCategoryPerEnvelope[a] ?? 0) - (averages.averageExpenseByCategoryPerEnvelope[b] ?? 0));
+
+    const [selectedCategories, setSelectedCategories] = useState<Category[]>(categoriesSortedByMonthlyCost);
 
     if (envelopeSelectedTransactions.length === 0) {
         return <>NO ENVELOPES SELECTED!!</> // Todo: Show a proper message

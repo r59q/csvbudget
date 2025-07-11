@@ -5,6 +5,7 @@ import {InsightsContext} from "@/features/insight/InsightPage";
 import {Transaction} from "@/model";
 import SingleLineChart from "@/components/SingleLineChart";
 import TransactionTable from "@/features/transaction/TransactionTable";
+import Chip from "@/components/Chip";
 
 const InsightPageView = () => {
     const {transactionsByEnvelope, categoriesSortedByMonthlyCost, averages, envelopes, setSelectedCategories, selectedCategories} = use(InsightsContext);
@@ -57,7 +58,25 @@ const InsightPageView = () => {
                 </InsightCard>
 
                 <InsightCard className={"flex-grow"}>
-                    <CategoryInsights/>
+                    <div className={"flex flex-wrap gap-2 pb-2"}>
+                        {categoriesSortedByMonthlyCost.map((category) => (
+                            <Chip
+                                key={category}
+                                label={category}
+                                selected={selectedCategories.includes(category)}
+                                onClick={() => {
+                                    if (selectedCategories.includes(category)) {
+                                        setSelectedCategories(selectedCategories.filter(c => c !== category));
+                                    } else {
+                                        setSelectedCategories([...selectedCategories, category]);
+                                    }
+                                }}
+                            />
+                        ))}
+                    </div>
+                    <div className={"flex flex-1 flex-grow"}>
+                        <CategoryInsights/>
+                    </div>
                 </InsightCard>
 
             </div>
@@ -201,7 +220,7 @@ const getHeatColor = (value: number, maxAbs: number) => {
 const InsightCard = ({children, className}: PropsWithChildren<{
     className?: React.HTMLAttributes<HTMLDivElement>['className']
 }>) => {
-    return <div className={`bg-zinc-900 text-zinc-100 p-6 rounded-2xl shadow-xl space-y-6 ${className}`}>
+    return <div className={`bg-zinc-900 text-zinc-100 p-4 flex flex-col rounded-2xl shadow-xl ${className}`}>
         {children}
     </div>
 }
