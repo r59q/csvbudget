@@ -1,7 +1,7 @@
 import React from "react";
-import {CSVFile, CSVSchemas} from "@/model";
-import { MdInsertDriveFile, MdDelete, MdRefresh } from "react-icons/md";
-import {getSchemaKeyFromHeaders, SchemaKey} from "@/utility/csvutils";
+import {CSVFile} from "@/model";
+import {MdDelete, MdInsertDriveFile, MdRefresh} from "react-icons/md";
+import {SchemaKey} from "@/utility/csvutils";
 
 interface FileSchemasListProps {
     csvFiles: CSVFile[];
@@ -9,11 +9,11 @@ interface FileSchemasListProps {
     onReset: (schemaKey: SchemaKey) => void;
 }
 
-const CSVFileList: React.FC<FileSchemasListProps> = ({ csvFiles, onRemove, onReset }) => {
+const CSVFileList: React.FC<FileSchemasListProps> = ({csvFiles, onRemove, onReset}) => {
 
     return <div className="p-6 rounded-lg border border-gray-700 bg-gray-900 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <MdInsertDriveFile className="text-blue-500" size={22} /> Imported Files
+        <h2 className="text-xl font-semibold mb-4 text-gray-100 flex items-center gap-2">
+            <MdInsertDriveFile className="text-blue-500" size={22}/> Imported Files
         </h2>
         {Object.keys(csvFiles).length === 0 ? (
             <p className="text-sm text-gray-500">No files imported</p>
@@ -23,26 +23,28 @@ const CSVFileList: React.FC<FileSchemasListProps> = ({ csvFiles, onRemove, onRes
                     return (
                         <li
                             key={file.name}
-                            className="flex items-center justify-between p-3 bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 transition">
+                            className="flex items-center justify-between p-3 bg-gray-800 rounded-lg shadow-sm border border-gray-600 hover:bg-gray-600 transition">
                             <div className="flex items-center gap-3">
-                                <MdInsertDriveFile className="text-blue-400" size={20} />
-                                <span className="font-medium text-gray-800 dark:text-gray-100 text-base">{file.name}</span>
-                                <span className="ml-2 px-2 py-0.5 text-xs rounded bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300">{file.schema.headers.length} columns</span>
+                                <MdInsertDriveFile className="text-blue-400" size={20}/>
+                                <span
+                                    className="font-medium text-gray-100 text-base">{file.name}</span>
+                                <span
+                                    className="ml-2 px-2 py-0.5 text-xs rounded bg-gray-600 text-gray-300">{file.schema.headers.length} columns</span>
                             </div>
                             <div className="flex gap-2">
                                 <button
-                                    className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-white border border-blue-300 dark:border-blue-500 rounded px-3 py-1 bg-white dark:bg-gray-800 hover:bg-blue-500 dark:hover:bg-blue-600 transition"
+                                    className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-white border border-blue-500 rounded px-3 py-1 bg-gray-800 hover:bg-blue-600 transition"
                                     onClick={() => onReset(file.schemaKey)}
                                     title="Reset schema mapping"
                                 >
-                                    <MdRefresh size={16} /> Reset
+                                    <MdRefresh size={16}/> Reset
                                 </button>
                                 <button
-                                    className="flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-white border border-red-300 dark:border-red-500 rounded px-3 py-1 bg-white dark:bg-gray-800 hover:bg-red-500 dark:hover:bg-red-600 transition"
+                                    className="flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-white border border-red-500 rounded px-3 py-1 bg-gray-800 hover:bg-red-600 transition"
                                     onClick={() => onRemove(file.name)}
                                     title="Remove file and mapping"
                                 >
-                                    <MdDelete size={16} /> Remove
+                                    <MdDelete size={16}/> Remove
                                 </button>
                             </div>
                         </li>

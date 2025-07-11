@@ -28,7 +28,7 @@ const CSVImport = ({ onFileImport }: CSVImportProps) => {
     <div className="p-6 rounded-lg border border-gray-700 bg-gray-900 shadow-sm flex flex-col items-center">
       <div className="flex self-start gap-2 mb-4">
         <MdFileDownload className="text-blue-500" size={28} />
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Import Budget CSVs</h2>
+        <h2 className="text-xl font-semibold text-gray-100">Import Budget CSVs</h2>
       </div>
       <label
         className="w-full flex flex-col items-center px-4 py-6 bg-gray-800 text-blue-600 rounded-lg shadow-md tracking-wide uppercase border border-blue-300 cursor-pointer hover:bg-gray-700 transition mb-4"

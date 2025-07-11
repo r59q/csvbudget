@@ -7,25 +7,25 @@ const subsections = [
     {
         title: "Import Your CSVs",
         text: "Easily import your transactions in form of CSV files. This tool helps you convert your data to a financial overview.",
-        icon: <FaFileCsv size={64} className="text-blue-500 dark:text-blue-400"/>,
+        icon: <FaFileCsv size={64} className="text-blue-400"/>,
         imgRight: false,
     },
     {
         title: "Visualize Your Finances",
         text: "See your income, expenses, and trends with clear charts and summaries. Get instant insights into your spending habits.",
-        icon: <FaChartBar size={64} className="text-green-500 dark:text-green-400"/>,
+        icon: <FaChartBar size={64} className="text-green-400"/>,
         imgRight: true,
     },
     {
         title: "Set Budgets & Goals",
         text: "Create envelopes, set monthly budgets, and track your progress. Stay on top of your financial goals with ease.",
-        icon: <FaWallet size={64} className="text-purple-500 dark:text-purple-400"/>,
+        icon: <FaWallet size={64} className="text-purple-400"/>,
         imgRight: false,
     },
     {
         title: "100% Private By Design",
         text: "Your data never leaves your device. CSV Budget uses no cloud infrastructure, no tracking, and stores all data securely in your browser's local storage. Enjoy full privacy and peace of mind.",
-        icon: <MdOutlinePrivacyTip size={64} className="text-green-600 dark:text-green-300"/>,
+        icon: <MdOutlinePrivacyTip size={64} className="text-green-300"/>,
         imgRight: true,
     },
 ];
@@ -60,7 +60,7 @@ const HomePage = () => {
                         <h2 className="text-2xl font-semibold mb-2 text-gray-100">
                             {section.title}
                         </h2>
-                        <p className="text-gray-700 dark:text-gray-300 text-base sm:text-lg">
+                        <p className="text-gray-300 text-base sm:text-lg">
                             {section.text}
                         </p>
                     </div>

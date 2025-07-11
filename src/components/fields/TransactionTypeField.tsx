@@ -79,7 +79,7 @@ const TransactionTypeField: React.FC<MappingFieldProps> = ({transaction}) => {
                     return (
                         <button
                             key={opt}
-                            className={`w-10 h-10 flex flex-col items-center justify-center rounded-md border transition-colors text-xl relative group ${transaction.type === opt ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-400 dark:border-gray-600 hover:bg-blue-100 dark:hover:bg-blue-800'}`}
+                            className={`w-10 h-10 flex flex-col items-center justify-center rounded-md border transition-colors text-xl relative group ${transaction.type === opt ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-700 text-gray-100 border-gray-600 hover:bg-blue-800'}`}
                             onClick={() => handleTypeChange(opt)}
                             type="button"
                         >
@@ -94,7 +94,7 @@ const TransactionTypeField: React.FC<MappingFieldProps> = ({transaction}) => {
             {showDialog && (
                 <BackdropBlur>
                     <div
-                        className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg flex flex-col items-center gap-4 max-w-lg w-full">
+                        className="bg-gray-900 p-6 rounded shadow-lg flex flex-col items-center gap-4 max-w-lg w-full">
                         <div>Are you sure you want to change the transaction type to <b>{pendingType}</b> for the
                             selected transactions?
                         </div>

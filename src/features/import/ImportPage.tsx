@@ -59,7 +59,7 @@ const ImportPage = () => {
             </div>
             {/* Separation line and section for transactions table */}
             <div className="w-full flex justify-center my-10">
-                <div className="w-2/3 border-t border-gray-300 dark:border-gray-700"></div>
+                <div className="w-2/3 border-t border-gray-700"></div>
             </div>
             <div className={"px-4 w-full"}>
                 <TransactionsSection/>

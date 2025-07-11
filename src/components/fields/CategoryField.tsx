@@ -209,7 +209,7 @@ const CategoryAssignConfirmDialog: React.FC<CategoryAssignConfirmDialogProps> = 
 
     return (
         <BackdropBlur>
-            <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg flex flex-col items-center gap-4 max-w-lg w-full">
+            <div className="bg-gray-900 p-6 rounded shadow-lg flex flex-col items-center gap-4 max-w-lg w-full">
                 <div>Are you sure you want to assign the category <b>{pendingCategory}</b> to the selected transactions?</div>
                 <TransactionSelectTable
                     transactions={allTransactions}

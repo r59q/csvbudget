@@ -41,8 +41,8 @@ const RefundLinkDialog: React.FC<RefundLinkDialogProps> = ({
     return (
         <BackdropBlur>
             <div
-                className="bg-gray-50 dark:bg-gray-900 p-6 rounded shadow-2xl flex flex-col items-center gap-4 max-w-2xl w-full border-2 border-gray-400">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">Link Refund to Original
+                className="bg-gray-900 p-6 rounded shadow-2xl flex flex-col items-center gap-4 max-w-2xl w-full border-2 border-gray-400">
+                <h2 className="text-lg font-bold text-gray-200">Link Refund to Original
                     Transaction</h2>
                 <input
                     className="w-full p-2 border rounded mb-2 text-gray-200"
@@ -52,9 +52,9 @@ const RefundLinkDialog: React.FC<RefundLinkDialogProps> = ({
                     autoFocus
                 />
                 <div className="max-h-80 overflow-y-auto w-full">
-                    <table className="w-full text-xs border border-gray-700 bg-gray-100 dark:bg-gray-800 rounded">
+                    <table className="w-full text-xs border border-gray-700 bg-gray-800 rounded">
                         <thead>
-                        <tr className="bg-gray-200 dark:bg-gray-700">
+                        <tr className="bg-gray-700">
                             <th className="p-1 border">Select</th>
                             <th className="p-1 border">ID</th>
                             <th className="p-1 border">Date</th>
@@ -67,8 +67,8 @@ const RefundLinkDialog: React.FC<RefundLinkDialogProps> = ({
                             <tr
                                 key={t.id}
                                 className={
-                                    (selectedId === t.id ? 'bg-gray-300 dark:bg-gray-600 ' : '') +
-                                    'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700'
+                                    (selectedId === t.id ? 'bg-gray-600 ' : '') +
+                                    'cursor-pointer hover:bg-gray-700'
                                 }
                                 onClick={() => setSelectedId(selectedId === t.id ? null : t.id)}>
                                 <td className="p-1 border text-center" onClick={e => e.stopPropagation()}>

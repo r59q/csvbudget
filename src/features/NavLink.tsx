@@ -17,9 +17,9 @@ const NavLink = ({ href, icon, activeColor, inactiveColor, border, warning, chil
 
     const base =
         'text-base font-medium px-3 py-1 rounded transition-colors flex items-center gap-1 select-none';
-    const active = activeColor || 'bg-blue-200 dark:bg-blue-700 text-blue-900 dark:text-blue-100';
-    const inactive = inactiveColor || 'hover:bg-blue-100 dark:hover:bg-blue-800';
-    const borderClass = border ? 'border border-blue-400 dark:border-blue-600' : '';
+    const active = activeColor || 'bg-blue-700 text-blue-100';
+    const inactive = inactiveColor || 'hover:bg-blue-800';
+    const borderClass = border ? 'border border-blue-600' : '';
     const className = [
         base,
         isActive ? active : inactive,
