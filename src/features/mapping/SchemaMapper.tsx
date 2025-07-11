@@ -9,8 +9,11 @@ interface Props {
     onSaveMapping: (mapping: ColumnMapping, schemaKey: SchemaKey) => void;
 }
 
+/**
+ * SchemaMapper allows the user to map columns from their imported CSV file to the application's required schema fields.
+ * The user should select which CSV column corresponds to each required field, then click 'Save Mapping' to continue.
+ */
 const SchemaMapper = ({unmappedSchema, onSaveMapping}: Props) => {
-    const {currency, setCurrency} = useGlobalContext();
     const [mapping, setMapping] = useState<Partial<ColumnMapping>>({});
 
     const handleMappingChange = (target: keyof SchemaColumnMapping, source: string) => {
@@ -21,6 +24,7 @@ const SchemaMapper = ({unmappedSchema, onSaveMapping}: Props) => {
     return <>
         <div className={"bg-gray-900 p-4 rounded-md flex flex-col gap-4"}>
             <h1 className={"text-lg"}>Describe your CSV</h1>
+            <p className="max-w-90 text-gray-400 text-sm">Map each required field to the corresponding column in your CSV file. When finished, click <b>Save Mapping</b> to continue.</p>
             <table className="w-full border text-sm">
                 <thead>
                 <tr className="bg-gray-950">

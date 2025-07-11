@@ -90,6 +90,20 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
         }
     };
 
+    const getPlaceholderText = () => {
+        if (transaction.type === 'expense') {
+            return 'Add or select category';
+        }
+        return transaction.type || '';
+    }
+
+    const getTitleText = () => {
+        if (transaction.type === 'expense') {
+            return 'Select or add a category for this expense';
+        }
+        return transaction.type ? `Transaction type: ${transaction.type}` : '';
+    }
+
     return (
         <>
             <div className="relative w-full flex flex-row">
@@ -99,7 +113,9 @@ const CategoryField: React.FC<CategoryFieldProps> = ({transaction}) => {
                     onChange={handleInputChange}
                     onFocus={() => setShowDropdown(true)}
                     onBlur={handleInputBlur}
-                    placeholder="Add or select category"
+                    title={getTitleText()}
+                    disabled={transaction.type === "transfer" || transaction.type === "refund" || transaction.type === "income"}
+                    placeholder={getPlaceholderText()}
                     list="category-list"
                 />
 

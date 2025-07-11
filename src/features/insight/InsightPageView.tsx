@@ -22,7 +22,7 @@ const InsightPageView = () => {
 
     return <div className={"p-2 bg-gradient-to-b from-gray-950 to-[#0a0a0a] flex flex-col gap-8"}>
         <div className="gap-4">
-            <div className={"flex flex-row gap-4"}>
+            <div className={"flex flex-row gap-4 min-h-[525px]"}>
                 <InsightCard>
                     {/* Section: Expenses */}
                     <section>
@@ -130,6 +130,7 @@ const MonthInsightsTable = ({
     const [open, setOpen] = useState(false);
     const expenseTransactions = transactions.filter(tran => tran.type === "income" || tran.type === "expense")
         .toSorted((a, b) => a.date.valueOf() - b.date.valueOf());
+    const formatCurrency = useFormatCurrency();
 
     let balance = 0;
     const burndownChart = expenseTransactions.map((tran) => {
@@ -143,14 +144,29 @@ const MonthInsightsTable = ({
     return (
         <div className="rounded-xl shadow p-4 mb-6 bg-gray-800">
             <button
-                className="flex items-center justify-between w-full text-left text-lg font-semibold text-gray-300 hover:text-white"
-                onClick={() => setOpen(!open)}>
-                <span className={"text-sm"}>Transactions</span>
-                <div className={"items-center flex flex-row gap-8"}>
-                    <span className={"text-green-600"}>{income}</span>
-                    <span className={"text-red-600"}>{expenses}</span>
-                    <span className={"text-blue-600"}>{income + expenses}</span>
-                    <span className="text-sm">{open ? "▼" : "►"}</span>
+                className="flex items-center justify-between w-full text-left text-lg font-semibold bg-gray-800 text-gray-100 hover:bg-gray-700 hover:text-white rounded-2xl shadow px-5 py-2 transition-all duration-200 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                onClick={() => setOpen(!open)}
+            >
+                <span className="flex items-center gap-2 text-base font-semibold tracking-wide">
+                    <span className="inline-block w-2 h-2 rounded-full bg-sky-300 animate-pulse shadow" />
+                    Transactions
+                </span>
+                <div className="flex flex-row gap-6 items-center">
+                    <span className="flex items-center gap-1 text-emerald-500 font-medium text-base">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m0 0l-3-3m3 3l3-3"/></svg>
+                        {formatCurrency(income)}
+                    </span>
+                    <span className="flex items-center gap-1 text-rose-500 font-medium text-base">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 16V8m0 0l-3 3m3-3l3 3"/></svg>
+                        {formatCurrency(expenses)}
+                    </span>
+                    <span className="flex items-center gap-1 text-cyan-600 font-medium text-base">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14"/></svg>
+                        {formatCurrency(income + expenses)}
+                    </span>
+                    <span className="ml-4 text-xl transition-transform duration-200">
+                        {open ? <span className="rotate-180">▼</span> : <span>►</span>}
+                    </span>
                 </div>
             </button>
 
