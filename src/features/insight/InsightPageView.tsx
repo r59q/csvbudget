@@ -1,11 +1,12 @@
 import React, {PropsWithChildren, use, useState} from "react";
-import {formatCurrency, formatEnvelope} from "@/utility/datautils";
 import CategoryInsights from "@/features/insight/CategoryInsights";
 import {InsightsContext} from "@/features/insight/InsightPage";
 import {Transaction} from "@/model";
 import SingleLineChart from "@/components/SingleLineChart";
 import TransactionTable from "@/features/transaction/TransactionTable";
 import CategoryChipSelector from "@/features/insight/CategoryChipSelector";
+import useFormatCurrency from "@/hooks/FormatCurrency";
+import {formatEnvelope} from "@/utility/datautils";
 
 const InsightPageView = () => {
     const {
@@ -16,6 +17,8 @@ const InsightPageView = () => {
         setSelectedCategories,
         selectedCategories
     } = use(InsightsContext);
+
+    const formatCurrency = useFormatCurrency();
 
     return <div className={"p-2 bg-gradient-to-b from-gray-950 to-[#0a0a0a] flex flex-col gap-8"}>
         <div className="gap-4">
@@ -181,6 +184,7 @@ const MonthInsightsTableTotals = ({
                                   }: MonthInsightsTableTotalsProps) => {
     const sorted = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
     const maxAbs = Math.max(...Object.values(categoryTotals).map(Math.abs), 1); // Avoid div/0
+    const formatCurrency = useFormatCurrency();
 
     return (
         <>

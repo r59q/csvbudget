@@ -1,8 +1,8 @@
 import React, {use, useMemo} from 'react';
 import {InsightsContext} from "@/features/insight/InsightPage";
 import {Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
-import {formatCurrency} from '@/utility/datautils';
 import {getCategoryColorForName} from '@/utility/categoryColors';
+import useFormatCurrency from "@/hooks/FormatCurrency";
 
 interface CustomTooltipProps {
     active?: boolean;
@@ -14,6 +14,7 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip = ({active, payload, label}: CustomTooltipProps) => {
+    const formatCurrency = useFormatCurrency();
     if (active && payload && payload.length) {
         return (
             <div className="bg-gray-800 text-gray-100 rounded-lg shadow-lg px-4 py-2 border border-gray-700">
@@ -31,6 +32,7 @@ const CustomTooltip = ({active, payload, label}: CustomTooltipProps) => {
 
 const ExpensesByCategory = () => {
     const {categoriesSortedByMonthlyCost, averages, selectedCategories} = use(InsightsContext);
+    const formatCurrency = useFormatCurrency();
     // Prepare data for recharts: [{ category: string, average: number }]
     const data = useMemo(() =>
         categoriesSortedByMonthlyCost

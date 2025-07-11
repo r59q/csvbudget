@@ -5,13 +5,6 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 
 dayjs.extend(customParseFormat)
 
-export const formatCurrency = (amount: number) =>
-    amount.toLocaleString("da-DK", {
-        style: "currency",
-        currency: "DKK",
-        minimumFractionDigits: 2,
-    });
-
 export const advancedFilters = (row: Transaction) => {
     const parsedFilters: string[] = getAdvancedFiltersData().load();
     if (parsedFilters.length === 0) return true;

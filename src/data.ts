@@ -4,8 +4,13 @@ import {
     BudgetPost,
     Category,
     CategoryBudgetPostMap,
-    CSVFile, Envelope,
-    EnvelopeMap, RawCSV, TransactionCategoryMap, TransactionID, TransactionLinkDescriptor, TransactionType
+    Envelope,
+    EnvelopeMap,
+    RawCSV,
+    TransactionCategoryMap,
+    TransactionID,
+    TransactionLinkDescriptor,
+    TransactionType
 } from "@/model";
 import {SchemaColumnMapping} from "@/utility/csvutils";
 
@@ -27,6 +32,7 @@ const CSV_MAPPING_KEY = "csv_mappings";
 const TRANSACTION_LINKS_KEY = "transaction_links";
 const TRANSACTION_TYPE_MAP_KEY = "transaction_type_map";
 const SELECTED_ENVELOPES_KEY = "selected_envelopes";
+const CURRENCY_KEY = "currency";
 
 /// Used for resetting data
 export const LOCALSTORAGE_KEYS = [
@@ -43,6 +49,7 @@ export const LOCALSTORAGE_KEYS = [
     TRANSACTION_LINKS_KEY,
     TRANSACTION_TYPE_MAP_KEY,
     SELECTED_ENVELOPES_KEY,
+    CURRENCY_KEY,
 ];
 
 export const getCSVFilesData = (): StoredDataWrapper<RawCSV[]> => {
@@ -284,6 +291,23 @@ export const getSelectedEnvelopesData = (): StoredDataWrapper<Envelope[]> => {
         save: (data: Envelope[]) => {
             localStorage.setItem(SELECTED_ENVELOPES_KEY, JSON.stringify(data));
             return data;
+        }
+    };
+}
+
+export const getCurrencyData = (): StoredDataWrapper<string> => {
+    return {
+        load: () => {
+            return localStorage.getItem(CURRENCY_KEY) ?? "EUR";
+        },
+        save: (currency: string) => {
+            try {
+                localStorage.setItem(CURRENCY_KEY, currency);
+            } catch (e) {
+                console.error(e);
+                return "EUR";
+            }
+            return currency;
         }
     };
 }

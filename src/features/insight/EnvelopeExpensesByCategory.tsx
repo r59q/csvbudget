@@ -1,9 +1,10 @@
 import React, {createElement, use, useMemo} from 'react';
 import {InsightsContext} from "@/features/insight/InsightPage";
 import {Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from 'recharts';
-import {formatCurrency, formatEnvelope} from '@/utility/datautils';
 import {NameType, ValueType} from 'recharts/types/component/DefaultTooltipContent';
 import {getCategoryColorForName} from '@/utility/categoryColors';
+import useFormatCurrency from "@/hooks/FormatCurrency";
+import {formatEnvelope} from "@/utility/datautils";
 
 const EnvelopeExpensesByCategory = () => {
     const {transactionsByEnvelope, categoriesSortedByMonthlyCost, selectedCategories} = use(InsightsContext);
@@ -62,6 +63,7 @@ interface CustomTooltipProps extends TooltipProps<ValueType, NameType> {
 }
 
 const CustomTooltip = (props: CustomTooltipProps) => {
+    const formatCurrency = useFormatCurrency();
     const {active, payload, label} = props;
     if (active && payload && payload.length) {
         // Sort payload descending by value for the current envelope

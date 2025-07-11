@@ -1,6 +1,7 @@
 import React, {useMemo} from 'react';
 import {BudgetPost, Envelope, Transaction} from "@/model";
-import {formatCurrency, formatEnvelope, getExpenses} from "@/utility/datautils";
+import {formatEnvelope, getExpenses} from "@/utility/datautils";
+import useFormatCurrency from "@/hooks/FormatCurrency";
 
 interface Props {
     budgetPosts: BudgetPost[];
@@ -21,6 +22,8 @@ const BudgetOverview = ({
         return groupByPost(budgetSelectedTransactions);
     }, [budgetSelectedTransactions, groupByPost]);
 
+    const formatCurrency = useFormatCurrency();
+
     const transactionsByEnvelope = useMemo(() => {
         const envelopeMap: Partial<Record<Envelope, Transaction[]>> = {};
         budgetEnvelopes.forEach(env => {
@@ -33,25 +36,6 @@ const BudgetOverview = ({
         });
         return envelopeMap;
     }, [budgetSelectedTransactions, budgetEnvelopes]);
-
-    const transactionsByEnvelopeAndPost = useMemo(() => {
-        const envelopePostMap: Partial<Record<Envelope, Partial<Record<BudgetPost['title'], Transaction[]>>>> = {};
-        budgetEnvelopes.forEach(env => {
-            envelopePostMap[env] = {};
-            budgetPosts.forEach(post => {
-                envelopePostMap[env]![post.title] = [];
-            });
-        });
-
-        budgetSelectedTransactions.forEach(tran => {
-            const post = getTransactionPost(tran);
-            if (post && envelopePostMap[tran.envelope]) {
-                envelopePostMap[tran.envelope]![post.title]?.push(tran);
-            }
-        });
-
-        return envelopePostMap;
-    }, [budgetSelectedTransactions, budgetEnvelopes, budgetPosts, getTransactionPost]);
 
     const netByEnvelopeByPost = useMemo(() => {
         const netMap: Partial<Record<Envelope, Partial<Record<BudgetPost['title'], number>>>> = {};

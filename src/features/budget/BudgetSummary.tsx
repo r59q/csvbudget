@@ -1,6 +1,6 @@
 import React from "react";
-import {formatCurrency} from "@/utility/datautils";
 import {BudgetPost} from "@/model";
+import useFormatCurrency from "@/hooks/FormatCurrency";
 
 interface BudgetSummaryProps {
     budgetNet: { title: string, net: number }[];
@@ -15,6 +15,7 @@ interface BudgetSummaryProps {
 const BudgetSummary = ({budgetNet, averages, budgetPosts}: BudgetSummaryProps) => {
     const headroom = budgetPosts.reduce((sum, post) => sum + post.amount, 0) + averages.averageExpensePerEnvelope;
     const totalNet = budgetNet.reduce((sum, item) => sum + item.net, 0);
+    const formatCurrency = useFormatCurrency();
     return (
         <div className={"bg-gray-800 p-4 rounded-xl flex-1/3"}>
             <h2 className="text-xl font-semibold mb-2">Summary</h2>

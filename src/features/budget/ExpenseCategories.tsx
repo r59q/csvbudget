@@ -1,6 +1,6 @@
 import {BudgetPost} from "@/model";
-import {formatCurrency} from "@/utility/datautils";
 import React from "react";
+import useFormatCurrency from "@/hooks/FormatCurrency";
 
 interface Props {
     averageExpenseByCategoryPerEnvelope: Record<string, number>;
@@ -15,6 +15,7 @@ const ExpenseCategories = ({
                                setCategoryBudgetMapping,
                                budgetPosts
                            }: Props) => {
+    const formatCurrency = useFormatCurrency();
     return (
         <div className={"bg-gray-800 p-4 rounded-xl flex flex-col gap-1 divide-y flex-1/4"}>
             <h2 className="text-xl font-semibold mb-2">Expense Categories</h2>

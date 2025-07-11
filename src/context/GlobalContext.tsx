@@ -6,6 +6,7 @@ import {ColumnMapping, SchemaColumnMapping, SchemaKey} from "@/utility/csvutils"
 import useAccountMapping from "@/hooks/AccountMapping";
 import useOwnedAccounts from "@/hooks/OwnedAccount";
 import useCategories, {UseCategoriesResult} from "@/hooks/Categories";
+import useCurrency from "@/hooks/Currency";
 
 export interface GlobalContextType extends UseCategoriesResult {
     user: { name: string; email: string } | null;
@@ -23,6 +24,8 @@ export interface GlobalContextType extends UseCategoriesResult {
     removeOwnedAccount: (accountNumber: AccountNumber) => void;
     getAccountMapping: (accountNumber: AccountNumber) => string | AccountNumber;
     handleRemoveMapping: (schemaKey: SchemaKey) => void;
+    currency: string;
+    setCurrency: (currency: string) => void;
 }
 
 export const GlobalContext = createContext<GlobalContextType>(undefined!);
@@ -39,6 +42,7 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
     const {accountValueMappings, addAccountMapping, removeAccountMapping, getAccountMapping} = useAccountMapping();
     const {isAccountOwned, addOwnedAccount, removeOwnedAccount} = useOwnedAccounts();
     const categories = useCategories();
+    const currency = useCurrency();
     const {
         unmappedSchemas,
         handleSaveMapping,
@@ -63,7 +67,8 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
             removeOwnedAccount,
             getAccountMapping,
             handleRemoveMapping,
-            ...categories
+            ...categories,
+            ...currency
         }}>
             {children}
         </GlobalContext.Provider>

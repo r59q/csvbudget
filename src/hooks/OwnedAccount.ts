@@ -1,7 +1,6 @@
 import {useEffect, useState} from 'react';
 import {getOwnedAccountsData} from "@/data";
-import {AccountNumber, MappedCSVRow, Transaction, TransactionID} from "@/model";
-import {advancedFilters} from "@/utility/datautils";
+import {AccountNumber} from "@/model";
 
 const useOwnedAccounts = () => {
     const [ownAccounts, setOwnAccounts] = useState<string[]>([])
@@ -27,12 +26,6 @@ const useOwnedAccounts = () => {
         removeOwnedAccount: (accountNumber: AccountNumber) => {
             const newState = [...ownAccounts].filter(accNo => accNo !== accountNumber);
             saveAccounts(newState);
-        },
-        filterIntraAccountTransaction: (row: MappedCSVRow) => {
-            return !(ownAccounts.includes(row.mappedFrom) && ownAccounts.includes(row.mappedTo));
-        },
-        filterInterAccountTransaction: (row: Transaction) => {
-            return (!ownAccounts.includes(row.from) || ownAccounts.includes(row.to));
         }
     }
 };

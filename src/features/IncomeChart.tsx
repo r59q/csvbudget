@@ -1,6 +1,6 @@
 import React from "react";
 import SingleLineChart from "@/components/SingleLineChart";
-import { formatCurrency } from "@/utility/datautils";
+import useFormatCurrency from "@/hooks/FormatCurrency";
 
 interface IncomeChartProps {
     averageIncome: number;
@@ -10,6 +10,7 @@ interface IncomeChartProps {
 const IncomeChart: React.FC<IncomeChartProps> = ({ averageIncome, chartData }) => {
     // Sort chartData by date to ensure correct order regardless of input
     const sortedChartData = [...chartData].sort((a, b) => a.date - b.date);
+    const formatCurrency = useFormatCurrency();
     return (
         <div>
             <p>Average Income: {formatCurrency(averageIncome)}</p>
