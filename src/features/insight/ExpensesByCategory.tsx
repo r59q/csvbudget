@@ -2,12 +2,7 @@ import React, {use, useMemo} from 'react';
 import {InsightsContext} from "@/features/insight/InsightPage";
 import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell} from 'recharts';
 import {formatCurrency} from '@/utility/datautils';
-
-const CATEGORY_COLORS = [
-    '#7dd3fc', '#f9a8d4', '#a7f3d0', '#fcd34d', '#c4b5fd', '#fdba74', '#fca5a5', '#6ee7b7', '#fef08a', '#a5b4fc',
-    '#fbbf24', '#f472b6', '#34d399', '#818cf8', '#f87171', '#38bdf8', '#facc15', '#a3e635', '#fb7185', '#fca5a5',
-];
-const getCategoryColor = (idx: number) => CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+import {getCategoryColorForName} from '@/utility/categoryColors';
 
 const CustomTooltip = ({active, payload, label}: any) => {
     if (active && payload && payload.length) {
@@ -34,6 +29,9 @@ const ExpensesByCategory = () => {
                 category: cat,
                 average: averages.averageExpenseByCategoryPerEnvelope[cat] || 0,
             })), [categoriesSortedByMonthlyCost, averages, selectedCategories]);
+
+    // Use the master sorted list for color assignment
+    const allCategories = categoriesSortedByMonthlyCost;
 
     return (
         <div className="w-full h-full">
@@ -63,8 +61,8 @@ const ExpensesByCategory = () => {
                         isAnimationActive={false}
                         radius={[6, 6, 6, 6]}
                     >
-                        {data.map((entry, idx) => (
-                            <Cell key={entry.category} fill={getCategoryColor(idx)} />
+                        {data.map((entry) => (
+                            <Cell key={entry.category} fill={getCategoryColorForName(entry.category, allCategories)} />
                         ))}
                     </Bar>
                 </BarChart>

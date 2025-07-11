@@ -4,15 +4,7 @@ import {Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, Tool
 import {formatCurrency, formatEnvelope} from '@/utility/datautils';
 import {Category} from '@/model';
 import {NameType, ValueType} from 'recharts/types/component/DefaultTooltipContent';
-
-
-// Use a set of distinct, soft but visually separated colors for categories
-const CATEGORY_COLORS = [
-    '#7dd3fc', '#f9a8d4', '#a7f3d0', '#fcd34d', '#c4b5fd', '#fdba74', '#fca5a5', '#6ee7b7', '#fef08a', '#a5b4fc',
-    '#fbbf24', '#f472b6', '#34d399', '#818cf8', '#f87171', '#38bdf8', '#facc15', '#a3e635', '#fb7185', '#fca5a5',
-];
-
-const getCategoryColor = (idx: number) => CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+import {getCategoryColorForName} from '@/utility/categoryColors';
 
 const EnvelopeExpensesByCategory = () => {
     const {transactionsByEnvelope, categoriesSortedByMonthlyCost, selectedCategories} = use(InsightsContext);
@@ -28,6 +20,12 @@ const EnvelopeExpensesByCategory = () => {
         return Array.from(set).filter(cat => selectedCategories.includes(cat)).sort();
     }, [transactionsByEnvelope, selectedCategories]);
 
+    // Use the master sorted list filtered by selectedCategories for consistent color assignment
+    const filteredCategories = useMemo(() =>
+            categoriesSortedByMonthlyCost.filter(cat => selectedCategories.includes(cat)),
+        [categoriesSortedByMonthlyCost, selectedCategories]
+    );
+
     // Prepare data for recharts: [{ envelope: '2024-01', Category1: 123, Category2: 456, ... }, ...]
     const data = useMemo(() => {
         return Object.entries(transactionsByEnvelope || {})
@@ -35,7 +33,7 @@ const EnvelopeExpensesByCategory = () => {
                 const row: Record<string, any> = {
                     envelope: formatEnvelope ? formatEnvelope(envelope) : envelope
                 };
-                allCategories.forEach(cat => {
+                filteredCategories.forEach(cat => {
                     row[cat] = (txs || [])
                         .filter(t => t.type === 'expense' && t.category === cat)
                         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
@@ -43,7 +41,7 @@ const EnvelopeExpensesByCategory = () => {
                 return row;
             })
             .sort((a, b) => a.envelope.localeCompare(b.envelope));
-    }, [transactionsByEnvelope, allCategories]);
+    }, [transactionsByEnvelope, filteredCategories]);
 
     return (
         <div className="flex flex-col flex-grow h-full"> {/* Use flex layout and h-full for responsive height */}
@@ -57,8 +55,8 @@ const EnvelopeExpensesByCategory = () => {
                         <Tooltip
                             content={<CustomTooltip categoriesSortedByMonthlyCost={categoriesSortedByMonthlyCost}/>}/>
                         <Legend wrapperStyle={{color: '#e5e7eb'}}/>
-                        {allCategories.map((cat, idx) => (
-                            <Bar key={cat} dataKey={cat} fill={getCategoryColor(idx)} radius={[6, 6, 0, 0]}
+                        {filteredCategories.map((cat) => (
+                            <Bar key={cat} dataKey={cat} fill={getCategoryColorForName(cat, categoriesSortedByMonthlyCost)} radius={[6, 6, 0, 0]}
                                  shape={<CustomBar/>}/>
                         ))}
                     </BarChart>
