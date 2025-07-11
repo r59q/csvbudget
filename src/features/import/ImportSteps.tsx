@@ -14,13 +14,14 @@ const ImportSteps = ({}: object) => {
                 <li className="flex gap-4 items-center">
                     <span className="flex items-center justify-center shrink-0"><MdFileDownload className="text-green-500" size={22} /></span>
                     <span className="flex-1 text-gray-200">
-                        <span className="font-semibold">Acquire a CSV file:</span> Download your transaction history as a CSV file from your online banking or financial service. Most banks offer an export or download option in their web interface.
+                        <span className="font-semibold">Acquire a CSV file:</span> Download your transaction history as a CSV file from your online banking or financial service. Most banks offer an export or download option in their web interface. Check out the example by pressing the button below.
                     </span>
                 </li>
                 <li className="flex gap-4 items-center">
                     <span className="flex items-center justify-center shrink-0"><MdUploadFile className="text-blue-500" size={22} /></span>
                     <span className="flex-1 text-gray-200">
-                        <span className="font-semibold">Import the CSV file:</span> Use the import tool below to upload your CSV file. You can drag and drop or use the file picker.
+                        <span className="font-semibold">Import the CSV file:</span> Use the import tool below to import your CSV file. You can drag and drop or use the file picker.
+                        <p className={"ml-2 text-md text-gray-400"}><span className="font-semibold">Note:</span> files are stored in your browser and is not being submitted to the cloud.</p>
                     </span>
                 </li>
                 <li className="flex gap-4 items-center">
