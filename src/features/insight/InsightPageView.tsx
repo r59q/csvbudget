@@ -22,7 +22,7 @@ const InsightPageView = () => {
 
     return <div className={"p-2 bg-gradient-to-b from-gray-950 to-[#0a0a0a] flex flex-col gap-8"}>
         <div className="gap-4">
-            <div className={"flex flex-row gap-4 min-h-[525px]"}>
+            <div className={"flex flex-row gap-4 min-h-[800px]"}>
                 <InsightCard>
                     {/* Section: Expenses */}
                     <section>
@@ -81,7 +81,7 @@ const InsightPageView = () => {
             </div>
         </div>
 
-        <div>
+        <div className={"flex flex-col gap-4"}>
             {envelopes.map(envelope => {
                 const envelopeTransactions = transactionsByEnvelope[envelope];
                 if (!envelopeTransactions) return <React.Fragment key={envelope}></React.Fragment>;
