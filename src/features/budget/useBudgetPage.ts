@@ -4,7 +4,7 @@ import useCategories from "@/hooks/Categories";
 import useBudget from "@/hooks/Budget";
 import {useTransactionsContext} from "@/context/TransactionsContext";
 import useAverages from "@/hooks/Averages";
-import {getExpenses, getSum} from "@/utility/datautils";
+import {getExpenses, getSumAfterRefund} from "@/utility/datautils";
 
 export const useBudgetPage = () => {
     const {envelopes, selectedEnvelopes, envelopeSelectedTransactions, transactions} = useTransactionsContext();
@@ -152,7 +152,7 @@ export const useBudgetPage = () => {
         return budgetPosts.map(post => {
             const transactions = grouped[post.title] || [];
             // Only sum negative amounts (expenses)
-            const totalExpenses = getSum(getExpenses(transactions));
+            const totalExpenses = getSumAfterRefund(getExpenses(transactions));
             return {
                 title: post.title,
                 net: post.amount * numEnvelopes + totalExpenses
@@ -164,7 +164,7 @@ export const useBudgetPage = () => {
         return selectedEnvelopes.reduce((total, envelope) => {
             const transactions = envelopeSelectedTransactions.filter(tran => tran.envelope === envelope);
             const income = transactions.filter(tran => tran.type === "income");
-            return total + getSum(income);
+            return total + getSumAfterRefund(income);
         }, 0);
     }, [selectedEnvelopes, envelopeSelectedTransactions]);
 
@@ -172,7 +172,7 @@ export const useBudgetPage = () => {
         return selectedEnvelopes.reduce((total, envelope) => {
             const transactions = envelopeSelectedTransactions.filter(tran => tran.envelope === envelope);
             const expenses = transactions.filter(tran => tran.type === "expense");
-            return total + getSum(expenses);
+            return total + getSumAfterRefund(expenses);
         }, 0);
     }, [selectedEnvelopes, envelopeSelectedTransactions]);
 

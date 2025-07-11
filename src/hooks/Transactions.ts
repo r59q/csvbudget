@@ -3,9 +3,10 @@ import {Envelope, MappedCSVRow, Transaction, TransactionID, TransactionLinkDescr
 import {
     compareEnvelopesByDate,
     getDayJs,
-    getEnvelopeFromDayjs, getSum,
+    getEnvelopeFromDayjs,
     predictEnvelope,
-    predictIsCsvRowTransfer, predictTypeFromRows
+    predictIsCsvRowTransfer,
+    predictTypeFromRows
 } from "@/utility/datautils";
 import useEnvelopeMapping from "@/hooks/Income";
 import {useGlobalContext} from "@/context/GlobalContext";
@@ -20,7 +21,13 @@ const useTransactions = () => {
     const {isAccountOwned, accountValueMappings, getCategory, categoryMap} = useGlobalContext();
     const {mappedCSVRows, dateFormat, getById} = useCSVRows();
     const categoryPredictionIndex = useCategoryPredictionIndex(categoryMap, mappedCSVRows, getCategory);
-    const {storedLinks, setTransactionLink, unsetTransactionLink, setTransactionLinkType, setTransactionLinkAndType} = useTransactionLinks();
+    const {
+        storedLinks,
+        setTransactionLink,
+        unsetTransactionLink,
+        setTransactionLinkType,
+        setTransactionLinkAndType
+    } = useTransactionLinks();
     const {transactionTypeMap, setTransactionType, setTransactionTypes} = useTransactionTypeMap();
     const {
         selectedEnvelopes,

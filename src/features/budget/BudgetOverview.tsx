@@ -81,9 +81,6 @@ const BudgetOverview = ({
         return budgetNet.reduce((sum, post) => sum + post.net, 0);
     }, [budgetNet]);
 
-    console.log(budgetNet)
-
-    throw new Error("TOTAL NET IS WRONG") // TODO: Fix this
     return (
         <>
             {budgetPosts.length === 0 ? (

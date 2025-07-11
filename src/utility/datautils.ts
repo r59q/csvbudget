@@ -35,8 +35,8 @@ export const groupByDateMonth = (rows: Transaction[]): Record<string, Transactio
     }) as Record<string, Transaction[]>;
 }
 
-export const getSum = (rows: Transaction[]) => {
-    return rows.reduce((pre, cur) => pre + cur.amount, 0)
+export const getSumAfterRefund = (rows: Transaction[]) => {
+    return rows.reduce((pre, cur) => pre + cur.amountAfterRefund, 0)
 }
 
 export const transactionsSortedByDate = (a: Transaction, b: Transaction) => {
