@@ -1,7 +1,6 @@
 import React, {createElement, use, useMemo} from 'react';
 import {InsightsContext} from "@/features/insight/InsightPage";
-import {Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from 'recharts';
-import {NameType, ValueType} from 'recharts/types/component/DefaultTooltipContent';
+import {Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import {getCategoryColorForName} from '@/utility/categoryColors';
 import useFormatCurrency from "@/hooks/FormatCurrency";
 import {formatEnvelope} from "@/utility/datautils";
@@ -41,8 +40,7 @@ const EnvelopeExpensesByCategory = () => {
                         <CartesianGrid strokeDasharray="3 3" stroke="#444"/>
                         <XAxis dataKey="envelope" stroke="#ccc"/>
                         <YAxis stroke="#ccc"/>
-                        <Tooltip
-                            content={<CustomTooltip categoriesSortedByMonthlyCost={categoriesSortedByMonthlyCost}/>}/>
+                        <Tooltip content={CustomTooltip}/>
                         <Legend wrapperStyle={{color: '#e5e7eb'}}/>
                         {filteredCategories.map((cat) => (
                             <Bar key={cat} dataKey={cat}
@@ -57,30 +55,39 @@ const EnvelopeExpensesByCategory = () => {
     );
 }
 
-// Custom dark tooltip for recharts
-interface CustomTooltipProps extends TooltipProps<ValueType, NameType> {
-    categoriesSortedByMonthlyCost: string[];
+// Use a proper type for the tooltip payload entries
+interface TooltipEntry {
+    color: string;
+    name: string;
+    value: number;
 }
 
-const CustomTooltip = (props: CustomTooltipProps) => {
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: TooltipEntry[];
+    label?: string;
+}
+
+// Use correct types for recharts v3 Tooltip content
+import { TooltipContentProps } from 'recharts';
+
+const CustomTooltip = (props: TooltipContentProps<number, string>) => {
     const formatCurrency = useFormatCurrency();
     const {active, payload, label} = props;
     if (active && payload && payload.length) {
         // Sort payload descending by value for the current envelope
-        const sortedPayload = [...payload]
-            .filter(entry => typeof entry.value === 'number')
-            .sort((a, b) => (b.value as number) - (a.value as number));
+        const sortedPayload = [...payload].sort((a, b) => ((b.value ?? 0) - (a.value ?? 0)));
         return (
             <div className="bg-gray-800 text-gray-100 rounded-lg shadow-lg px-4 py-2 border border-gray-700">
-                <div className="font-semibold mb-1">{label}</div>
-                {sortedPayload.map((entry, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                        <span className="inline-block w-3 h-3 rounded-full"
-                              style={{backgroundColor: entry.color}}></span>
-                        <span className="text-sm">{entry.name}: <span
-                            className="font-mono">{formatCurrency(entry.value as number)}</span></span>
-                    </div>
-                ))}
+                <div className="font-semibold mb-1">{String(label)}</div>
+                <div className="flex flex-col gap-1">
+                    {sortedPayload.map((entry, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: entry.color}}></span>
+                            <span className="text-sm">{entry.name}: {formatCurrency(entry.value as number)}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
