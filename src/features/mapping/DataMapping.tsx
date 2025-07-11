@@ -42,8 +42,8 @@ const DataMapping = ({unmappedSchemas, onSaveMapping, onCloseInitialImport, isIn
         onCloseInitialImport(); // Finish off by closing the dialog
     }
 
-    if (isInitialImport) {
-        const unknownTypeTransactionsWithGuessedType = unknownTypeTransactions.filter(tran => tran.guessedType !== "unknown")
+    const unknownTypeTransactionsWithGuessedType = unknownTypeTransactions.filter(tran => tran.guessedType !== "unknown")
+    if (isInitialImport && unknownTypeTransactionsWithGuessedType.length > 0) {
         return <BackdropBlur onClose={onCloseInitialImport}>
             <div className="p-4 bg-gray-900 rounded-md flex flex-col gap-4 max-w-7xl w-full mx-auto">
                 <h1 className="font-bold text-xl">Initial Import</h1>
@@ -53,7 +53,7 @@ const DataMapping = ({unmappedSchemas, onSaveMapping, onCloseInitialImport, isIn
                     initialSelectedIds={unknownTypeTransactionsWithGuessedType.map(t => t.id)}
                     onConfirm={setConfirmedTypes}
                     onCancel={onCloseInitialImport}
-                    additionalColumns={[{title: "Hello", cell: (t => <span className={"font-bold"}>{t.guessedType}</span>)}]}
+                    additionalColumns={[{title: "Guess", cell: (t => <span className={"font-bold"}>{t.guessedType}</span>)}]}
                 />
             </div>
         </BackdropBlur>
