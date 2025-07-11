@@ -3,7 +3,7 @@ import useCategories from "@/hooks/Categories";
 import useAverages from "@/hooks/Averages";
 import {Category, Envelope, Transaction, TransactionID} from "@/model";
 import {groupByEnvelope} from "@/utility/datautils";
-import React, {createContext, useState} from "react";
+import React, {createContext, PropsWithChildren, useState} from "react";
 import InsightPageView from "@/features/insight/InsightPageView";
 
 interface InsightsContextType {
@@ -27,28 +27,44 @@ const InsightPage = () => {
 
     // For sorting categories by average expense
     const categoriesSortedByMonthlyCost = [...averages.categories].filter(e => e !== "Unassigned" || (e === "Unassigned" && averages.averageExpenseByCategoryPerEnvelope[e] !== 0))
-        .toSorted((a, b) => (averages.averageExpenseByCategoryPerEnvelope[a] ?? 0) - (averages.averageExpenseByCategoryPerEnvelope[b] ?? 0));
-
-    const [selectedCategories, setSelectedCategories] = useState<Category[]>(categoriesSortedByMonthlyCost);
+        .toSorted((a, b) => (averages.averageExpenseByCategoryPerEnvelope[a] ?? 0) - (averages.averageExpenseByCategoryPerEnvelope[b] ?? 0))
 
     if (envelopeSelectedTransactions.length === 0) {
         return <>NO ENVELOPES SELECTED!!</> // Todo: Show a proper message
     }
 
     return (
-        <InsightsContext.Provider
-            value={{
-                getCategory,
-                transactionsByEnvelope,
-                categoriesSortedByMonthlyCost,
-                averages,
-                envelopes,
-                selectedCategories,
-                setSelectedCategories
-            }}>
+        <ContextProvider {...{transactionsByEnvelope, getCategory, envelopes, categoriesSortedByMonthlyCost, averages}}>
             <InsightPageView/>
-        </InsightsContext.Provider>
+        </ContextProvider>
     );
 };
+
+interface ContextProviderProps extends Omit<InsightsContextType, "setSelectedCategories" | "selectedCategories"> {
+}
+
+const ContextProvider = ({
+                             children,
+                             categoriesSortedByMonthlyCost,
+                             getCategory,
+                             transactionsByEnvelope,
+                             envelopes,
+                             averages
+                         }: PropsWithChildren<ContextProviderProps>) => {
+    const [selectedCategories, setSelectedCategories] = useState<Category[]>(categoriesSortedByMonthlyCost);
+
+    return <InsightsContext.Provider
+        value={{
+            getCategory,
+            transactionsByEnvelope,
+            categoriesSortedByMonthlyCost,
+            averages,
+            envelopes,
+            selectedCategories,
+            setSelectedCategories
+        }}>
+        {children}
+    </InsightsContext.Provider>
+}
 
 export default InsightPage;

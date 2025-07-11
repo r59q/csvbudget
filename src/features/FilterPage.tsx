@@ -9,7 +9,7 @@ import { FaRegEnvelopeOpen } from "react-icons/fa6";
 import { FaRegUserCircle } from "react-icons/fa";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import Chip from "@/components/Chip";
-import EnvelopeChipSelector from "@/components/EnvelopeChipSelector";
+import EnvelopeChipSelector from "@/features/EnvelopeChipSelector";
 
 const FilterPage = () => {
     const {transactions, envelopes, toggleSelectedEnvelope, isEnvelopeSelected} = useTransactionsContext();

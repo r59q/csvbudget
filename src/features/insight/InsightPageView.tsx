@@ -5,10 +5,17 @@ import {InsightsContext} from "@/features/insight/InsightPage";
 import {Transaction} from "@/model";
 import SingleLineChart from "@/components/SingleLineChart";
 import TransactionTable from "@/features/transaction/TransactionTable";
-import Chip from "@/components/Chip";
+import CategoryChipSelector from "@/features/insight/CategoryChipSelector";
 
 const InsightPageView = () => {
-    const {transactionsByEnvelope, categoriesSortedByMonthlyCost, averages, envelopes, setSelectedCategories, selectedCategories} = use(InsightsContext);
+    const {
+        transactionsByEnvelope,
+        categoriesSortedByMonthlyCost,
+        averages,
+        envelopes,
+        setSelectedCategories,
+        selectedCategories
+    } = use(InsightsContext);
 
     return <div className={"p-2 bg-gradient-to-b from-gray-950 to-[#0a0a0a] flex flex-col gap-8 pt-4"}>
         <div className="gap-4">
@@ -58,22 +65,11 @@ const InsightPageView = () => {
                 </InsightCard>
 
                 <InsightCard className={"flex-grow"}>
-                    <div className={"flex flex-wrap gap-2 pb-2"}>
-                        {categoriesSortedByMonthlyCost.map((category) => (
-                            <Chip
-                                key={category}
-                                label={category}
-                                selected={selectedCategories.includes(category)}
-                                onClick={() => {
-                                    if (selectedCategories.includes(category)) {
-                                        setSelectedCategories(selectedCategories.filter(c => c !== category));
-                                    } else {
-                                        setSelectedCategories([...selectedCategories, category]);
-                                    }
-                                }}
-                            />
-                        ))}
-                    </div>
+                    <CategoryChipSelector
+                        categories={categoriesSortedByMonthlyCost}
+                        selectedCategories={selectedCategories}
+                        setSelectedCategories={setSelectedCategories}
+                    />
                     <div className={"flex flex-1 flex-grow"}>
                         <CategoryInsights/>
                     </div>

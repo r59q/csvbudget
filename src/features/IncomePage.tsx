@@ -7,7 +7,7 @@ import InfoBox from "@/components/InfoBox";
 import {FaRegEnvelopeOpen} from "react-icons/fa6";
 import useSelectedEnvelopes from "@/hooks/useSelectedEnvelopes";
 import Chip from "@/components/Chip";
-import EnvelopeChipSelector from "@/components/EnvelopeChipSelector";
+import EnvelopeChipSelector from "@/features/EnvelopeChipSelector";
 
 const IncomePage = () => {
     const {transactions, envelopes, incomeTransactionsGroupedByEnvelope} = useTransactionsContext();

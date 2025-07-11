@@ -8,26 +8,8 @@ import {NameType, ValueType} from 'recharts/types/component/DefaultTooltipConten
 
 // Use a set of distinct, soft but visually separated colors for categories
 const CATEGORY_COLORS = [
-    '#7dd3fc', // sky-300
-    '#f9a8d4', // pink-300
-    '#a7f3d0', // green-200
-    '#fcd34d', // yellow-300
-    '#c4b5fd', // purple-300
-    '#fdba74', // orange-300
-    '#fca5a5', // red-300
-    '#6ee7b7', // emerald-300
-    '#fef08a', // yellow-200
-    '#a5b4fc', // indigo-300
-    '#fbbf24', // yellow-400
-    '#f472b6', // pink-400
-    '#34d399', // green-400
-    '#818cf8', // indigo-400
-    '#f87171', // red-400
-    '#38bdf8', // sky-400
-    '#facc15', // yellow-400
-    '#a3e635', // lime-400
-    '#fb7185', // rose-400
-    '#fca5a5', // red-300
+    '#7dd3fc', '#f9a8d4', '#a7f3d0', '#fcd34d', '#c4b5fd', '#fdba74', '#fca5a5', '#6ee7b7', '#fef08a', '#a5b4fc',
+    '#fbbf24', '#f472b6', '#34d399', '#818cf8', '#f87171', '#38bdf8', '#facc15', '#a3e635', '#fb7185', '#fca5a5',
 ];
 
 const getCategoryColor = (idx: number) => CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
