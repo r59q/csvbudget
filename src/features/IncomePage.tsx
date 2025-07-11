@@ -7,6 +7,7 @@ import InfoBox from "@/components/InfoBox";
 import {FaRegEnvelopeOpen} from "react-icons/fa6";
 import useSelectedEnvelopes from "@/hooks/useSelectedEnvelopes";
 import Chip from "@/components/Chip";
+import EnvelopeChipSelector from "@/components/EnvelopeChipSelector";
 
 const IncomePage = () => {
     const {transactions, envelopes, incomeTransactionsGroupedByEnvelope} = useTransactionsContext();
@@ -61,25 +62,11 @@ const IncomePage = () => {
             />
 
             {/* Envelope selection chips */}
-            <div className="flex flex-wrap gap-2 mb-4">
-                {envelopes && envelopes.length > 0 ? (
-                    envelopes.map((env) => (
-                        <Chip
-                            key={env}
-                            label={formatEnvelope(env)}
-                            selected={isEnvelopeSelected(env)}
-                            onClick={() => toggleSelectedEnvelope(env)}
-                            icon={isEnvelopeSelected(env) ? (
-                                <span className="inline-block w-2.5 h-2.5 bg-blue-300 rounded-full mr-1" />
-                            ) : (
-                                <span className="inline-block w-2.5 h-2.5 bg-gray-400 rounded-full mr-1" />
-                            )}
-                        />
-                    ))
-                ) : (
-                    <span className="text-gray-400 text-xs">No envelopes found</span>
-                )}
-            </div>
+            <EnvelopeChipSelector
+                envelopes={envelopes}
+                isEnvelopeSelected={isEnvelopeSelected}
+                toggleSelectedEnvelope={toggleSelectedEnvelope}
+            />
 
             <IncomeChart averageIncome={averageIncome} chartData={chartData}/>
             <TransactionTable pageSize={20} transactions={incomeTransactionsSorted}
