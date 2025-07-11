@@ -1,6 +1,6 @@
 import React, {use, useMemo} from 'react';
 import {InsightsContext} from "@/features/insight/InsightPage";
-import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell} from 'recharts';
+import {Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import {formatCurrency} from '@/utility/datautils';
 import {getCategoryColorForName} from '@/utility/categoryColors';
 
@@ -10,7 +10,8 @@ const CustomTooltip = ({active, payload, label}: any) => {
             <div className="bg-gray-800 text-gray-100 rounded-lg shadow-lg px-4 py-2 border border-gray-700">
                 <div className="font-semibold mb-1">{label}</div>
                 <div className="flex items-center gap-2">
-                    <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: payload[0].color}}></span>
+                    <span className="inline-block w-3 h-3 rounded-full"
+                          style={{backgroundColor: payload[0].color}}></span>
                     <span className="text-sm">{formatCurrency(payload[0].value)}</span>
                 </div>
             </div>
@@ -42,8 +43,8 @@ const ExpensesByCategory = () => {
                     layout="vertical"
                     margin={{top: 8, right: 4}}
                     barCategoryGap={5}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis type="number" stroke="#ccc" tickFormatter={formatCurrency} orientation="bottom" reversed />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444"/>
+                    <XAxis type="number" stroke="#ccc" tickFormatter={formatCurrency} orientation="bottom" reversed/>
                     <YAxis
                         type="category"
                         dataKey="category"
@@ -56,13 +57,13 @@ const ExpensesByCategory = () => {
                             textAnchor: 'end',
                         }}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{fill: '#222', opacity: 0.1}} />
+                    <Tooltip content={<CustomTooltip/>} cursor={{fill: '#222', opacity: 0.1}}/>
                     <Bar dataKey="average"
-                        isAnimationActive={false}
-                        radius={[6, 6, 6, 6]}
+                         isAnimationActive={false}
+                         radius={[6, 6, 6, 6]}
                     >
                         {data.map((entry) => (
-                            <Cell key={entry.category} fill={getCategoryColorForName(entry.category, allCategories)} />
+                            <Cell key={entry.category} fill={getCategoryColorForName(entry.category, allCategories)}/>
                         ))}
                     </Bar>
                 </BarChart>

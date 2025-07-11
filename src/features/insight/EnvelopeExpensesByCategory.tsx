@@ -2,23 +2,11 @@ import React, {createElement, use, useMemo} from 'react';
 import {InsightsContext} from "@/features/insight/InsightPage";
 import {Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from 'recharts';
 import {formatCurrency, formatEnvelope} from '@/utility/datautils';
-import {Category} from '@/model';
 import {NameType, ValueType} from 'recharts/types/component/DefaultTooltipContent';
 import {getCategoryColorForName} from '@/utility/categoryColors';
 
 const EnvelopeExpensesByCategory = () => {
     const {transactionsByEnvelope, categoriesSortedByMonthlyCost, selectedCategories} = use(InsightsContext);
-
-    // Collect all categories (filtered by selectedCategories)
-    const allCategories = useMemo(() => {
-        const set = new Set<Category>();
-        Object.values(transactionsByEnvelope || {}).forEach(txs => {
-            (txs || []).forEach(t => {
-                if (t.type === 'expense') set.add(t.category);
-            });
-        });
-        return Array.from(set).filter(cat => selectedCategories.includes(cat)).sort();
-    }, [transactionsByEnvelope, selectedCategories]);
 
     // Use the master sorted list filtered by selectedCategories for consistent color assignment
     const filteredCategories = useMemo(() =>
@@ -56,7 +44,9 @@ const EnvelopeExpensesByCategory = () => {
                             content={<CustomTooltip categoriesSortedByMonthlyCost={categoriesSortedByMonthlyCost}/>}/>
                         <Legend wrapperStyle={{color: '#e5e7eb'}}/>
                         {filteredCategories.map((cat) => (
-                            <Bar key={cat} dataKey={cat} fill={getCategoryColorForName(cat, categoriesSortedByMonthlyCost)} radius={[6, 6, 0, 0]}
+                            <Bar key={cat} dataKey={cat}
+                                 fill={getCategoryColorForName(cat, categoriesSortedByMonthlyCost)}
+                                 radius={[6, 6, 0, 0]}
                                  shape={<CustomBar/>}/>
                         ))}
                     </BarChart>
